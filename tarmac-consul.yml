@@ -1,0 +1,2 @@
+tarmac:
+  config: '{"from_consul": true, "debug": false, "trace": false}'

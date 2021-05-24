@@ -1,0 +1,59 @@
+version: '2'
+services:
+  tarmac:
+    build: .
+    ports:
+      - 443:8443
+      - 80:8080
+    environment:
+      - "APP_ENABLE_TLS=false"
+      - "APP_LISTEN_ADDR=0.0.0.0:8080"
+      - "APP_DB_SERVER=redis:6379"
+      - "APP_USE_CONSUL=true"
+      - "APP_CONSUL_ADDR=consul:8500"
+      - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
+      - "CONSUL_HTTP_ADDR=consul:8500"
+      - "CONSUL_HTTP_SSL=false"
+      - "APP_WASM_MODULE=./testdata/http_env.wasm"
+    depends_on:
+      - redis
+      - consul
+      - consulator
+  tests:
+    build: .
+    working_dir: /go/src/github.com/madflojo/tarmac
+    entrypoint: go test -v -covermode=count -coverprofile=/tmp/coverage/coverage.out ./...
+    volumes:
+      - "./coverage:/tmp/coverage"
+    environment:
+      - "APP_ENABLE_TLS=false"
+      - "APP_DB_SERVER=redis:6379"
+      - "APP_CONSUL_ADDR=consul:8500"
+      - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
+      - "CONSUL_HTTP_ADDR=consul:8500"
+      - "CONSUL_HTTP_SSL=false"
+    depends_on:
+      - redis
+      - consul
+      - consulator
+  redis:
+    image: bitnami/redis:latest
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+  consul:
+    image: consul
+    ports:
+      - 8500:8500
+  consulator:
+    image: lewispeckover/consulator
+    command: "import /app/tarmac-consul.yml"
+    depends_on:
+      - consul
+    volumes:
+      - "./:/app"
+    environment:
+      - "CONSUL_HTTP_ADDR=consul:8500"
+      - "CONSUL_HTTP_SSL=false"
+
+volumes:
+  coverage:
