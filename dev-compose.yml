@@ -26,6 +26,7 @@ services:
     entrypoint: go test -v -covermode=count -coverprofile=/tmp/coverage/coverage.out ./...
     volumes:
       - "./coverage:/tmp/coverage"
+      - "./example:/example"
     environment:
       - "APP_ENABLE_TLS=false"
       - "APP_DB_SERVER=redis:6379"

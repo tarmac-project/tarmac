@@ -18,7 +18,7 @@ func main() {
 	cfg.SetDefault("enable_tls", true)
 	cfg.SetDefault("listen_addr", "0.0.0.0:8443")
 	cfg.SetDefault("config_watch_interval", 15)
-  cfg.SetDefault("wasm_module", "./tarmac_module.wasm")
+	cfg.SetDefault("wasm_module", "./tarmac_module.wasm")
 
 	// Load Config
 	cfg.AddConfigPath("./conf")
