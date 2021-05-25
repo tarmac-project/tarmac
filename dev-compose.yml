@@ -9,6 +9,7 @@ services:
       - "APP_ENABLE_TLS=false"
       - "APP_LISTEN_ADDR=0.0.0.0:8080"
       - "APP_DB_SERVER=redis:6379"
+      - "APP_ENABLE_DB=true"
       - "APP_USE_CONSUL=true"
       - "APP_CONSUL_ADDR=consul:8500"
       - "APP_CONSUL_KEYS_PREFIX=tarmac/config"

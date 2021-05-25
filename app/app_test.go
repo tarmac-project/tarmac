@@ -38,8 +38,19 @@ func TestBadConfigs(t *testing.T) {
 	v.Set("enable_tls", false)
 	v.Set("listen_addr", "0.0.0.0:8443")
 	v.Set("disable_logging", true)
+  v.Set("enable_db", true)
 	v.Set("db_server", "")
 	cfgs["invalid DB Address"] = v
+
+  // Invalid WASM path
+	v = viper.New()
+	v.Set("enable_tls", false)
+	v.Set("listen_addr", "0.0.0.0:8443")
+	v.Set("disable_logging", true)
+  v.Set("enable_db", false)
+  v.Set("wasm_module", "something-that-does-not-exist")
+	cfgs["invalid WASM path"] = v
+
 
 	// Loop through bad configs, creating sub-tests as we go
 	for k, v := range cfgs {
@@ -66,6 +77,7 @@ func TestRunningServer(t *testing.T) {
 	cfg.Set("disable_logging", true)
 	cfg.Set("listen_addr", "localhost:9000")
 	cfg.Set("db_server", "redis:6379")
+  cfg.Set("enable_db", true)
 	cfg.Set("config_watch_interval", 5)
 	cfg.Set("use_consul", true)
 	cfg.Set("debug", true)
@@ -120,6 +132,7 @@ func TestRunningTLSServer(t *testing.T) {
 	cfg.Set("cert_file", "/tmp/cert")
 	cfg.Set("key_file", "/tmp/key")
 	cfg.Set("db_server", "redis:6379")
+  cfg.Set("enable_db", true)
 	cfg.Set("listen_addr", "localhost:9000")
 	cfg.Set("config_watch_interval", 1)
 	err = cfg.AddRemoteProvider("consul", "consul:8500", "tarmac/config")

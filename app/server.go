@@ -55,6 +55,8 @@ func (s *server) middleware(n httprouter.Handle) httprouter.Handle {
 	}
 }
 
+// WASMHandler is the primary HTTP handler for WASM Module traffic. This handler will load the
+// specified module and create an execution environment for that module.
 func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	// Read the HTTP Payload
@@ -79,6 +81,7 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 	env, err := wasmer.NewWasiStateBuilder("http_func").
 		Environment("REQUEST_TYPE", "http").
 		Environment("HTTP_METHOD", r.Method).
+    Environment("HTTP_PATH", r.URL.Path).
 		Environment("REMOTE_ADDR", r.RemoteAddr).
 		Environment("HTTP_PAYLOAD", base64.StdEncoding.EncodeToString(payload)).
 		CaptureStdout().
@@ -110,6 +113,7 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 
+  // Create a WASM module instance
 	instance, err := wasmer.NewInstance(engine.Module("http_handler").Module, obj)
 	if err != nil {
 		log.WithFields(logrus.Fields{
@@ -123,6 +127,7 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 
+  // Export the HTTP Handler
 	handler, err := instance.Exports.GetFunction("HTTPHandler")
 	if err != nil {
 		log.WithFields(logrus.Fields{

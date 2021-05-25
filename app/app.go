@@ -114,7 +114,7 @@ func Run(c *viper.Viper) error {
 	}
 
 	// Setup the DB Connection
-	if cfg.GetString("db_server") != "" {
+	if cfg.GetBool("enable_db") {
 		db, err = redis.Dial(redis.Config{
 			Server:   cfg.GetString("db_server"),
 			Password: cfg.GetString("db_password"),

@@ -11,10 +11,13 @@ import (
 
 func TestHandlers(t *testing.T) {
 	cfg := viper.New()
-	cfg.Set("disable_logging", true)
+	cfg.Set("disable_logging", false)
+  cfg.Set("debug", true)
 	cfg.Set("listen_addr", "localhost:9001")
 	cfg.Set("db_server", "redis:6379")
+	cfg.Set("enable_db", true)
 	cfg.Set("config_watch_interval", 5)
+	cfg.Set("wasm-module", "example/go/tarmac-module.wasm")
 	go func() {
 		err := Run(cfg)
 		if err != nil && err != ErrShutdown {
@@ -27,23 +30,13 @@ func TestHandlers(t *testing.T) {
 	// Wait for app to start
 	time.Sleep(10 * time.Second)
 
-	t.Run("Update greeting", func(t *testing.T) {
-		r, err := http.Post("http://localhost:9001/hello", "application/text", bytes.NewBuffer([]byte("Howdie")))
+	t.Run("Simple Payload", func(t *testing.T) {
+		r, err := http.Post("http://localhost:9001/", "application/text", bytes.NewBuffer([]byte("Howdie")))
 		if err != nil {
-			t.Errorf("Unexpected error when updating greeting - %s", err)
+			t.Errorf("Unexpected error when making HTTP request - %s", err)
 		}
 		if r.StatusCode != 200 {
-			t.Errorf("Unexpected http status code when updating greeting - %d", r.StatusCode)
-		}
-	})
-
-	t.Run("Check greeting", func(t *testing.T) {
-		r, err := http.Get("http://localhost:9001/hello")
-		if err != nil {
-			t.Errorf("Unexpected error when requesting greeting service - %s", err)
-		}
-		if r.StatusCode != 200 {
-			t.Errorf("Unexpected http status code when checking greeting service - %d", r.StatusCode)
+			t.Errorf("Unexpected http status code when making HTTP request %d", r.StatusCode)
 		}
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -56,32 +49,4 @@ func TestHandlers(t *testing.T) {
 
 	// Close DB for error checks
 	db.Close()
-
-	t.Run("Update greeting with DB Closed", func(t *testing.T) {
-		r, err := http.Post("http://localhost:9001/hello", "application/text", bytes.NewBuffer([]byte("Howdie2")))
-		if err != nil {
-			t.Errorf("Unexpected error when updating greeting - %s", err)
-		}
-		if r.StatusCode != 500 {
-			t.Errorf("Unexpected http status code when updating greeting - %d", r.StatusCode)
-		}
-	})
-
-	t.Run("Check greeting with DB Closed", func(t *testing.T) {
-		r, err := http.Get("http://localhost:9001/hello")
-		if err != nil {
-			t.Errorf("Unexpected error when requesting greeting service - %s", err)
-		}
-		if r.StatusCode != 500 {
-			t.Errorf("Unexpected http status code when checking greeting service - %d", r.StatusCode)
-		}
-		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			t.Errorf("Unexpected error reading http response - %s", err)
-		}
-		if string(body) == string([]byte("Howdie2")) {
-			t.Errorf("Unexpected reply from http response - got %s", body)
-		}
-	})
-
 }
