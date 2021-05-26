@@ -7,6 +7,9 @@ before_install:
   # Coverage
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/mattn/goveralls
+  # TinyGo
+  - wget https://github.com/tinygo-org/tinygo/releases/download/v0.18.0/tinygo_0.18.0_amd64.deb
+  - dpkg -i tinygo_0.18.0_amd64.deb
 script:
   # Check format and code cleanliness
   - gofmt -l ./ | grep -v vendor | wc -l | grep -q 0
