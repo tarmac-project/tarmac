@@ -54,15 +54,15 @@ func HTTPHandler() int {
 func main() {}
 ```
 
-As we can see from the above code Tarmac passes the HTTP Context and Payload through Environment Variables (at the moment). The Payload is Base64 encoded but otherwise untouched.
+As we can see from the above code, Tarmac passes the HTTP Context and Payload through Environment Variables (at the moment). The Payload is Base64 encoded but otherwise untouched.
 
-To compile the example above simply run:
+To compile the example above, run:
 
 ```shell
 $ tinygo build -o tarmac_module.wasm -target wasi ./main.go
 ```
 
-Once compiled users can run Tarmac using the following command:
+Once compiled, users can run Tarmac using the following command:
 
 ```shell
 $ docker run -v ./path/to/wasm-module:/wasm-module -e "APP_WASM_MODULE=/wasm-module/target_module.wasm" madflojo/tarmac

@@ -206,6 +206,7 @@ func Run(c *viper.Viper) error {
 	// Start HTTP Listener
 	log.Infof("Starting Listener on %s", cfg.GetString("listen_addr"))
 	if cfg.GetBool("enable_tls") {
+		log.Infof("Using Certificate: %s Key: %s", cfg.GetString("cert_file"), cfg.GetString("key_file"))
 		err := srv.httpServer.ListenAndServeTLS(cfg.GetString("cert_file"), cfg.GetString("key_file"))
 		if err != nil {
 			if err == http.ErrServerClosed {
@@ -213,7 +214,7 @@ func Run(c *viper.Viper) error {
 				<-runCtx.Done()
 				return ErrShutdown
 			}
-			return err
+			return fmt.Errorf("unable to start HTTPS Server - %s", err)
 		}
 	}
 	err = srv.httpServer.ListenAndServe()
@@ -223,7 +224,7 @@ func Run(c *viper.Viper) error {
 			<-runCtx.Done()
 			return ErrShutdown
 		}
-		return err
+		return fmt.Errorf("unable to start HTTP Server - %s", err)
 	}
 
 	return nil
