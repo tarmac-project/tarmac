@@ -3,6 +3,8 @@
 
 tests:
 	@echo "Launching Tests in Docker Compose"
+	mkdir -p example/go/module/
+	tinygo build -o example/go/module/tarmac_module.wasm -target wasi ./example/go/main.go
 	docker-compose -f dev-compose.yml up --build tests
 
 clean:

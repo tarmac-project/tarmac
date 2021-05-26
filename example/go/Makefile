@@ -1,7 +1,8 @@
 build: tests build-wasm
 
 build-wasm:
-	tinygo build -o tarmac_module.wasm -target wasi ./main.go
+	mkdir -p module/
+	tinygo build -o module/tarmac_module.wasm -target wasi ./main.go
 
 tests:
 	mkdir -p coverage

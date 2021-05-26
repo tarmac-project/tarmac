@@ -17,8 +17,10 @@ func main() {
 	// Set Default Configs
 	cfg.SetDefault("enable_tls", true)
 	cfg.SetDefault("listen_addr", "0.0.0.0:8443")
+	cfg.SetDefault("cert_file", "/certs/cert.crt")
+	cfg.SetDefault("key_file", "/certs/key.key")
 	cfg.SetDefault("config_watch_interval", 15)
-	cfg.SetDefault("wasm_module", "./tarmac_module.wasm")
+	cfg.SetDefault("wasm_module", "/module/tarmac_module.wasm")
 
 	// Load Config
 	cfg.AddConfigPath("./conf")

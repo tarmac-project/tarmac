@@ -65,7 +65,7 @@ $ tinygo build -o tarmac_module.wasm -target wasi ./main.go
 Once compiled, users can run Tarmac using the following command:
 
 ```shell
-$ docker run -v ./path/to/wasm-module:/wasm-module -e "APP_WASM_MODULE=/wasm-module/target_module.wasm" madflojo/tarmac
+$ docker run -p 8443:8443 -v /path/to/certs:/certs -v ./path/to/wasm-module:/wasm-module -e "APP_CERT_FILE=/certs/cert.crt" -e "APP_KEY_FILE=/certs/key.key" -e "APP_WASM_MODULE=/wasm-module/target_module.wasm" madflojo/tarmac
 ```
 
 Do pay attention to the volume mount and the `APP_WASM_MODULE` environment variable, as these are key to specifying what WASM module to execute.
