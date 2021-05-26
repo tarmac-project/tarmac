@@ -1,6 +1,4 @@
 language: go
-go:
-  - 1.14
 os:
   - linux
 env:
@@ -9,12 +7,6 @@ before_install:
   # Coverage
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/mattn/goveralls
-  # TinyGo
-  - wget https://github.com/tinygo-org/tinygo/releases/download/v0.18.0/tinygo_0.18.0_amd64.deb
-  - sudo dpkg -i tinygo_0.18.0_amd64.deb
-  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-  - sudo apt-get -q update
-  - sudo apt-get -y install --reinstall gcc-4.9 build-essential libstdc++6
 script:
   # Check format and code cleanliness
   - gofmt -l ./ | grep -v vendor | wc -l | grep -q 0
