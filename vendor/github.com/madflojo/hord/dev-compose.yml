@@ -1,0 +1,56 @@
+version: "3"
+services:
+  tests:
+    build: .
+    depends_on:
+      - cassandra
+      - cassandra-primary
+      - redis-sentinel
+      - redis
+    working_dir: /go/src/github.com/madflojo/hord
+    entrypoint: go test -v -covermode=count -coverprofile=coverage/coverage.out ./...
+    volumes:
+      - ./coverage:/go/src/github.com/madflojo/hord/coverage
+  benchmarks:
+    build: .
+    depends_on:
+      - cassandra
+      - cassandra-primary
+      - redis
+    working_dir: /go/src/github.com/madflojo/hord
+    entrypoint: go test -run=BenchmarkDrivers -bench=.
+  cassandra-primary:
+    image: madflojo/cassandra:latest
+    command: /bin/bash -c "sleep 1 && /docker-entrypoint.sh cassandra -f"
+    environment:
+      - CASSANDRA_KEYSPACE=hord
+    expose:
+      - 7000
+      - 7001
+      - 7199
+      - 9042
+      - 9160
+  cassandra:
+    image: madflojo/cassandra:latest
+    command: /bin/bash -c "sleep 15 && /docker-entrypoint.sh cassandra -f"
+    environment:
+      - CASSANDRA_SEEDS=cassandra-primary
+      - CASSANDRA_KEYSPACE=hord
+    depends_on:
+      - cassandra-primary
+    expose:
+      - 7000
+      - 7001
+      - 7199
+      - 9042
+      - 9160
+  redis:
+    image: bitnami/redis:latest
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+  redis-sentinel:
+    image: bitnami/redis-sentinel:latest
+    depends_on:
+      - redis
+    environment:
+      - REDIS_MASTER_HOST=redis

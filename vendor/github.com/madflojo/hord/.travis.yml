@@ -1,0 +1,21 @@
+language: go
+go:
+  - 1.14.1
+os:
+  - linux
+env:
+  - "PATH=/home/travis/gopath/bin:$PATH"
+before_script:
+  - go get golang.org/x/tools/cmd/cover
+  - go get github.com/mattn/goveralls
+  - go mod tidy
+script:
+  - gofmt -l ./ | grep -v vendor | wc -l | grep -q 0
+  - go vet -v ./...
+  - docker-compose -f dev-compose.yml up -d cassandra-primary cassandra redis
+  - sleep 30
+  - docker-compose -f dev-compose.yml up --exit-code-from tests --build tests
+  - sleep 30
+  - docker-compose -f dev-compose.yml up --exit-code-from benchmarks --build benchmarks
+after_success:
+  - goveralls -coverprofile=coverage/coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
