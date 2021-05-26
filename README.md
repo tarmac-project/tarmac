@@ -1,40 +1,79 @@
-# Go Quick
+# Tarmac - Microservice Framework for WASM
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/madflojo/tarmac)](https://pkg.go.dev/github.com/madflojo/tarmac)
 [![Go Report Card](https://goreportcard.com/badge/github.com/madflojo/tarmac)](https://goreportcard.com/report/github.com/madflojo/tarmac)
-[![Build Status](https://travis-ci.com/madflojo/tarmac.svg?branch=main)](https://travis-ci.com/madflojo/tarmac)
-[![Coverage Status](https://coveralls.io/repos/github/madflojo/tarmac/badge.svg?branch=main)](https://coveralls.io/github/madflojo/tarmac?branch=main)
 
-This project is a boilerplate web application written in Go (Golang).
+Tarmac is a framework for building distributed services for any language. Like many other distributed service frameworks or microservice toolkits, Tarmac abstracts the complexities of building distributed systems. Except unlike other toolkits, Tarmac is language agnostic.
 
-Starting a new Go Project and wish you had a basic application you could use as a starting point? Want to learn Go but don't know how to structure your project?
+Using Web Assembly (WASM), Tarmac users can write their logic in many different languages like Rust, Go, Javascript, or even C and run it using the same framework.
 
-The goal of this project is to be all of those things. A clean, straightforward project that offers power users everything they need to start a new Go application. While also providing folks new to Go an example of a well-structured application.
+## Tarmac vs. Functions as a Service
 
-## Features
+Like other FaaS services, it's easy to use Tarmac to create either Functions or full Microservices. However, unlike FaaS platforms, Tarmac provides users with much more than an easy way to run a function inside a Docker container.
 
-* Environment Variable and/or HashiCorp Consul-based configuration ([spf13/viper](https://github.com/spf13/viper))
-* Modular Key-Value Database integration ([madflojo/hord](https://github.com/madflojo/hord))
-* Internal task scheduler for recurring tasks ([madflojo/tasks](https://github.com/madflojo/tasks))
-* Live Enable/Disable of debug logging when using Consul for configuration
-* Service Resiliency
-  - Liveness probe support via `/health` end-point
-  - Readiness probe support via `/ready` end-point
-  - Graceful shutdown with a SIGTERM signal trap
+By leveraging Web Assembly System Interface (WASI), Tarmac creates an isolated environment for running functions. But unlike FaaS platforms, Tarmac users will be able to import Tarmac functions.
 
-## Getting Started
+Like any other microservice framework, Tarmac will handle the complexities of Database Connections, Caching, Metrics, and Dynamic Configuration. Users can focus purely on the function logic and writing it in their favorite programming language.
 
-The easiest way to get started with this project is to run it locally via Docker Compose. Just follow the instructions below, and you will have an entire local instance with dependencies running.
+Tarmac aims to enable users to create robust and performant distributed services with the ease of writing serverless functions with the convenience of a standard microservices framework.
 
-```console
-$ docker compose up tarmac
+## Not ready for Production
+
+At the moment, Tarmac is Experimental, and interfaces will change; new features will come. But if you are interested in WASM and want to write a simple Microservice, Tarmac will work.
+
+Of course, Contributions are also welcome.
+
+## Getting Started with Tarmac
+
+At the moment, Tarmac can run WASI-generated WASM code. However, the serverless function code must follow a pre-defined function signature with Tarmac executing an `HTTPHandler()` function.
+
+To understand this better, take a look at our simple example written in Go (found in [example/go](example/go)).
+
+```golang
+package main
+
+import (
+        "encoding/base64"
+        "fmt"
+        "os"
+)
+
+//export HTTPHandler
+func HTTPHandler() int {
+        d, err := base64.StdEncoding.DecodeString(os.Getenv("HTTP_PAYLOAD"))
+        if err != nil {
+                fmt.Fprintf(os.Stderr, "Invalid Payload")
+                return 400
+        }
+        if os.Getenv("HTTP_METHOD") == "POST" || os.Getenv("HTTP_METHOD") == "PUT" {
+                fmt.Fprintf(os.Stdout, "%s", d)
+        }
+        return 200
+}
+
+func main() {}
 ```
 
-Once running, you can interact with the API via <http://localhost/hello>
+As we can see from the above code Tarmac passes the HTTP Context and Payload through Environment Variables (at the moment). The Payload is Base64 encoded but otherwise untouched.
 
-### Configuring the Service
+To compile the example above simply run:
 
-This application supports configuring the service from Environment Variables, a JSON file, or using HashiCorp Consul. All of these configuration options can also exist together to provide both static and dynamic configuration.
+```shell
+$ tinygo build -o tarmac_module.wasm -target wasi ./main.go
+```
+
+Once compiled users can run Tarmac using the following command:
+
+```shell
+$ docker run -v ./path/to/wasm-module:/wasm-module -e "APP_WASM_MODULE=/wasm-module/target_module.wasm" madflojo/tarmac
+```
+
+Do pay attention to the volume mount and the `APP_WASM_MODULE` environment variable, as these are key to specifying what WASM module to execute.
+
+### Configuring Tarmac
+
+
+Tarmac supports multiple configuration sources from Environment Variables, a JSON file, or using HashiCorp Consul. All of these configuration options can also exist together to provide both static and dynamic configuration.
 
 When using Environment Variables, all configurations are prefixed with `APP_`. The list below will show both Environment and Consul/JSON format for configuration.
 
