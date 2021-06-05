@@ -24,3 +24,9 @@ coverage/
 
 # Build Directory
 build/
+
+# Rust build Directory
+target/
+
+# Tarmac WASM Module Directory
+module/
