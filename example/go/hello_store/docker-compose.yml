@@ -9,8 +9,3 @@ services:
       - "APP_LISTEN_ADDR=0.0.0.0:8080"
     volumes:
       - "./module:/module"
-  builder:
-    image: tinygo/tinygo
-    volumes:
-      - "./:/src"
-    command: tinygo build -o module/tarmac_module.wasm -target wasi ./main.go

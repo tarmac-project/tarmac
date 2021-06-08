@@ -1,5 +1,8 @@
 # Tarmac Go Example
 
+WARNING: This specific module is not compilable and is a work in progress, please checkout the http_env module instead.
+
+
 This project is a Go example of building a WASM microservice using Tarmac.
 
 Tarmac is a framework for building distributed services for any language. Like many other distributed service frameworks or microservice toolkits, Tarmac abstracts the complexities of building distributed systems. Except unlike other toolkits, Tarmac is language agnostic.
