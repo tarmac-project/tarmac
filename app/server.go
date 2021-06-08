@@ -28,8 +28,8 @@ func (s *server) Health(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 // Ready is used to handle HTTP Ready requests to this service. Use this for readiness
 // probes or any checks that validate the service is ready to accept traffic.
 func (s *server) Ready(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// Check other stuff here like DB connectivity, health of dependent services, etc.
-	err := db.HealthCheck()
+	// Check other stuff here like KV connectivity, health of dependent services, etc.
+	err := kv.HealthCheck()
 	if err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		return

@@ -31,8 +31,8 @@ var srv *server
 // engine is the global WASM Engine
 var engine *WASMServer
 
-// db is the global reference for the DB Server.
-var db hord.Database
+// kv is the global reference for the K/V Store.
+var kv hord.Database
 
 // runCtx is a global context used to control shutdown of the application.
 var runCtx context.Context
@@ -79,7 +79,7 @@ func Run(c *viper.Viper) error {
 	defer scheduler.Stop()
 
 	// Config Reload
-	if cfg.GetInt("config_watch_interval") > 0 {
+	if cfg.GetInt("config_watch_interval") > 0 && cfg.GetBool("use_consul") {
 		_, err := scheduler.Add(&tasks.Task{
 			Interval: time.Duration(cfg.GetInt("config_watch_interval")) * time.Second,
 			TaskFunc: func() error {
@@ -113,26 +113,26 @@ func Run(c *viper.Viper) error {
 		}
 	}
 
-	// Setup the DB Connection
-	if cfg.GetBool("enable_db") {
-		db, err = redis.Dial(redis.Config{
-			Server:   cfg.GetString("db_server"),
-			Password: cfg.GetString("db_password"),
+	// Setup the KV Connection
+	if cfg.GetBool("enable_kvstore") {
+		kv, err = redis.Dial(redis.Config{
+			Server:   cfg.GetString("kv_server"),
+			Password: cfg.GetString("kv_password"),
 		})
 		if err != nil {
-			return fmt.Errorf("could not establish database connection - %s", err)
+			return fmt.Errorf("could not establish kvstore connection - %s", err)
 		}
-		defer db.Close()
+		defer kv.Close()
 
-		// Initialize the DB
-		err = db.Setup()
+		// Initialize the KV
+		err = kv.Setup()
 		if err != nil {
-			return fmt.Errorf("could not setup database - %s", err)
+			return fmt.Errorf("could not setup kvstore - %s", err)
 		}
 	}
 
-	if db == nil {
-		log.Infof("Database not configured, skipping")
+	if kv == nil {
+		log.Infof("KV Store not configured, skipping")
 	}
 
 	// Setup the HTTP Server
@@ -171,8 +171,8 @@ func Run(c *viper.Viper) error {
 			log.Errorf("Received errors when shutting down HTTP sessions %s", err)
 		}
 
-		// Close DB Sessions
-		db.Close()
+		// Close KV Sessions
+		kv.Close()
 
 		// Shutdown the app via runCtx
 		runCancel()

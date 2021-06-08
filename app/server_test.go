@@ -17,7 +17,7 @@ func TestHandlers(t *testing.T) {
 	cfg.Set("db_server", "redis:6379")
 	cfg.Set("enable_db", true)
 	cfg.Set("config_watch_interval", 5)
-	cfg.Set("wasm_module", "/example/go/module/tarmac_module.wasm")
+	cfg.Set("wasm_module", "/example/go/http_env/module/tarmac_module.wasm")
 	go func() {
 		err := Run(cfg)
 		if err != nil && err != ErrShutdown {

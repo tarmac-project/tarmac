@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"github.com/madflojo/testcerts"
 	"github.com/spf13/viper"
-	_ "github.com/spf13/viper/remote"
+	//	_ "github.com/spf13/viper/remote"
 	"net/http"
 	"os"
 	"testing"
@@ -20,7 +20,7 @@ func TestBadConfigs(t *testing.T) {
 	v.Set("enable_tls", false)
 	v.Set("listen_addr", "pandasdonotbelonghere")
 	v.Set("disable_logging", true)
-	v.Set("db_server", "redis:6379")
+	v.Set("kv_server", "redis:6379")
 	cfgs["invalid listener address"] = v
 
 	// Invalid TLS config
@@ -28,26 +28,26 @@ func TestBadConfigs(t *testing.T) {
 	v.Set("enable_tls", true)
 	v.Set("listen_addr", "0.0.0.0:8443")
 	v.Set("disable_logging", true)
-	v.Set("db_server", "redis:6379")
+	v.Set("kv_server", "redis:6379")
 	v.Set("cert_file", "/tmp/doesntexist")
 	v.Set("key_file", "/tmp/doesntexist")
 	cfgs["invalid TLS Config"] = v
 
-	// Invalid DB Address
+	// Invalid KV Address
 	v = viper.New()
 	v.Set("enable_tls", false)
 	v.Set("listen_addr", "0.0.0.0:8443")
 	v.Set("disable_logging", true)
-	v.Set("enable_db", true)
-	v.Set("db_server", "")
-	cfgs["invalid DB Address"] = v
+	v.Set("enable_kvstore", true)
+	v.Set("kv_server", "")
+	cfgs["invalid KV Address"] = v
 
 	// Invalid WASM path
 	v = viper.New()
 	v.Set("enable_tls", false)
 	v.Set("listen_addr", "0.0.0.0:8443")
 	v.Set("disable_logging", true)
-	v.Set("enable_db", false)
+	v.Set("enable_kvstore", false)
 	v.Set("wasm_module", "something-that-does-not-exist")
 	cfgs["invalid WASM path"] = v
 
@@ -75,10 +75,10 @@ func TestRunningServer(t *testing.T) {
 	cfg := viper.New()
 	cfg.Set("disable_logging", true)
 	cfg.Set("listen_addr", "localhost:9000")
-	cfg.Set("db_server", "redis:6379")
-	cfg.Set("enable_db", true)
+	cfg.Set("kv_server", "redis:6379")
+	cfg.Set("enable_kvstore", true)
 	cfg.Set("config_watch_interval", 5)
-	cfg.Set("use_consul", true)
+	cfg.Set("use_consul", false)
 	cfg.Set("debug", true)
 	cfg.Set("trace", true)
 	go func() {
@@ -103,11 +103,13 @@ func TestRunningServer(t *testing.T) {
 		}
 	})
 
-	t.Run("Check Scheduler is set", func(t *testing.T) {
-		if len(scheduler.Tasks()) == 0 {
-			t.Errorf("Expected scheduler to have at least one task")
-		}
-	})
+	/*
+		t.Run("Check Scheduler is set", func(t *testing.T) {
+			if len(scheduler.Tasks()) == 0 {
+				t.Errorf("Expected scheduler to have at least one task")
+			}
+		})
+	*/
 }
 
 func TestRunningTLSServer(t *testing.T) {
@@ -127,11 +129,10 @@ func TestRunningTLSServer(t *testing.T) {
 	cfg := viper.New()
 	cfg.Set("disable_logging", true)
 	cfg.Set("enable_tls", true)
-	cfg.Set("enable_consul", true)
 	cfg.Set("cert_file", "/tmp/cert")
 	cfg.Set("key_file", "/tmp/key")
-	cfg.Set("db_server", "redis:6379")
-	cfg.Set("enable_db", true)
+	cfg.Set("kv_server", "redis:6379")
+	cfg.Set("enable_kvstore", true)
 	cfg.Set("listen_addr", "localhost:9000")
 	cfg.Set("config_watch_interval", 1)
 	err = cfg.AddRemoteProvider("consul", "consul:8500", "tarmac/config")
@@ -177,7 +178,7 @@ func TestRunningTLSServer(t *testing.T) {
 	})
 
 	// Kill the DB sessions for unhappy path testing
-	db.Close()
+	kv.Close()
 
 	t.Run("Check Ready HTTP Handler with DB Stopped", func(t *testing.T) {
 		r, err := http.Get("https://localhost:9000/ready")

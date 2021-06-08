@@ -3,8 +3,8 @@
 
 build:
 	@echo "Building WASI Examples"
-	mkdir -p example/go/module/
-	tinygo build -o example/go/module/tarmac_module.wasm -target wasi ./example/go/main.go
+	mkdir -p example/go/http_env/module/
+	tinygo build -o example/go/http_env/module/tarmac_module.wasm -target wasi ./example/go/http_env/main.go
 
 tests:
 	@echo "Launching Tests in Docker Compose"

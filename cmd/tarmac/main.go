@@ -4,7 +4,7 @@ import (
 	"github.com/madflojo/tarmac/app"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	_ "github.com/spf13/viper/remote"
+	//	_ "github.com/spf13/viper/remote"
 )
 
 func main() {
@@ -21,6 +21,7 @@ func main() {
 	cfg.SetDefault("key_file", "/certs/key.key")
 	cfg.SetDefault("config_watch_interval", 15)
 	cfg.SetDefault("wasm_module", "/module/tarmac_module.wasm")
+	cfg.SetDefault("grpc_socket_path", "/grpc.sock")
 
 	// Load Config
 	cfg.AddConfigPath("./conf")

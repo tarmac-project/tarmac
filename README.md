@@ -89,8 +89,9 @@ When using Environment Variables, all configurations are prefixed with `APP_`. T
 | `APP_DEBUG` | `debug` | bool | Enable debug logging |
 | `APP_TRACE` | `trace` | bool | Enable trace logging | 
 | `APP_DISABLE_LOGGING` | `disable_logging` | bool | Disable all logging |
-| `APP_DB_SERVER` | `db_server` | string | Database server address |
-| `APP_DB_PASSWORD` | `db_password` | string | Database password | 
+| `APP_ENABLE_KVSTORE` | `enable_kvstore` | bool | Enable the KV Store |
+| `APP_KV_SERVER` | `kv_server` | string | KV Store server address |
+| `APP_KV_PASSWORD` |  kv_password` | string | KV Store password | 
 | `APP_CERT_FILE` | `cert_file` | string | Certificate File Path (i.e. `/some/path/cert.crt`) |
 | `APP_KEY_FILE` | `key_file` | string | Key File Path (i.e. `/some/path/cert.key`) 
 
