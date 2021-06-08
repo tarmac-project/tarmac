@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+option go_package = "github.com/madflojo/tarmac/proto/kvstore";
+
+package tarmac.kvstore;
+
+// Generic Status for meaningful replies
+message Status {
+  // Status Codes: 0 is OK anything else is an error
+  int32 code = 1;
+
+  // Long Description of status
+  string description = 2;
+}
+
+// Data is used as a return for Data lookup calls
+message Data {
+  // Data in byte array format
+  bytes data = 1;
+
+  // Request status message
+  Status status = 2;
+}
+
+// Fetch Data using key to lookup values
+message GetRequest{
+  // Lookup Key
+  string key = 1;
+}
+
+// Create/Update data stored under key
+message SetRequest {
+  // Lookup Key
+  string key = 1;
+
+  // Data in byte array format
+  bytes data = 2;
+}
+
+// Delete data under key
+message DeleteRequest {
+  // Lookup Key
+  string key = 1;
+}
+
+service KVStore {
+  // Get() will retrieve data from the Tarmac KV Store
+  rpc Get(GetRequest) returns (Data) {}
+  
+  // Set() will write data to the Tarmac KV Store
+  rpc Set(SetRequest) returns (Status) {}
+
+  // Delete will delete the key from the Tarmac KV Store
+  rpc Delete(DeleteRequest) returns (Status) {}
+}
