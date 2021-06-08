@@ -9,11 +9,11 @@ Using Web Assembly (WASM), Tarmac users can write their logic in many different 
 
 ## Tarmac vs. Functions as a Service
 
-Like other FaaS services, it's easy to use Tarmac to create either Functions or full Microservices. However, unlike FaaS platforms, Tarmac provides users with much more than an easy way to run a function inside a Docker container.
+Like other FaaS services, it's easy to use Tarmac to create either Functions or full Microservices. However, unlike FaaS platforms, as Web Assembly (WASM) & Web Assembly System Interface (WASI) matures, Tarmac will provide users with much more than an easy way to run a function inside a Docker container.
 
-By leveraging Web Assembly System Interface (WASI), Tarmac creates an isolated environment for running functions. But unlike FaaS platforms, Tarmac users will be able to import Tarmac functions.
+By leveraging Web Assembly System Interface (WASI), Tarmac creates an isolated environment for running functions. But unlike FaaS platforms, Tarmac users will be able to import Tarmac functions (still a work in progress, experimenting with gRPC currently).
 
-Like any other microservice framework, Tarmac will handle the complexities of Database Connections, Caching, Metrics, and Dynamic Configuration. Users can focus purely on the function logic and writing it in their favorite programming language.
+Like any other microservice framework, the goal is Tarmac will handle the complexities of Database Connections, Caching, Metrics, and Dynamic Configuration. Users can focus purely on the function logic and writing it in their favorite programming language.
 
 Tarmac aims to enable users to create robust and performant distributed services with the ease of writing serverless functions with the convenience of a standard microservices framework.
 
@@ -68,35 +68,4 @@ Once compiled, users can run Tarmac using the following command:
 $ docker run -p 8443:8443 -v /path/to/certs:/certs -v ./path/to/wasm-module:/module madflojo/tarmac
 ```
 
-Do pay attention to the volume mount and the `APP_WASM_MODULE` environment variable, as these are key to specifying what WASM module to execute.
-
-### Configuring Tarmac
-
-
-Tarmac supports multiple configuration sources from Environment Variables, a JSON file, or using HashiCorp Consul. All of these configuration options can also exist together to provide both static and dynamic configuration.
-
-When using Environment Variables, all configurations are prefixed with `APP_`. The list below will show both Environment and Consul/JSON format for configuration.
-
-| Environment Variable | Consul/JSON | Type | Description |
-|----------------------|-------------|------|-------------|
-| `APP_ENABLE_TLS` | `enable_tls` | bool | Enable the HTTPS Listener (default: `True`) |
-| `APP_LISTEN_ADDR` | `listen_addr` | string | Define the HTTP/HTTPS Listener address (default: `0.0.0.0:8443`) |
-| `APP_CONFIG_WATCH_INTERVAL` | `config_watch_interval` | integer | Frequency in seconds which Consul configuration will be refreshed (default: 15) |
-| `APP_USE_CONSUL` | `use_consul` | bool | Enable Consul based configuration (default: `False`) |
-| `APP_CONSUL_ADDR` | `consul_addr` | string | Consul address (i.e. `consul.example.com:8500`) |
-| `APP_CONSUL_KEYS_PREFIX` | `consul_keys_prefix` | string | Key path for app specific consul configuration |
-|| `from_consul` | bool | Indicator to reflect whether Consul config was loaded |
-| `APP_DEBUG` | `debug` | bool | Enable debug logging |
-| `APP_TRACE` | `trace` | bool | Enable trace logging | 
-| `APP_DISABLE_LOGGING` | `disable_logging` | bool | Disable all logging |
-| `APP_ENABLE_KVSTORE` | `enable_kvstore` | bool | Enable the KV Store |
-| `APP_KV_SERVER` | `kv_server` | string | KV Store server address |
-| `APP_KV_PASSWORD` |  kv_password` | string | KV Store password | 
-| `APP_CERT_FILE` | `cert_file` | string | Certificate File Path (i.e. `/some/path/cert.crt`) |
-| `APP_KEY_FILE` | `key_file` | string | Key File Path (i.e. `/some/path/cert.key`) 
-
-#### Consul Format
-
-When using Consul the `consul_keys_prefix` should be the path to a key with a JSON string as the value. For example, a key of `tarmac/config` will have a value of `{"from_consul":true}`.
-
-![](static/img/consul-example.png)
+Once running you can call the Tarmac service via `curl -v https://localhost:8443/`.
