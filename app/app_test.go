@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"github.com/madflojo/testcerts"
 	"github.com/spf13/viper"
-	//	_ "github.com/spf13/viper/remote"
+	_ "github.com/spf13/viper/remote"
 	"net/http"
 	"os"
 	"testing"

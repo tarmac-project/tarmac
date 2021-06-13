@@ -15,7 +15,7 @@ services:
       - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
       - "CONSUL_HTTP_ADDR=consul:8500"
       - "CONSUL_HTTP_SSL=false"
-      - "APP_WASM_MODULE=./testdata/http_env.wasm"
+      - "APP_WASM_MODULE=./testdata/tarmac_module.wasm"
     depends_on:
       - redis
       - consul
@@ -27,6 +27,7 @@ services:
     volumes:
       - "./coverage:/tmp/coverage"
       - "./example:/example"
+      - "./testdata:/testdata"
     environment:
       - "APP_ENABLE_TLS=false"
       - "APP_DB_SERVER=redis:6379"

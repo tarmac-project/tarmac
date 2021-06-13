@@ -18,12 +18,10 @@ services:
       - redis
       - consul
       - consulator
-    secrets:
-      - password
   redis:
     image: bitnami/redis:latest
     environment:
-      - "REDIS_PASSWORD=example"
+      - ALLOW_EMPTY_PASSWORD=yes
   consul:
     image: consul
     ports:
@@ -38,6 +36,3 @@ services:
     environment:
       - "CONSUL_HTTP_ADDR=consul:8500"
       - "CONSUL_HTTP_SSL=false"
-secrets:
-  password:
-    file: ./secret.txt

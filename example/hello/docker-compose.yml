@@ -7,5 +7,6 @@ services:
     environment:
       - "APP_ENABLE_TLS=false"
       - "APP_LISTEN_ADDR=0.0.0.0:8080"
+      - "APP_DEBUG=true"
     volumes:
       - "./module:/module"

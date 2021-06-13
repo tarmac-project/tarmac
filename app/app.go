@@ -10,6 +10,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/madflojo/hord"
 	"github.com/madflojo/hord/drivers/redis"
+	"github.com/madflojo/tarmac/wasm"
 	"github.com/madflojo/tasks"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -29,7 +30,7 @@ var (
 var srv *server
 
 // engine is the global WASM Engine
-var engine *WASMServer
+var engine *wasm.Server
 
 // kv is the global reference for the K/V Store.
 var kv hord.Database
@@ -185,13 +186,19 @@ func Run(c *viper.Viper) error {
 	srv.httpRouter.GET("/ready", srv.middleware(srv.Ready))
 
 	// Start WASM Engine
-	engine, err = NewWASMServer()
+	engine, err = wasm.NewServer(wasm.Config{
+		Callback: srv.CallbackRouter,
+	})
 	if err != nil {
 		return err
 	}
 
+	// Preload Modules
 	if cfg.GetString("wasm_module") != "" {
-		err = engine.LoadModule("http_handler", cfg.GetString("wasm_module"))
+		err = engine.LoadModule(wasm.ModuleConfig{
+			Name:     "default",
+			Filepath: cfg.GetString("wasm_module"),
+		})
 		if err != nil {
 			return err
 		}

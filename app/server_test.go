@@ -11,13 +11,13 @@ import (
 
 func TestHandlers(t *testing.T) {
 	cfg := viper.New()
-	cfg.Set("disable_logging", true)
-	cfg.Set("debug", false)
+	cfg.Set("disable_logging", false)
+	cfg.Set("debug", true)
 	cfg.Set("listen_addr", "localhost:9001")
 	cfg.Set("db_server", "redis:6379")
 	cfg.Set("enable_db", true)
 	cfg.Set("config_watch_interval", 5)
-	cfg.Set("wasm_module", "/example/go/http_env/module/tarmac_module.wasm")
+	cfg.Set("wasm_module", "/testdata/tarmac_module.wasm")
 	go func() {
 		err := Run(cfg)
 		if err != nil && err != ErrShutdown {
@@ -33,7 +33,7 @@ func TestHandlers(t *testing.T) {
 	t.Run("Simple Payload", func(t *testing.T) {
 		r, err := http.Post("http://localhost:9001/", "application/text", bytes.NewBuffer([]byte("Howdie")))
 		if err != nil {
-			t.Errorf("Unexpected error when making HTTP request - %s", err)
+			t.Fatalf("Unexpected error when making HTTP request - %s", err)
 		}
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when making HTTP request %d", r.StatusCode)
@@ -50,7 +50,7 @@ func TestHandlers(t *testing.T) {
 	t.Run("Do a Get", func(t *testing.T) {
 		r, err := http.Get("http://localhost:9001/")
 		if err != nil {
-			t.Errorf("Unexpected error when making HTTP request - %s", err)
+			t.Fatalf("Unexpected error when making HTTP request - %s", err)
 		}
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
@@ -60,7 +60,7 @@ func TestHandlers(t *testing.T) {
 	t.Run("No Payload", func(t *testing.T) {
 		r, err := http.Post("http://localhost:9001/", "application/text", bytes.NewBuffer([]byte("")))
 		if err != nil {
-			t.Errorf("Unexpected error when making HTTP request - %s", err)
+			t.Fatalf("Unexpected error when making HTTP request - %s", err)
 		}
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when making HTTP request %d", r.StatusCode)
