@@ -10,6 +10,6 @@ pub extern "C" fn wapc_init() {
 }
 
 fn hello_world(msg: &[u8]) -> CallResult {
-    let _res = host_call("default", "tarmac", "hello:callback", b"howdie")?;
+    let _res = host_call("default", "tarmac", "hello:callback", &msg.to_vec())?;
     Ok(msg.to_vec())
 }
