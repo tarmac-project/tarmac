@@ -4,7 +4,7 @@ import (
 	"github.com/madflojo/tarmac/app"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	//	_ "github.com/spf13/viper/remote"
+	_ "github.com/spf13/viper/remote"
 )
 
 func main() {

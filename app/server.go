@@ -1,11 +1,11 @@
 package app
 
 import (
-	"encoding/base64"
+	//	"encoding/base64"
+	"context"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"github.com/sirupsen/logrus"
-	wasmer "github.com/wasmerio/wasmer-go/wasmer"
 	"io/ioutil"
 	"net/http"
 )
@@ -77,16 +77,8 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 	}
 
-	// Create a runtime environment for the WASM module
-	env, err := wasmer.NewWasiStateBuilder("http_func").
-		Environment("REQUEST_TYPE", "http").
-		Environment("HTTP_METHOD", r.Method).
-		Environment("HTTP_PATH", r.URL.Path).
-		Environment("REMOTE_ADDR", r.RemoteAddr).
-		Environment("HTTP_PAYLOAD", base64.StdEncoding.EncodeToString(payload)).
-		CaptureStdout().
-		CaptureStderr().
-		Finalize()
+	// Fetch Module and run with payload
+	m, err := engine.Module("default")
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"method":         r.Method,
@@ -96,54 +88,10 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 			"content-length": r.ContentLength,
 		}).Debugf("Error loading wasi environment %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	// Import the module
-	obj, err := env.GenerateImportObject(engine.Store, engine.Module("http_handler").Module)
-	if err != nil {
-		log.WithFields(logrus.Fields{
-			"method":         r.Method,
-			"remote-addr":    r.RemoteAddr,
-			"http-protocol":  r.Proto,
-			"headers":        r.Header,
-			"content-length": r.ContentLength,
-		}).Debugf("Error importing object %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	// Create a WASM module instance
-	instance, err := wasmer.NewInstance(engine.Module("http_handler").Module, obj)
-	if err != nil {
-		log.WithFields(logrus.Fields{
-			"method":         r.Method,
-			"remote-addr":    r.RemoteAddr,
-			"http-protocol":  r.Proto,
-			"headers":        r.Header,
-			"content-length": r.ContentLength,
-		}).Debugf("Error creating wasm instance %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	// Export the HTTP Handler
-	handler, err := instance.Exports.GetFunction("HTTPHandler")
-	if err != nil {
-		log.WithFields(logrus.Fields{
-			"method":         r.Method,
-			"remote-addr":    r.RemoteAddr,
-			"http-protocol":  r.Proto,
-			"headers":        r.Header,
-			"content-length": r.ContentLength,
-		}).Debugf("Error exporting function %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
 	}
 
 	// Execute the WASM HTTP Handler
-	var code int
-	rsp, err := handler()
+	rsp, err := m.Run("request:handler", payload)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"method":         r.Method,
@@ -152,18 +100,20 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 			"headers":        r.Header,
 			"content-length": r.ContentLength,
 		}).Debugf("Error executing function %s", err)
-		return
-	}
-	code = int(rsp.(int32))
-
-	// If module returns an error print stderr
-	if code > 399 {
-		w.WriteHeader(code)
-		fmt.Fprintf(w, "%s", env.ReadStderr())
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	// Return status code and print stdout
-	w.WriteHeader(code)
-	fmt.Fprintf(w, "%s", env.ReadStdout())
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "%s", rsp)
+}
+
+func (s *server) CallbackRouter(ctx context.Context, binding, namespace, op string, payload []byte) ([]byte, error) {
+	log.WithFields(logrus.Fields{
+		"binding":   binding,
+		"namespace": namespace,
+		"function":  op,
+	}).Infof("CallbackRouter called with payload %s", payload)
+	return []byte(""), nil
 }

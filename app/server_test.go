@@ -11,13 +11,13 @@ import (
 
 func TestHandlers(t *testing.T) {
 	cfg := viper.New()
-	cfg.Set("disable_logging", true)
+	cfg.Set("disable_logging", false)
 	cfg.Set("debug", false)
 	cfg.Set("listen_addr", "localhost:9001")
 	cfg.Set("db_server", "redis:6379")
 	cfg.Set("enable_db", true)
 	cfg.Set("config_watch_interval", 5)
-	cfg.Set("wasm_module", "/example/go/http_env/module/tarmac_module.wasm")
+	cfg.Set("wasm_module", "/testdata/hello.wasm")
 	go func() {
 		err := Run(cfg)
 		if err != nil && err != ErrShutdown {
