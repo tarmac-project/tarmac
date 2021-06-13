@@ -158,7 +158,6 @@ func (m *Module) Run(handler string, payload []byte) ([]byte, error) {
 		if err != nil {
 			defer i.Close()
 		}
-		return
 	}()
 
 	r, err = i.Invoke(context.Background(), handler, payload)
