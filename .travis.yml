@@ -12,6 +12,6 @@ script:
   - gofmt -l ./ | grep -v vendor | wc -l | grep -q 0
   - go vet -v
   # Run Tests
-  - make tests clean
+  - make tests 
 after_success:
   - goveralls -coverprofile=coverage/coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
