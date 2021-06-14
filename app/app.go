@@ -10,6 +10,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/madflojo/hord"
 	"github.com/madflojo/hord/drivers/redis"
+	"github.com/madflojo/tarmac/callbacks"
 	"github.com/madflojo/tarmac/wasm"
 	"github.com/madflojo/tasks"
 	"github.com/sirupsen/logrus"
@@ -185,9 +186,22 @@ func Run(c *viper.Viper) error {
 	// Register Health Check Handler used for Readiness checks
 	srv.httpRouter.GET("/ready", srv.middleware(srv.Ready))
 
+	// Create WASM Callback Router
+	router := callbacks.New(callbacks.Config{
+		PreFunc: func(namespace, op string, data []byte) ([]byte, error) {
+			log.WithFields(logrus.Fields{
+				"namespace": namespace,
+				"function":  op,
+			}).Infof("CallbackRouter called with payload %s", data)
+			return []byte(""), nil
+		},
+	})
+
+	router.RegisterCallback("logging", "Debug", srv.LoggingDebug)
+
 	// Start WASM Engine
 	engine, err = wasm.NewServer(wasm.Config{
-		Callback: srv.CallbackRouter,
+		Callback: router.Callback,
 	})
 	if err != nil {
 		return err

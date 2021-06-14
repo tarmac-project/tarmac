@@ -1,7 +1,6 @@
 package app
 
 import (
-	"context"
 	"encoding/base64"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
@@ -170,11 +169,7 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 	fmt.Fprintf(w, "%s", rspPayload)
 }
 
-func (s *server) CallbackRouter(ctx context.Context, binding, namespace, op string, payload []byte) ([]byte, error) {
-	log.WithFields(logrus.Fields{
-		"binding":   binding,
-		"namespace": namespace,
-		"function":  op,
-	}).Infof("CallbackRouter called with payload %s", payload)
+func (s *server) LoggingDebug(payload []byte) ([]byte, error) {
+	log.WithFields(logrus.Fields{}).Debugf("Callback received with payload - %s", payload)
 	return []byte(""), nil
 }
