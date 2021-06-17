@@ -18,6 +18,12 @@ type server struct {
 
 	// httpRouter is used to store and access the HTTP Request Router.
 	httpRouter *httprouter.Router
+
+	// kvStore provides access to the key:value datastore callback functions for WASM Modules.
+	kvStore *kvStore
+
+	// logger provides access to the logging callback functions for WASM Modules.
+	logger *logger
 }
 
 // Health is used to handle HTTP Health requests to this service. Use this for liveness
@@ -79,7 +85,7 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	// Create Request type
-	req := tarmac.Request{
+	req := tarmac.ServerRequest{
 		Headers: map[string]string{
 			"REQUEST_TYPE": "http",
 			"HTTP_METHOD":  r.Method,
@@ -118,7 +124,7 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	// Execute the WASM HTTP Handler
-	var rsp tarmac.Response
+	var rsp tarmac.ServerResponse
 	rspData, err := m.Run("request:handler", reqData)
 	if err != nil {
 		log.WithFields(logrus.Fields{
@@ -160,16 +166,12 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 
-	if rsp.StatusCode == 0 {
-		rsp.StatusCode = 200
+	// Assume if no status code everything worked as expected
+	if rsp.Status.Code == 0 {
+		rsp.Status.Code = 200
 	}
 
 	// Return status code and print stdout
-	w.WriteHeader(rsp.StatusCode)
+	w.WriteHeader(rsp.Status.Code)
 	fmt.Fprintf(w, "%s", rspPayload)
-}
-
-func (s *server) LoggingDebug(payload []byte) ([]byte, error) {
-	log.WithFields(logrus.Fields{}).Debugf("Callback received with payload - %s", payload)
-	return []byte(""), nil
 }

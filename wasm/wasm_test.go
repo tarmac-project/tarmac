@@ -131,7 +131,7 @@ func TestWASMExecution(t *testing.T) {
 		t.Fatalf("Cannot find module - %s - %+v", err, s)
 	}
 
-	_, err = m.Run("request:handler", []byte("Hello"))
+	_, err = m.Run("request:handler", []byte(`{"headers":{},"payload":"aGVsbG8="}`))
 	if err != nil {
 		t.Fatalf("Could not execute the wasm function - %s", err)
 	}
