@@ -73,6 +73,7 @@ type KVStoreGetResponse struct {
 type KVStoreSet struct {
 	// Key is the index key used to store the data.
 	Key string `json:"key"`
+
 	// Data is the user-supplied key:value data. This field should contain a base64 encoded byte slice. Tarmac
 	// expects this field to base base64 encoded, and neglecting to do so will result in an error returned from the callback
 	// function.
