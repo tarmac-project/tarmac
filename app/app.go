@@ -140,6 +140,8 @@ func Run(c *viper.Viper) error {
 	// Setup the HTTP Server
 	srv = &server{
 		httpRouter: httprouter.New(),
+		kvStore:    &kvStore{},
+		logger:     &logger{},
 	}
 	srv.httpServer = &http.Server{
 		Addr:    cfg.GetString("listen_addr"),
@@ -197,7 +199,17 @@ func Run(c *viper.Viper) error {
 		},
 	})
 
-	router.RegisterCallback("logging", "Debug", srv.LoggingDebug)
+	// Setup KVStore Callbacks
+	router.RegisterCallback("kvstore", "get", srv.kvStore.Get)
+	router.RegisterCallback("kvstore", "set", srv.kvStore.Set)
+	router.RegisterCallback("kvstore", "delete", srv.kvStore.Delete)
+
+	// Setup Logger Callbacks
+	router.RegisterCallback("logger", "info", srv.logger.Info)
+	router.RegisterCallback("logger", "error", srv.logger.Error)
+	router.RegisterCallback("logger", "warn", srv.logger.Warn)
+	router.RegisterCallback("logger", "debug", srv.logger.Debug)
+	router.RegisterCallback("logger", "trace", srv.logger.Trace)
 
 	// Start WASM Engine
 	engine, err = wasm.NewServer(wasm.Config{
