@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 // server is used as an interface for managing the HTTP server.
@@ -87,12 +88,17 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 	// Create Request type
 	req := tarmac.ServerRequest{
 		Headers: map[string]string{
-			"REQUEST_TYPE": "http",
-			"HTTP_METHOD":  r.Method,
-			"HTTP_PATH":    r.URL.Path,
-			"REMOTE_ADDR":  r.RemoteAddr,
+			"request_type": "http",
+			"http_method":  r.Method,
+			"http_path":    r.URL.Path,
+			"remote_addr":  r.RemoteAddr,
 		},
 		Payload: base64.StdEncoding.EncodeToString(payload),
+	}
+
+	// Append Request Headers
+	for k := range r.Header {
+		req.Headers[strings.ToLower(k)] = r.Header.Get(k)
 	}
 
 	// Convert request to JSON payload
