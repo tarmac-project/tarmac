@@ -49,6 +49,9 @@ func (s *server) Ready(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 // them. e.g. Metrics, Logging...
 func (s *server) middleware(n httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		// Set the Tarmac server response header
+		w.Header().Set("Server", "tarmac")
+
 		// Log the basics
 		log.WithFields(logrus.Fields{
 			"method":         r.Method,
