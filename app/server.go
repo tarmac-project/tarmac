@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
-  "strings"
+	"strings"
 )
 
 // server is used as an interface for managing the HTTP server.
