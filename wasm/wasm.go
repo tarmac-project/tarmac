@@ -162,7 +162,7 @@ func (m *Module) Run(handler string, payload []byte) ([]byte, error) {
 
 	r, err = i.Invoke(context.Background(), handler, payload)
 	if err != nil {
-		return r, err
+		return r, fmt.Errorf("invocation of WASM module failed - %s", err)
 	}
 
 	return r, nil
