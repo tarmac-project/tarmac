@@ -36,7 +36,7 @@ pub extern "C" fn wapc_init() {
 // This function will accept the server request, log it, and echo back the payload.
 fn hello_world(msg: &[u8]) -> CallResult {
   // Perform a host callback to log the incoming request
-  let _res = host_call("tarmac", "logging", "debug", &msg.to_vec());
+  let _res = host_call("tarmac", "logger", "debug", &msg.to_vec());
 
   // Unmarshal the request
   let rq: ServerRequest = serde_json::from_slice(msg).unwrap();

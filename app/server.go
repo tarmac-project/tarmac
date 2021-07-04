@@ -134,8 +134,6 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 			"headers":        r.Header,
 			"content-length": r.ContentLength,
 		}).Debugf("Error executing function - %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
 	}
 
 	// Unmarshal WASM JSON response
@@ -163,6 +161,14 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 			"content-length": r.ContentLength,
 		}).Debugf("Error decoing base64 payload response from WASM module - %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// If Response indicates error print it out
+	if rsp.Status.Code > 399 {
+		// Return status code and print stdout
+		w.WriteHeader(rsp.Status.Code)
+		fmt.Fprintf(w, "%s", rsp.Status.Status)
 		return
 	}
 
