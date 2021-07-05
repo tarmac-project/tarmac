@@ -1,5 +1,5 @@
-// Hello is a small, simple Go program that is an example WASM module for Tarmac. This program will accept a Tarmac
-// server request, log it, and echo back the payload.
+// Tac is a small, simple Go program that is an example WASM module for Tarmac. This program will accept a Tarmac
+// server request, log it, and echo back the payload in reverse.
 package main
 
 import (
@@ -13,13 +13,13 @@ func main() {
 	// Tarmac uses waPC to facilitate WASM module execution. Modules must register their custom handlers under the
 	// "request:handler" function name.
 	wapc.RegisterFunctions(wapc.Functions{
-		"request:handler": HelloWorld,
+		"request:handler": Handler,
 	})
 }
 
-// HelloWorld is the custom Tarmac Handler function that will receive a tarmac.ServerRequest JSON payload and
+// Handler is the custom Tarmac Handler function that will receive a tarmac.ServerRequest JSON payload and
 // must return a tarmac.ServerResponse JSON payload along with a nil error.
-func HelloWorld(payload []byte) ([]byte, error) {
+func Handler(payload []byte) ([]byte, error) {
 	// Parse the JSON request
 	rq, err := fastjson.ParseBytes(payload)
 	if err != nil {
