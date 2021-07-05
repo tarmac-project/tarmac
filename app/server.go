@@ -134,7 +134,7 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 
 	// Execute the WASM HTTP Handler
 	var rsp tarmac.ServerResponse
-	rspData, err := m.Run("request:handler", reqData)
+	rspData, err := m.Run("http:"+r.Method, reqData)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"method":         r.Method,
