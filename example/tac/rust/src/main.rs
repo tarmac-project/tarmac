@@ -31,7 +31,34 @@ fn main() {}
 
 #[no_mangle]
 pub extern "C" fn wapc_init() {
-  register_function("request:handler", handler);
+  // Add Handler for the GET request
+  register_function("http:GET", fail_handler);
+  // Add Handler for the POST request
+  register_function("http:POST", handler);
+  // Add Handler for the PUT request
+  register_function("http:PUT", handler);
+  // Add Handler for the DELETE request
+  register_function("http:DELETE", fail_handler);
+}
+
+// fail_handler will accept the server request and return a server response
+// which rejects the client request
+fn fail_handler(_msg: &[u8]) -> CallResult {
+  // Create the response
+  let rsp = ServerResponse {
+      status: Status {
+        code: 503,
+        status: "Not Implemented".to_string(),
+      },
+      payload: "".to_string(),
+      headers: HashMap::new(),
+  };
+
+  // Marshal the response
+  let r = serde_json::to_vec(&rsp).unwrap();
+
+  // Return JSON byte array
+  Ok(r)
 }
 
 // handler is a simple example of a Tarmac WASM module written in Rust.
