@@ -10,15 +10,28 @@ import (
 
 func main() {
 	// Tarmac uses waPC to facilitate WASM module execution. Modules must register their custom handlers under the
-	// "request:handler" function name.
+	// appropriate method as shown below.
 	wapc.RegisterFunctions(wapc.Functions{
-		"request:handler": HelloWorld,
+		// Register a GET request handler
+		"http:GET": NoHandler,
+		// Register a POST request handler
+		"http:POST": Handler,
+		// Register a PUT request handler
+		"http:PUT": Handler,
+		// Register a DELETE request handler
+		"http:DELETE": NoHandler,
 	})
 }
 
-// HelloWorld is the custom Tarmac Handler function that will receive a tarmac.ServerRequest JSON payload and
+// NoHandler is a custom Tarmac Handler function that will return a tarmac.ServerResponse JSON that denies
+// the client request.
+func NoHandler(payload []byte) ([]byte, error) {
+	return []byte(`{"status":{"code":503,"status":"Not Implemented"}}`), nil
+}
+
+// Handler is the custom Tarmac Handler function that will receive a tarmac.ServerRequest JSON payload and
 // must return a tarmac.ServerResponse JSON payload along with a nil error.
-func HelloWorld(payload []byte) ([]byte, error) {
+func Handler(payload []byte) ([]byte, error) {
 	// Perform a host callback to log the incoming request
 	_, err := wapc.HostCall("tarmac", "logger", "debug", payload)
 	if err != nil {
