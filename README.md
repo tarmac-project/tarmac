@@ -1,31 +1,32 @@
-# Tarmac - Microservice Framework for WASM
+# Tarmac - Framework for building distributed services with Web Assembly
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/madflojo/tarmac)](https://pkg.go.dev/github.com/madflojo/tarmac)
 [![Go Report Card](https://goreportcard.com/badge/github.com/madflojo/tarmac)](https://goreportcard.com/report/github.com/madflojo/tarmac)
+[![Documentation](https://img.shields.io/badge/Docs-latest-blue)](https://madflojo.gitbook.io/tarmac/)
 
-Tarmac is a framework for building distributed services for any language. Like many other distributed service frameworks or microservice toolkits, Tarmac abstracts the complexities of building distributed systems. Except unlike other toolkits, Tarmac is language agnostic.
+Tarmac is a unique framework designed for the next generation of distributed systems. At its core, like many other microservice frameworks, Tarmac is focused on abstracting the complexities of building cloud-native services allowing users to focus more on business logic and less on boilerplate code. 
 
-Using Web Assembly (WASM), Tarmac users can write their logic in many different languages like Rust, Go, Javascript, or even C and run it using the same framework.
+What makes Tarmac unique is that, unlike most microservice frameworks, Tarmac is language agnostic. Using Web Assembly (WASM), Tarmac users can write their business logic in many different languages such as Rust, Go, Javascript, or even Swift; and run it all using the same core framework.
 
-## Tarmac vs. Functions as a Service
+## Tarmac vs. Serverless Functions
 
-Like other FaaS services, it's easy to use Tarmac to create either Functions or full Microservices. However, unlike FaaS platforms, as Web Assembly (WASM) & Web Assembly System Interface (WASI) matures, Tarmac will provide users with much more than an easy way to run a function inside a Docker container.
+Tarmac shares many traits with Serverless Functions and Functions as a Service (FaaS) platforms. Tarmac makes it easy for developers to deploy functions and microservices without writing repetitive boilerplate code. As a developer, you can create a production-ready service in less than 100 lines of code.
 
-By leveraging Web Assembly System Interface (WASI), Tarmac creates an isolated environment for running functions. But unlike FaaS platforms, Tarmac users will be able to import Tarmac functions (still a work in progress).
+But Tarmac takes Serverless Functions further. In general, FaaS platforms provide a simple runtime for user code. If a function requires any dependency (i.e., a Database), the developer-provided function code must maintain the database connectivity and query calls.
 
-Like any other microservice framework, the goal is Tarmac will handle the complexities of Database Connections, Caching, Metrics, and Dynamic Configuration. Users can focus purely on the function logic and writing it in their favorite programming language.
+Using the power of Web Assembly, Tarmac not only provides functions a secure sandboxed runtime environment, but it also provides abstractions that developers can use to interact with platform capabilities such as Databases, Caching, Metrics, and even Dynamic Configuration. 
 
-Tarmac aims to enable users to create robust and performant distributed services with the ease of writing serverless functions with the convenience of a standard microservices framework.
+In many ways, Tarmac is more akin to a microservices framework with the developer experience of a FaaS platform.
 
 ## Not ready for Production
 
-At the moment, Tarmac is Experimental, and interfaces will change; new features will come. But if you are interested in WASM and want to write a simple Microservice, Tarmac will work.
-
-Of course, Contributions are also welcome.
+At the moment, Tarmac is Experimental, and interfaces will change; new features will come. But if you are interested in WASM and want to write a simple Function, Tarmac will work.
 
 ## Getting Started with Tarmac
 
-At the moment, Tarmac can run WASI-generated WASM code. However, the serverless function code must follow a pre-defined function signature with Tarmac executing a defined `request:handler` function.
+At the moment, Tramac is executing WASM functions or "Tarmac Modules" by executing a defined set of function signatures. When Tarmac receives an HTTP GET request, it will call the function's registered under the `http:GET` signature.
+
+As part of the Tarmac Module, users must register their functions using the pre-defined function signatures.
 
 To understand this better, take a look at our simple example written in Rust (found in [example/](example/)).
 
@@ -91,19 +92,19 @@ fn hello_world(msg: &[u8]) -> CallResult {
 }
 ```
 
-Tarmac passes the HTTP Context and Payload to the WASM guest via the incoming `msg`. The `msg` is a JSON which contains Headers and a Payload which is Base64 encoded but otherwise untouched.
+Tarmac passes the HTTP Context and Payload to the WASM function via the incoming `msg`. The `msg` is a JSON which contains Headers and a Payload which is Base64 encoded but otherwise untouched.
 
 To compile the example above, run:
 
 ```shell
-$ cd example/hello
+$ cd example/tac/rust
 $ make build
 ```
 
 Once compiled, users can run Tarmac using the following command:
 
 ```shell
-$ docker run -p 8443:8443 -v /path/to/certs:/certs -v ./path/to/wasm-module:/module madflojo/tarmac
+$ docker run -p 8443:8443 -v /path/to/certs:/certs -v ./module:/module madflojo/tarmac
 ```
 
 Once running you can call the Tarmac service via `curl -v https://localhost:8443/`.
