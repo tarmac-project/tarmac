@@ -48,7 +48,7 @@ func TestBadConfigs(t *testing.T) {
 	v.Set("listen_addr", "0.0.0.0:8443")
 	v.Set("disable_logging", true)
 	v.Set("enable_kvstore", false)
-	v.Set("wasm_module", "something-that-does-not-exist")
+	v.Set("wasm_function", "something-that-does-not-exist")
 	cfgs["invalid WASM path"] = v
 
 	// Loop through bad configs, creating sub-tests as we go

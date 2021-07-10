@@ -24,14 +24,14 @@ At the moment, Tarmac is Experimental, and interfaces will change; new features 
 
 ## Getting Started with Tarmac
 
-At the moment, Tramac is executing WASM functions or "Tarmac Modules" by executing a defined set of function signatures. When Tarmac receives an HTTP GET request, it will call the function's registered under the `http:GET` signature.
+At the moment, Tramac is executing WASM functions by executing a defined set of function signatures. When Tarmac receives an HTTP GET request, it will call the function's registered under the `http:GET` signature.
 
-As part of the Tarmac Module, users must register their functions using the pre-defined function signatures.
+As part of the WASM function, users must register their functions using the pre-defined function signatures.
 
 To understand this better, take a look at our simple example written in Rust (found in [example/](example/)).
 
 ```rust
-// Tac is a small, simple Rust program that is an example WASM module for Tarmac.
+// Tac is a small, simple Rust program that is an example WASM function for Tarmac.
 // This program will accept a Tarmac server request, log it, and echo back the payload
 // but with the payload reversed.
 extern crate wapc_guest as guest;
@@ -94,7 +94,7 @@ fn fail_handler(_msg: &[u8]) -> CallResult {
   Ok(r)
 }
 
-// handler is a simple example of a Tarmac WASM module written in Rust.
+// handler is a simple example of a Tarmac WASM function written in Rust.
 // This function will accept the server request, log it, and echo back the payload
 // but with the payload reversed.
 fn handler(msg: &[u8]) -> CallResult {
@@ -141,7 +141,7 @@ $ make build
 Once compiled, users can run Tarmac using the following command:
 
 ```shell
-$ docker run -p 8443:8443 -v /path/to/certs:/certs -v ./module:/module madflojo/tarmac
+$ docker run -p 8443:8443 -v /path/to/certs:/certs -v ./functions:/functions madflojo/tarmac
 ```
 
-Once running you can call the Tarmac service via `curl -v https://localhost:8443/`.
+Once running you can call the Tarmac service via `curl -v --data "Tarmac Example" https://localhost:8443/`.

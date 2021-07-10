@@ -27,3 +27,4 @@ target/
 
 # Tarmac WASM Module Directory
 module/
+functions/
