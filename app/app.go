@@ -220,10 +220,10 @@ func Run(c *viper.Viper) error {
 	}
 
 	// Preload Modules
-	if cfg.GetString("wasm_module") != "" {
+	if cfg.GetString("wasm_function") != "" {
 		err = engine.LoadModule(wasm.ModuleConfig{
 			Name:     "default",
-			Filepath: cfg.GetString("wasm_module"),
+			Filepath: cfg.GetString("wasm_function"),
 		})
 		if err != nil {
 			return err

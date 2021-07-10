@@ -17,7 +17,7 @@ func TestHandlers(t *testing.T) {
 	cfg.Set("db_server", "redis:6379")
 	cfg.Set("enable_db", true)
 	cfg.Set("config_watch_interval", 5)
-	cfg.Set("wasm_module", "/testdata/tarmac_module.wasm")
+	cfg.Set("wasm_function", "/testdata/tarmac.wasm")
 	go func() {
 		err := Run(cfg)
 		if err != nil && err != ErrShutdown {
@@ -52,7 +52,7 @@ func TestHandlers(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Unexpected error when making HTTP request - %s", err)
 		}
-		if r.StatusCode != 200 {
+		if r.StatusCode != 503 {
 			t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
 		}
 	})

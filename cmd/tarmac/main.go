@@ -20,7 +20,7 @@ func main() {
 	cfg.SetDefault("cert_file", "/certs/cert.crt")
 	cfg.SetDefault("key_file", "/certs/key.key")
 	cfg.SetDefault("config_watch_interval", 15)
-	cfg.SetDefault("wasm_module", "/module/tarmac_module.wasm")
+	cfg.SetDefault("wasm_function", "/functions/tarmac.wasm")
 	cfg.SetDefault("grpc_socket_path", "/grpc.sock")
 
 	// Load Config

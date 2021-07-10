@@ -21,6 +21,7 @@ When using Environment Variables, all configurations are prefixed with `APP_`. T
 | `APP_KV_PASSWORD` |  kv_password` | string | KV Store password | 
 | `APP_CERT_FILE` | `cert_file` | string | Certificate File Path (i.e. `/some/path/cert.crt`) |
 | `APP_KEY_FILE` | `key_file` | string | Key File Path (i.e. `/some/path/cert.key`) 
+| `APP_WASM_FUNCTION` | `wasm_function` | string | Path and Filename of the WASM Function to execute (Default: `/functions/tarmac.wasm`) |
 
 #### Consul Format
 

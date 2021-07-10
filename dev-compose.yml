@@ -15,7 +15,7 @@ services:
       - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
       - "CONSUL_HTTP_ADDR=consul:8500"
       - "CONSUL_HTTP_SSL=false"
-      - "APP_WASM_MODULE=./testdata/tarmac_module.wasm"
+      - "APP_WASM_FUNCTION=./testdata/tarmac.wasm"
     depends_on:
       - redis
       - consul

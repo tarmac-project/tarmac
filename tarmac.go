@@ -1,14 +1,14 @@
 /*
-Package tarmac is a client package for WASM modules running within a Tarmac server.
+Package tarmac is a client package for WASM functions running within a Tarmac server.
 
 This package provides user-friendly functions that wrap the Web Assembly Procedure Call (waPC) based functions of
-Tarmac. Guest WASM modules running inside Tarmac can use this library to call back the Tarmac host and perform
+Tarmac. Guest WASM functions running inside Tarmac can use this library to call back the Tarmac host and perform
 host-level actions such as storing data within the database, logging specific data, or looking up configurations.
 
 */
 package tarmac
 
-// ServerRequest is used to create the Payload JSON sent to Tarmac WASM modules for incoming requests. A
+// ServerRequest is used to create the Payload JSON sent to Tarmac WASM functions for incoming requests. A
 // "request:handler" function will recieve this Request type in JSON format and will need to parse it accordingly.
 type ServerRequest struct {
 
@@ -20,7 +20,7 @@ type ServerRequest struct {
 	Payload string `json:"payload"`
 }
 
-// ServerResponse is used to create a Response Payload sent from Tarmac WASM modules to the Tarmac host. A
+// ServerResponse is used to create a Response Payload sent from Tarmac WASM functions to the Tarmac host. A
 // "request:handler" function will return this Response type in JSON format. The host will parse it accordingly and use
 // the response details to reply to clients.
 type ServerResponse struct {

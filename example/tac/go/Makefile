@@ -1,9 +1,9 @@
-## Makefile for Go example for Tarmac WASM modules
+## Makefile for Go example for Tarmac WASM functions
 
 build:
-	mkdir -p module
+	mkdir -p functions
 	## Run TinyGo build via Docker because waPC requires a <0.18.0 version of TinyGo to work right
-	docker run -v `pwd`/:/build -w /build tinygo/tinygo:0.17.0 tinygo build -o /build/module/tarmac_module.wasm -target wasi /build/main.go
+	docker run -v `pwd`/:/build -w /build tinygo/tinygo:0.17.0 tinygo build -o /build/functions/tarmac.wasm -target wasi /build/main.go
 
 docker-compose:
 	docker compose up
