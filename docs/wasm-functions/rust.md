@@ -4,7 +4,7 @@ description: Creating a WASM Function in Rust.
 
 # Rust
 
-Web Assembly (WASM) support is a first-class feature in Rust, making Rust an excellent language to write WASM functions for Tarmac.
+Web Assembly \(WASM\) support is a first-class feature in Rust, making Rust an excellent language to write WASM functions for Tarmac.
 
 This guide will walk users through creating a WASM function for Tarmac in the Rust language. This walkthrough assumes there is some familiarity with the Rust tooling and language to start.
 
@@ -16,7 +16,7 @@ We will need to begin with a new project folder, creating the `src/` directory. 
 fn main() {}
 ```
 
-Tarmac internally uses a Web Assembly Procedure Calls (waPC) runtime, which means all WASM functions running within Tarmac must import and use a waPC compliant library.
+Tarmac internally uses a Web Assembly Procedure Calls \(waPC\) runtime, which means all WASM functions running within Tarmac must import and use a waPC compliant library.
 
 ```rust
 extern crate wapc_guest as guest;
@@ -50,7 +50,6 @@ pub extern "C" fn wapc_init() {
 }
 ```
 
-
 In the example above, we have registered the `handler()` function under two Tarmac routes; `http:POST` and `http:PUT`. When Tarmac receives an HTTP POST request for this WASM function, it will execute the handler function as defined. If we wanted this function to be used for HTTP GET requests, we could add another line registering it under `http:GET`.
 
 With our handler function now registered, we must create a basic version of this handler for Tarmac to call.
@@ -59,7 +58,7 @@ With our handler function now registered, we must create a basic version of this
 fn handler(msg: &[u8]) -> CallResult {}
 ```
 
-As we can see from the example above, the handler input a slice of 8-bit unsigned integers, a raw Server Request JSON. And a return value of CallResult, which expects a Server Reply JSON back. The Server Request and Server Reply JSON are essential as they enable the Tarmac server to provide the WASM function with request context and the WASM function to provide Tarmac with how to handle the request. To understand more about Server Request and Server Response, refer to our Inputs & Outputs documentation.
+As we can see from the example above, the handler input a slice of 8-bit unsigned integers, a raw Server Request JSON. And a return value of CallResult, which expects a Server Reply JSON back. The Server Request and Server Reply JSON are essential as they enable the Tarmac server to provide the WASM function with request context and the WASM function to provide Tarmac with how to handle the request. To understand more about Server Request and Server Response, refer to our [Inputs & Outputs](inputs-and-outputs.md) documentation.
 
 ## Adding Logic
 
@@ -158,7 +157,7 @@ We will use the Host Callback to create a Trace log entry of the incoming Server
   let _res = host_call("tarmac", "logger", "trace", &msg.to_vec());
 ```
 
-The Callbacks documentation section explains each available Host Callback and the various actions available to WASM functions.
+The [Callbacks](../callback-functions/callbacks.md) documentation section explains each available Host Callback and the various actions available to WASM functions.
 
 ## Full WASM function
 
@@ -267,13 +266,13 @@ fn handler(msg: &[u8]) -> CallResult {
 
 Now that our function is ready, we must compile our Rust code into a `.wasm` file. To do this, we will need to create our Cargo manifest and build the project.
 
-```console
+```text
 $ cargo init
 ```
 
 Within the `Cargo.toml` file, we must specify the different packages used in our WASM function.
 
-```toml
+```text
 [package]
 name = "hello"
 version = "0.1.0"
@@ -291,13 +290,13 @@ base64 = "0.13.0"
 
 With our manifest defined, we can now build our module.
 
-```console
+```text
 $ cargo build --target wasm32-unknown-unknown --release
 ```
 
 After the code build completes, we will copy the `.wasm` file into a directory Tarmac can use to run.
 
-```console
+```text
 $ mkdir -p functions
 $ cp target/wasm32-unknown-unknown/release/hello.wasm functions/tarmac.wasm
 ```
@@ -306,17 +305,17 @@ $ cp target/wasm32-unknown-unknown/release/hello.wasm functions/tarmac.wasm
 
 We are now ready to run our WASM function via Tarmac. To make this process easier, we will be using Docker to execute Tarmac. It is not necessary to use Docker with Tarmac as it can run outside of Docker as well.
 
-```console
+```text
 $ docker run -p 8080:8080 \
   -e "APP_ENABLE_TLS=false" -e "APP_LISTEN_ADDR=0.0.0.0:8080" \
   -v ./functions:/functions madflojo/tarmac
 ```
 
-In the above command, we pass two environment variables to the container using the -e flag. These environment variables will tell Tarmac to use HTTP rather than HTTPS, which is the default. For additional configuration options, check out the Configuration documentation.
+In the above command, we pass two environment variables to the container using the -e flag. These environment variables will tell Tarmac to use HTTP rather than HTTPS, which is the default. For additional configuration options, check out the [Configuration](../running-tarmac/configuration.md) documentation.
 
 With Tarmac now running, we can access our WASM function using any HTTP Client such as `curl`.
 
-```console
+```text
 $ curl -v --data "Tarmac Example" http://localhost:8080
 ```
 
