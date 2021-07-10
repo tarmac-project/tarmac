@@ -1,8 +1,10 @@
----
-description: Framework for building distributed services with Web Assembly
----
-
 # Tarmac
+
+Framework for building distributed services with Web Assembly
+
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/madflojo/tarmac)](https://pkg.go.dev/github.com/madflojo/tarmac)
+[![Go Report Card](https://goreportcard.com/badge/github.com/madflojo/tarmac)](https://goreportcard.com/report/github.com/madflojo/tarmac)
+[![Documentation](https://img.shields.io/badge/Docs-latest-blue)](https://madflojo.gitbook.io/tarmac/)
 
 Tarmac is a unique framework designed for the next generation of distributed systems. At its core, like many other microservice frameworks, Tarmac is focused on abstracting the complexities of building cloud-native services allowing users to focus more on business logic and less on boilerplate code. 
 
