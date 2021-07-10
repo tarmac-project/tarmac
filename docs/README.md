@@ -8,13 +8,13 @@ Framework for building distributed services with Web Assembly
 
 Tarmac is a unique framework designed for the next generation of distributed systems. At its core, like many other microservice frameworks, Tarmac is focused on abstracting the complexities of building cloud-native services allowing users to focus more on business logic and less on boilerplate code. 
 
-What makes Tarmac unique is that, unlike most microservice frameworks, Tarmac is language agnostic. Using Web Assembly \(WASM\), Tarmac users can write their business logic in many different languages such as Rust, Go, Javascript, or even Swift; and run it all using the same core framework.
+What makes Tarmac unique is that, unlike most microservice frameworks, Tarmac is language agnostic. Using Web Assembly (WASM), Tarmac users can write their business logic in many different languages such as Rust, Go, Javascript, or even Swift; and run it all using the same core framework.
 
 ## Tarmac vs. Serverless Functions
 
 Tarmac shares many traits with Serverless Functions and Functions as a Service \(FaaS\) platforms. Tarmac makes it easy for developers to deploy functions and microservices without writing repetitive boilerplate code. As a developer, you can create a production-ready service in less than 100 lines of code.
 
-‌But Tarmac takes Serverless Functions further. In general, FaaS platforms provide a simple runtime for user code. If a function requires any dependency \(i.e., a Database\), the developer-provided function code must maintain the database connectivity and query calls.
+But Tarmac takes Serverless Functions further. In general, FaaS platforms provide a simple runtime for user code. If a function requires any dependency (i.e., a Database), the developer-provided function code must maintain the database connectivity and query calls.
 
 Using the power of Web Assembly, Tarmac not only provides functions a secure sandboxed runtime environment, but it also provides abstractions that developers can use to interact with platform capabilities such as Databases, Caching, Metrics, and even Dynamic Configuration. 
 
@@ -26,10 +26,10 @@ At the moment, Tramac is executing WASM functions by executing a defined set of 
 
 As part of the WASM Function, users must register their handlers using the pre-defined function signatures.
 
-To understand this better, look at one of our simple examples written in Rust \(found in [example/](example/)\).
+To understand this better, look at one of our simple examples written in Rust (found in [example/](example/)).
 
 ```rust
-// Tac is a small, simple Rust program that is an example WASM module for Tarmac.
+// Tac is a small, simple Rust program that is an example WASM function for Tarmac.
 // This program will accept a Tarmac server request, log it, and echo back the payload
 // but with the payload reversed.
 extern crate wapc_guest as guest;
@@ -92,7 +92,7 @@ fn fail_handler(_msg: &[u8]) -> CallResult {
   Ok(r)
 }
 
-// handler is a simple example of a Tarmac WASM module written in Rust.
+// handler is a simple example of a Tarmac WASM function written in Rust.
 // This function will accept the server request, log it, and echo back the payload
 // but with the payload reversed.
 fn handler(msg: &[u8]) -> CallResult {
@@ -131,17 +131,23 @@ Tarmac passes the HTTP Context and Payload to the WASM function via the incoming
 
 To compile the example above, run:
 
-```text
+```console
 $ cd example/tac/rust
 $ make build
 ```
 
 Once compiled, users can run Tarmac via Docker using the following command:
 
-```text
-$ docker run -p 8443:8443 -v /path/to/certs:/certs \
--v ./path/to/wasm-module:/module madflojo/tarmac
+```console
+$ docker run -p 8080:8080 \
+  -e "APP_ENABLE_TLS=false" -e "APP_LISTEN_ADDR=0.0.0.0:8080" \
+  -v ./functions:/functions madflojo/tarmac
 ```
 
-Once running, users can call the Tarmac service via `curl -v https://localhost:8443/`.
+With Tarmac now running, we can access our WASM function using any HTTP Client such as `curl`.
+
+```console
+$ curl -v --data "Tarmac Example" http://localhost:8080
+
+```
 
