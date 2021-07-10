@@ -28,3 +28,6 @@ target/
 # Tarmac WASM Module Directory
 module/
 functions/
+
+# Mac stuff
+.DS_Store
