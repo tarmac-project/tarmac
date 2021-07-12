@@ -15,7 +15,7 @@ Critical errors within the system.
 ```golang
 _, err := wapc.HostCall("tarmac", "logger", "error", []byte("This is the data that should be logged"))
 ```
-### Interface Details:
+### Interface Details
 
 | Namespace | Capability | Function | Input | Output |
 | --------- | ---------- | -------- | ----- | ------ |
@@ -28,7 +28,7 @@ Non-critical errors within the system.
 ```golang
 _, err := wapc.HostCall("tarmac", "logger", "warn", []byte("This is the data that should be logged"))
 ```
-### Interface Details:
+### Interface Details
 
 | Namespace | Capability | Function | Input | Output |
 | --------- | ---------- | -------- | ----- | ------ |
@@ -41,7 +41,7 @@ Informational logs.
 ```golang
 _, err := wapc.HostCall("tarmac", "logger", "info", []byte("This is the data that should be logged"))
 ```
-### Interface Details:
+### Interface Details
 
 | Namespace | Capability | Function | Input | Output |
 | --------- | ---------- | -------- | ----- | ------ |
@@ -54,7 +54,7 @@ Request level errors & informational logs. Disabled by default, calls to Debug l
 ```golang
 _, err := wapc.HostCall("tarmac", "logger", "debug", []byte("This is the data that should be logged"))
 ```
-### Interface Details:
+### Interface Details
 
 | Namespace | Capability | Function | Input | Output |
 | --------- | ---------- | -------- | ----- | ------ |
@@ -68,7 +68,7 @@ Low-level details of execution. Disabled by default, calls to Trace logging are 
 _, err := wapc.HostCall("tarmac", "logger", "trace", []byte("This is the data that should be logged"))
 ```
 
-### Interface Details:
+### Interface Details
 
 | Namespace | Capability | Function | Input | Output |
 | --------- | ---------- | -------- | ----- | ------ |

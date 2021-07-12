@@ -13,7 +13,7 @@ The Get function provides users with the ability to fetch data using the specifi
 ```golang
 _, err := wapc.HostCall("tarmac", "kvstore", "get", KVStoreGetJSON)
 ```
-### Interface Details:
+### Interface Details
 
 | Namespace | Capability | Function | Input | Output |
 | --------- | ---------- | -------- | ----- | ------ |
@@ -52,7 +52,7 @@ The Set function provides users with the ability to store data within the Key:Va
 ```golang
 _, err := wapc.HostCall("tarmac", "kvstore", "set", KVStoreSetJSON)
 ```
-### Interface Details:
+### Interface Details
 
 | Namespace | Capability | Function | Input | Output |
 | --------- | ---------- | -------- | ----- | ------ |
@@ -91,7 +91,7 @@ The Delete function provides users with the ability to delete data stored within
 ```golang
 _, err := wapc.HostCall("tarmac", "kvstore", "delete", KVStoreDeleteJSON)
 ```
-### Interface Details:
+### Interface Details
 
 | Namespace | Capability | Function | Input | Output |
 | --------- | ---------- | -------- | ----- | ------ |
