@@ -156,6 +156,8 @@ func Run(c *viper.Viper) error {
 		default:
 			return fmt.Errorf("unknown kvstore specified - %s", cfg.GetString("kvstore_type"))
 		}
+
+		// Clean up KV Store connections on shutdown
 		defer kv.Close()
 
 		// Initialize the KV
@@ -201,17 +203,7 @@ func Run(c *viper.Viper) error {
 		s := <-trap
 		log.Infof("Received shutdown signal %s", s)
 
-		// Shutdown the HTTP Server
-		err := srv.httpServer.Shutdown(context.Background())
-		if err != nil {
-			log.Errorf("Received errors when shutting down HTTP sessions %s", err)
-		}
-
-		// Close KV Sessions
-		kv.Close()
-
-		// Shutdown the app via runCtx
-		runCancel()
+		defer Stop()
 	}()
 
 	// Register Health Check Handler used for Liveness checks

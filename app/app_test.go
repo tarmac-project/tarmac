@@ -35,7 +35,7 @@ func TestBadConfigs(t *testing.T) {
 	v.Set("key_file", "/tmp/doesntexist")
 	cfgs["invalid TLS Config"] = v
 
-	// Invalid KV Address
+	// Invalid Redis Address
 	v = viper.New()
 	v.Set("enable_tls", false)
 	v.Set("listen_addr", "0.0.0.0:8443")
@@ -43,7 +43,37 @@ func TestBadConfigs(t *testing.T) {
 	v.Set("enable_kvstore", true)
 	v.Set("kvstore_type", "redis")
 	v.Set("redis_server", "")
-	cfgs["invalid KV Address"] = v
+	cfgs["invalid Redis Address"] = v
+
+	// Invalid Cassandra Address
+	v = viper.New()
+	v.Set("enable_tls", false)
+	v.Set("listen_addr", "0.0.0.0:8443")
+	v.Set("disable_logging", true)
+	v.Set("enable_kvstore", true)
+	v.Set("kvstore_type", "cassandra")
+	v.Set("cassandra_hosts", []string{"notarealaddress"})
+	cfgs["invalid Cassandra Address"] = v
+
+	// Invalid Cassandra Keyspace
+	v = viper.New()
+	v.Set("enable_tls", false)
+	v.Set("listen_addr", "0.0.0.0:8443")
+	v.Set("disable_logging", true)
+	v.Set("enable_kvstore", true)
+	v.Set("kvstore_type", "cassandra")
+	v.Set("cassandra_keyspace", "")
+	v.Set("cassandra_hosts", []string{"cassandra-primary", "cassandra"})
+	cfgs["invalid Cassandra Keyspace"] = v
+
+	// Invalid KVStore
+	v = viper.New()
+	v.Set("enable_tls", false)
+	v.Set("listen_addr", "0.0.0.0:8443")
+	v.Set("disable_logging", true)
+	v.Set("enable_kvstore", true)
+	v.Set("kvstore_type", "notvalid")
+	cfgs["invalid kvstore Address"] = v
 
 	// Invalid WASM path
 	v = viper.New()
@@ -132,6 +162,7 @@ func TestRunningTLSServer(t *testing.T) {
 	cfg.Set("cassandra_hosts", []string{"cassandra-primary", "cassandra"})
 	cfg.Set("cassandra_keyspace", "tarmac")
 	cfg.Set("enable_kvstore", true)
+	cfg.Set("use_consul", true)
 	cfg.Set("listen_addr", "localhost:9000")
 	cfg.Set("config_watch_interval", 1)
 	err = cfg.AddRemoteProvider("consul", "consul:8500", "tarmac/config")
@@ -190,4 +221,9 @@ func TestRunningTLSServer(t *testing.T) {
 		}
 	})
 
+	t.Run("Check if Remote config was read", func(t *testing.T) {
+		if !cfg.GetBool("from_consul") {
+			t.Errorf("Did not fetch config from consul")
+		}
+	})
 }
