@@ -20,7 +20,8 @@ func TestBadConfigs(t *testing.T) {
 	v.Set("enable_tls", false)
 	v.Set("listen_addr", "pandasdonotbelonghere")
 	v.Set("disable_logging", true)
-	v.Set("kv_server", "redis:6379")
+	v.Set("kvstore_type", "redis")
+	v.Set("redis_server", "redis:6379")
 	cfgs["invalid listener address"] = v
 
 	// Invalid TLS config
@@ -28,7 +29,8 @@ func TestBadConfigs(t *testing.T) {
 	v.Set("enable_tls", true)
 	v.Set("listen_addr", "0.0.0.0:8443")
 	v.Set("disable_logging", true)
-	v.Set("kv_server", "redis:6379")
+	v.Set("kvstore_type", "redis")
+	v.Set("redis_server", "redis:6379")
 	v.Set("cert_file", "/tmp/doesntexist")
 	v.Set("key_file", "/tmp/doesntexist")
 	cfgs["invalid TLS Config"] = v
@@ -39,7 +41,8 @@ func TestBadConfigs(t *testing.T) {
 	v.Set("listen_addr", "0.0.0.0:8443")
 	v.Set("disable_logging", true)
 	v.Set("enable_kvstore", true)
-	v.Set("kv_server", "")
+	v.Set("kvstore_type", "redis")
+	v.Set("redis_server", "")
 	cfgs["invalid KV Address"] = v
 
 	// Invalid WASM path
@@ -75,7 +78,8 @@ func TestRunningServer(t *testing.T) {
 	cfg := viper.New()
 	cfg.Set("disable_logging", true)
 	cfg.Set("listen_addr", "localhost:9000")
-	cfg.Set("kv_server", "redis:6379")
+	cfg.Set("kvstore_type", "redis")
+	cfg.Set("redis_server", "redis:6379")
 	cfg.Set("enable_kvstore", true)
 	cfg.Set("config_watch_interval", 5)
 	cfg.Set("use_consul", false)
@@ -103,13 +107,6 @@ func TestRunningServer(t *testing.T) {
 		}
 	})
 
-	/*
-		t.Run("Check Scheduler is set", func(t *testing.T) {
-			if len(scheduler.Tasks()) == 0 {
-				t.Errorf("Expected scheduler to have at least one task")
-			}
-		})
-	*/
 }
 
 func TestRunningTLSServer(t *testing.T) {
@@ -131,7 +128,9 @@ func TestRunningTLSServer(t *testing.T) {
 	cfg.Set("enable_tls", true)
 	cfg.Set("cert_file", "/tmp/cert")
 	cfg.Set("key_file", "/tmp/key")
-	cfg.Set("kv_server", "redis:6379")
+	cfg.Set("kvstore_type", "cassandra")
+	cfg.Set("cassandra_hosts", []string{"cassandra-primary", "cassandra"})
+	cfg.Set("cassandra_keyspace", "tarmac")
 	cfg.Set("enable_kvstore", true)
 	cfg.Set("listen_addr", "localhost:9000")
 	cfg.Set("config_watch_interval", 1)
