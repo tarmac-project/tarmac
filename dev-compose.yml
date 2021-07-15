@@ -8,8 +8,6 @@ services:
     environment:
       - "APP_ENABLE_TLS=false"
       - "APP_LISTEN_ADDR=0.0.0.0:8080"
-      - "APP_DB_SERVER=redis:6379"
-      - "APP_ENABLE_DB=true"
       - "APP_USE_CONSUL=true"
       - "APP_CONSUL_ADDR=consul:8500"
       - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
@@ -30,19 +28,45 @@ services:
       - "./testdata:/testdata"
     environment:
       - "APP_ENABLE_TLS=false"
-      - "APP_DB_SERVER=redis:6379"
       - "APP_CONSUL_ADDR=consul:8500"
       - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
       - "CONSUL_HTTP_ADDR=consul:8500"
       - "CONSUL_HTTP_SSL=false"
     depends_on:
       - redis
+      - cassandra-primary
+      - cassandra
       - consul
       - consulator
   redis:
     image: bitnami/redis:latest
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
+  cassandra-primary:
+    image: madflojo/cassandra:latest
+    command: /bin/bash -c "sleep 1 && /docker-entrypoint.sh cassandra -f"
+    environment:
+      - CASSANDRA_KEYSPACE=tarmac
+    expose:
+      - 7000
+      - 7001
+      - 7199
+      - 9042
+      - 9160
+  cassandra:
+    image: madflojo/cassandra:latest
+    command: /bin/bash -c "sleep 15 && /docker-entrypoint.sh cassandra -f"
+    environment:
+      - CASSANDRA_SEEDS=cassandra-primary
+      - CASSANDRA_KEYSPACE=tarmac
+    depends_on:
+      - cassandra-primary
+    expose:
+      - 7000
+      - 7001
+      - 7199
+      - 9042
+      - 9160
   consul:
     image: consul
     ports:

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"github.com/madflojo/hord"
+	"github.com/madflojo/hord/drivers/cassandra"
 	"github.com/madflojo/hord/drivers/redis"
 	"github.com/madflojo/tarmac/callbacks"
 	"github.com/madflojo/tarmac/wasm"
@@ -117,13 +118,46 @@ func Run(c *viper.Viper) error {
 
 	// Setup the KV Connection
 	if cfg.GetBool("enable_kvstore") {
-		kv, err = redis.Dial(redis.Config{
-			Server:   cfg.GetString("kv_server"),
-			Password: cfg.GetString("kv_password"),
-		})
-		if err != nil {
-			return fmt.Errorf("could not establish kvstore connection - %s", err)
+		switch cfg.GetString("kvstore_type") {
+		case "redis":
+			kv, err = redis.Dial(redis.Config{
+				Server:   cfg.GetString("redis_server"),
+				Password: cfg.GetString("redis_password"),
+				SentinelConfig: redis.SentinelConfig{
+					Servers: cfg.GetStringSlice("redis_sentinel_servers"),
+					Master:  cfg.GetString("redis_sentinel_master"),
+				},
+				ConnectTimeout: time.Duration(cfg.GetInt("redis_connect_timeout")) * time.Second,
+				Database:       cfg.GetInt("redis_database"),
+				SkipTLSVerify:  cfg.GetBool("redis_hostname_verify"),
+				KeepAlive:      time.Duration(cfg.GetInt("redis_keepalive")) * time.Second,
+				MaxActive:      cfg.GetInt("redis_max_active"),
+				ReadTimeout:    time.Duration(cfg.GetInt("redis_read_timeout")) * time.Second,
+				WriteTimeout:   time.Duration(cfg.GetInt("redis_write_timeout")) * time.Second,
+			})
+			if err != nil {
+				return fmt.Errorf("could not establish kvstore connection - %s", err)
+			}
+		case "cassandra":
+			kv, err = cassandra.Dial(cassandra.Config{
+				Hosts:                      cfg.GetStringSlice("cassandra_hosts"),
+				Port:                       cfg.GetInt("cassandra_port"),
+				Keyspace:                   cfg.GetString("cassandra_keyspace"),
+				Consistency:                cfg.GetString("cassandra_consistency"),
+				ReplicationStrategy:        cfg.GetString("cassandra_repl_strategy"),
+				Replicas:                   cfg.GetInt("cassandra_replicas"),
+				User:                       cfg.GetString("cassandra_user"),
+				Password:                   cfg.GetString("cassandra_password"),
+				EnableHostnameVerification: cfg.GetBool("cassandra_hostname_verify"),
+			})
+			if err != nil {
+				return fmt.Errorf("could not establish kvstore connection - %s", err)
+			}
+		default:
+			return fmt.Errorf("unknown kvstore specified - %s", cfg.GetString("kvstore_type"))
 		}
+
+		// Clean up KV Store connections on shutdown
 		defer kv.Close()
 
 		// Initialize the KV
@@ -169,17 +203,7 @@ func Run(c *viper.Viper) error {
 		s := <-trap
 		log.Infof("Received shutdown signal %s", s)
 
-		// Shutdown the HTTP Server
-		err := srv.httpServer.Shutdown(context.Background())
-		if err != nil {
-			log.Errorf("Received errors when shutting down HTTP sessions %s", err)
-		}
-
-		// Close KV Sessions
-		kv.Close()
-
-		// Shutdown the app via runCtx
-		runCancel()
+		defer Stop()
 	}()
 
 	// Register Health Check Handler used for Liveness checks
@@ -200,9 +224,11 @@ func Run(c *viper.Viper) error {
 	})
 
 	// Setup KVStore Callbacks
-	router.RegisterCallback("kvstore", "get", srv.kvStore.Get)
-	router.RegisterCallback("kvstore", "set", srv.kvStore.Set)
-	router.RegisterCallback("kvstore", "delete", srv.kvStore.Delete)
+	if cfg.GetBool("enable_kvstore") {
+		router.RegisterCallback("kvstore", "get", srv.kvStore.Get)
+		router.RegisterCallback("kvstore", "set", srv.kvStore.Set)
+		router.RegisterCallback("kvstore", "delete", srv.kvStore.Delete)
+	}
 
 	// Setup Logger Callbacks
 	router.RegisterCallback("logger", "info", srv.logger.Info)
