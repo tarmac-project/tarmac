@@ -5,7 +5,7 @@
 ## Running Tarmac
 
 * [Configuration](running-tarmac/configuration.md)
-* [Key:Value Store Selection](running-tarmac/kvstore.md)
+* [Key:Value Setup](running-tarmac/kvstore.md)
 * [Managing Logging](running-tarmac/logging.md)
 
 ## WASM Functions
