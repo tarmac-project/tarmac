@@ -106,8 +106,8 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 		req.Headers[strings.ToLower(k)] = r.Header.Get(k)
 	}
 
-	// Convert request to JSON payload
-	reqData, err := ffjson.Marshal(req)
+	// Execute WASM Module
+	rsp, err := runWASM("default", "http:"+r.Method, req)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"method":         r.Method,
@@ -115,48 +115,7 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 			"http-protocol":  r.Proto,
 			"headers":        r.Header,
 			"content-length": r.ContentLength,
-		}).Debugf("Error creating request type for WASM module - %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	// Fetch Module and run with payload
-	m, err := engine.Module("default")
-	if err != nil {
-		log.WithFields(logrus.Fields{
-			"method":         r.Method,
-			"remote-addr":    r.RemoteAddr,
-			"http-protocol":  r.Proto,
-			"headers":        r.Header,
-			"content-length": r.ContentLength,
-		}).Debugf("Error loading wasi environment - %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	// Execute the WASM HTTP Handler
-	var rsp tarmac.ServerResponse
-	rspData, err := m.Run("http:"+r.Method, reqData)
-	if err != nil {
-		log.WithFields(logrus.Fields{
-			"method":         r.Method,
-			"remote-addr":    r.RemoteAddr,
-			"http-protocol":  r.Proto,
-			"headers":        r.Header,
-			"content-length": r.ContentLength,
-		}).Debugf("Error executing function - %s", err)
-	}
-
-	// Unmarshal WASM JSON response
-	err = ffjson.Unmarshal(rspData, &rsp)
-	if err != nil {
-		log.WithFields(logrus.Fields{
-			"method":         r.Method,
-			"remote-addr":    r.RemoteAddr,
-			"http-protocol":  r.Proto,
-			"headers":        r.Header,
-			"content-length": r.ContentLength,
-		}).Debugf("Error parsing response type from WASM module - %s", err)
+		}).Debugf("Error executing WASM module - %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -191,4 +150,35 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 	// Return status code and print stdout
 	w.WriteHeader(rsp.Status.Code)
 	fmt.Fprintf(w, "%s", rspPayload)
+}
+
+// runWASM will load and execute the specified WASM module.
+func runWASM(module, handler string, rq tarmac.ServerRequest) (tarmac.ServerResponse, error) {
+	var rsp tarmac.ServerResponse
+
+	// Convert request to JSON payload
+	d, err := ffjson.Marshal(rq)
+	if err != nil {
+		return rsp, fmt.Errorf("unable to marshal server request - %s", err)
+	}
+
+	// Fetch Module and run with payload
+	m, err := engine.Module(module)
+	if err != nil {
+		return rsp, fmt.Errorf("unable to load wasi environment - %s", err)
+	}
+
+	// Execute the WASM Handler
+	data, err := m.Run(handler, d)
+	if err != nil {
+		return rsp, fmt.Errorf("failed to execute wasm module - %s", err)
+	}
+
+	// Unmarshal WASM JSON response
+	err = ffjson.Unmarshal(data, &rsp)
+	if err != nil {
+		return rsp, fmt.Errorf("failed to unmarshal response - %s", err)
+	}
+
+	return rsp, nil
 }

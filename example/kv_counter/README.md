@@ -1,6 +1,6 @@
-# Tarmac Example: DB Counter
+# Tarmac Example: KV Counter
 
-This project is an example of building a WASM-based microservice using Tarmac. This service is a DB Counter
+This project is an example of building a WASM-based microservice using Tarmac. This service is a KV Counter
 service that can be run both as an HTTP function or a scheduled task.
 
 ```console

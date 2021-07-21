@@ -154,7 +154,7 @@ func TestRunningTLSServer(t *testing.T) {
 
 	// Setup Config
 	cfg := viper.New()
-	cfg.Set("disable_logging", true)
+	cfg.Set("disable_logging", false)
 	cfg.Set("enable_tls", true)
 	cfg.Set("cert_file", "/tmp/cert")
 	cfg.Set("key_file", "/tmp/key")
@@ -207,6 +207,13 @@ func TestRunningTLSServer(t *testing.T) {
 		}
 	})
 
+	t.Run("Verify Scheduled Tasks ran as expected", func(t *testing.T) {
+		_, err := kv.Get("kv_counter_example")
+		if err != nil {
+			t.Errorf("Unexpected error checking KV Counter value via scheduled WASM function")
+		}
+	})
+
 	// Kill the DB sessions for unhappy path testing
 	kv.Close()
 
@@ -226,4 +233,5 @@ func TestRunningTLSServer(t *testing.T) {
 			t.Errorf("Did not fetch config from consul")
 		}
 	})
+
 }
