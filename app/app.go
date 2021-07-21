@@ -277,10 +277,13 @@ func Run(c *viper.Viper) error {
 			Interval: time.Duration(cfg.GetInt("scheduled_tasks."+k+".interval")) * time.Second,
 			TaskFunc: func() error {
 				log.WithFields(logrus.Fields{"task-name": k}).Tracef("Executing Scheduled task")
-				_, err := runWASM("scheduler-"+k, "scheduler:RUN", tarmac.ServerRequest{Headers: headers})
+				r, err := runWASM("scheduler-"+k, "scheduler:RUN", tarmac.ServerRequest{Headers: headers})
 				if err != nil {
 					log.WithFields(logrus.Fields{"task-name": k}).Debugf("Error executing task - %s", err)
 					return err
+				}
+				if r.Status.Code == 200 {
+					log.WithFields(logrus.Fields{"task-name": k}).Debugf("Task execution completed successfully")
 				}
 				return nil
 			},
@@ -298,6 +301,7 @@ func Run(c *viper.Viper) error {
 	srv.httpRouter.POST("/", srv.middleware(srv.WASMHandler))
 	srv.httpRouter.PUT("/", srv.middleware(srv.WASMHandler))
 	srv.httpRouter.DELETE("/", srv.middleware(srv.WASMHandler))
+	srv.httpRouter.HEAD("/", srv.middleware(srv.WASMHandler))
 
 	// Start HTTP Listener
 	log.Infof("Starting Listener on %s", cfg.GetString("listen_addr"))
