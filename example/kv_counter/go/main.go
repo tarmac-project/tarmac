@@ -91,6 +91,6 @@ func IncCount(payload []byte) ([]byte, error) {
 		return []byte(fmt.Sprintf(`{"status":{"code":500,"status":"Failed to call host callback - %s"}}`, err)), nil
 	}
 
-  // Return Counter value to user
+	// Return Counter value to user
 	return []byte(fmt.Sprintf(`{"payload":"%s","status":{"code":200,"status":"Success"}}`, base64.StdEncoding.EncodeToString([]byte(s)))), nil
 }
