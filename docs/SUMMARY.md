@@ -1,6 +1,6 @@
 # Table of contents
 
-* [Tarmac](README.md)
+* [Introduction](README.md)
 
 ## Running Tarmac
 
