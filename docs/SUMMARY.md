@@ -5,8 +5,9 @@
 ## Running Tarmac
 
 * [Configuration](running-tarmac/configuration.md)
-* [Key:Value Setup](running-tarmac/kvstore.md)
-* [Managing Logging](running-tarmac/logging.md)
+* [Key:Value Datastore](running-tarmac/kvstore.md)
+* [Logging](running-tarmac/logging.md)
+* [Scheduled Tasks](running-tarmac/scheduled-tasks.md)
 
 ## WASM Functions
 
@@ -19,7 +20,7 @@
 
 * [Callbacks](callback-functions/callbacks.md)
 * [Logger](callback-functions/logger.md)
-* [Key:Value Store](callback-functions/key-value-store.md)
+* [Key:Value Datastore](callback-functions/key-value-store.md)
 
 ## Developer Resources
 

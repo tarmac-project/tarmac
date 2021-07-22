@@ -23,8 +23,9 @@ func TestHandlers(t *testing.T) {
 	cfg.Set("disable_logging", false)
 	cfg.Set("debug", true)
 	cfg.Set("listen_addr", "localhost:9001")
-	cfg.Set("db_server", "redis:6379")
-	cfg.Set("enable_db", true)
+	cfg.Set("kvstore_type", "redis")
+	cfg.Set("redis_server", "redis:6379")
+	cfg.Set("enable_kvstore", true)
 	cfg.Set("config_watch_interval", 5)
 	cfg.Set("wasm_function", "/testdata/tarmac.wasm")
 	go func() {
@@ -100,8 +101,9 @@ func TestWASMRunner(t *testing.T) {
 	cfg.Set("disable_logging", false)
 	cfg.Set("debug", true)
 	cfg.Set("listen_addr", "localhost:9001")
-	cfg.Set("db_server", "redis:6379")
-	cfg.Set("enable_db", true)
+	cfg.Set("kvstore_type", "redis")
+	cfg.Set("redis_server", "redis:6379")
+	cfg.Set("enable_kvstore", true)
 	cfg.Set("config_watch_interval", 5)
 	cfg.Set("wasm_function", "/testdata/tarmac.wasm")
 	go func() {
@@ -112,6 +114,9 @@ func TestWASMRunner(t *testing.T) {
 	}()
 	// Clean up
 	defer Stop()
+
+	// Wait for Server to start
+	time.Sleep(2 * time.Second)
 
 	var tc []RunnerCase
 
@@ -125,9 +130,9 @@ func TestWASMRunner(t *testing.T) {
 
 	tc = append(tc, RunnerCase{
 		name:    "Happy Path - Bad Payload",
-		pass:    true,
+		pass:    false,
 		module:  "default",
-		handler: "http:GET",
+		handler: "http:POST",
 		request: tarmac.ServerRequest{},
 	})
 
