@@ -28,5 +28,5 @@ $ docker compose up tarmac-example
 Once running, you can send requests to this service using `curl`.
 
 ```console
-$ curl -X POST --data "This is a test" http://localhost -v
+$ curl http://localhost -v
 ```

@@ -23,6 +23,7 @@ services:
     depends_on:
       - redis
       - consul
+      - consulator
   redis:
     image: bitnami/redis:latest
     environment:
