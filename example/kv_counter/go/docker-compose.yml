@@ -13,6 +13,11 @@ services:
       - "APP_KVSTORE_TYPE=redis"
       - "APP_REDIS_SERVER=redis:6379"
       - "APP_KVSTORE_SERVER=redis:6379"
+      - "APP_USE_CONSUL=true"
+      - "APP_CONSUL_ADDR=consul:8500"
+      - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
+      - "CONSUL_HTTP_ADDR=consul:8500"
+      - "CONSUL_HTTP_SSL=false"
     volumes:
       - "./functions:/functions"
     depends_on:
