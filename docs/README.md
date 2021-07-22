@@ -1,5 +1,7 @@
 # Tarmac
 
+![Tarmac Logo](tarmac-logo.png)
+
 Framework for building distributed services with Web Assembly
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/madflojo/tarmac)](https://pkg.go.dev/github.com/madflojo/tarmac) [![Go Report Card](https://goreportcard.com/badge/github.com/madflojo/tarmac)](https://goreportcard.com/report/github.com/madflojo/tarmac) [![Documentation](https://img.shields.io/badge/Docs-latest-blue)](https://madflojo.gitbook.io/tarmac/)
