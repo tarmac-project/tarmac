@@ -2,6 +2,7 @@ package app
 
 import (
 	"bytes"
+	"github.com/madflojo/tarmac"
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
@@ -9,13 +10,22 @@ import (
 	"time"
 )
 
+type RunnerCase struct {
+	name    string
+	pass    bool
+	module  string
+	handler string
+	request tarmac.ServerRequest
+}
+
 func TestHandlers(t *testing.T) {
 	cfg := viper.New()
 	cfg.Set("disable_logging", false)
 	cfg.Set("debug", true)
 	cfg.Set("listen_addr", "localhost:9001")
-	cfg.Set("db_server", "redis:6379")
-	cfg.Set("enable_db", true)
+	cfg.Set("kvstore_type", "redis")
+	cfg.Set("redis_server", "redis:6379")
+	cfg.Set("enable_kvstore", true)
 	cfg.Set("config_watch_interval", 5)
 	cfg.Set("wasm_function", "/testdata/tarmac.wasm")
 	go func() {
@@ -73,4 +83,81 @@ func TestHandlers(t *testing.T) {
 			t.Errorf("Unexpected reply from http response - got %s", body)
 		}
 	})
+
+	t.Run("Invalid Head Request", func(t *testing.T) {
+		r, err := http.Head("http://localhost:9001/")
+		if err != nil {
+			t.Fatalf("Unexpected error when making HTTP request - %s", err)
+		}
+		if r.StatusCode < 500 {
+			t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
+		}
+	})
+
+}
+
+func TestWASMRunner(t *testing.T) {
+	cfg := viper.New()
+	cfg.Set("disable_logging", false)
+	cfg.Set("debug", true)
+	cfg.Set("listen_addr", "localhost:9001")
+	cfg.Set("kvstore_type", "redis")
+	cfg.Set("redis_server", "redis:6379")
+	cfg.Set("enable_kvstore", true)
+	cfg.Set("config_watch_interval", 5)
+	cfg.Set("wasm_function", "/testdata/tarmac.wasm")
+	go func() {
+		err := Run(cfg)
+		if err != nil && err != ErrShutdown {
+			t.Errorf("Run unexpectedly stopped - %s", err)
+		}
+	}()
+	// Clean up
+	defer Stop()
+
+	// Wait for Server to start
+	time.Sleep(2 * time.Second)
+
+	var tc []RunnerCase
+
+	tc = append(tc, RunnerCase{
+		name:    "Module Doesn't Exist",
+		pass:    false,
+		module:  "notfound",
+		handler: "http:GET",
+		request: tarmac.ServerRequest{},
+	})
+
+	tc = append(tc, RunnerCase{
+		name:    "Happy Path - Bad Payload",
+		pass:    false,
+		module:  "default",
+		handler: "http:POST",
+		request: tarmac.ServerRequest{},
+	})
+
+	tc = append(tc, RunnerCase{
+		name:    "Bad Handler Route",
+		pass:    false,
+		module:  "default",
+		handler: "noroute",
+		request: tarmac.ServerRequest{},
+	})
+
+	for _, c := range tc {
+		t.Run(c.name, func(t *testing.T) {
+			rsp, err := runWASM(c.module, c.handler, c.request)
+			if err != nil && c.pass {
+				t.Errorf("Unexpected error executing module - %s", err)
+			}
+			if err == nil && !c.pass {
+				t.Errorf("Unexpected success executing module")
+			}
+
+			if rsp.Status.Code != 200 && rsp.Status.Code != 0 {
+				t.Errorf("Unexpected failure from WASM response status code %d", rsp.Status.Code)
+			}
+		})
+	}
+
 }

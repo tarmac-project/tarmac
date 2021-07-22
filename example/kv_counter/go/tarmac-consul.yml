@@ -1,0 +1,2 @@
+tarmac:
+  config: '{"from_consul":true,"debug":true,"trace":true,"scheduled_tasks":{"example-task":{"interval":30,"wasm_function":"/functions/tarmac.wasm","headers":{"task-name":"example-task"}}}}'

@@ -11,6 +11,7 @@ import (
 	"github.com/madflojo/hord"
 	"github.com/madflojo/hord/drivers/cassandra"
 	"github.com/madflojo/hord/drivers/redis"
+	"github.com/madflojo/tarmac"
 	"github.com/madflojo/tarmac/callbacks"
 	"github.com/madflojo/tarmac/wasm"
 	"github.com/madflojo/tasks"
@@ -245,7 +246,7 @@ func Run(c *viper.Viper) error {
 		return err
 	}
 
-	// Preload Modules
+	// Preload Default WASM Function
 	if cfg.GetString("wasm_function") != "" {
 		err = engine.LoadModule(wasm.ModuleConfig{
 			Name:     "default",
@@ -256,11 +257,51 @@ func Run(c *viper.Viper) error {
 		}
 	}
 
+	// Setup Scheduler based tasks
+	for k := range cfg.GetStringMap("scheduled_tasks") {
+		log.Infof("Scheduling Task - %s", k)
+
+		// Preload WASM Function
+		err = engine.LoadModule(wasm.ModuleConfig{
+			Name:     "scheduler-" + k,
+			Filepath: cfg.GetString("scheduled_tasks." + k + ".wasm_function"),
+		})
+		if err != nil {
+			log.Errorf("Error loading WASM module for scheduled task %s - %s", k, err)
+		}
+
+		// Create Scheduled Task
+		headers := cfg.GetStringMapString("scheduled_tasks." + k + ".headers")
+		headers["request_type"] = "scheduler"
+		id, err := scheduler.Add(&tasks.Task{
+			Interval: time.Duration(cfg.GetInt("scheduled_tasks."+k+".interval")) * time.Second,
+			TaskFunc: func() error {
+				log.WithFields(logrus.Fields{"task-name": k}).Tracef("Executing Scheduled task")
+				r, err := runWASM("scheduler-"+k, "scheduler:RUN", tarmac.ServerRequest{Headers: headers})
+				if err != nil {
+					log.WithFields(logrus.Fields{"task-name": k}).Debugf("Error executing task - %s", err)
+					return err
+				}
+				if r.Status.Code == 200 {
+					log.WithFields(logrus.Fields{"task-name": k}).Debugf("Task execution completed successfully")
+				}
+				return nil
+			},
+		})
+		if err != nil {
+			log.Errorf("Error scheduling scheduled task %s - %s", k, err)
+		}
+
+		// Clean up Task on Shutdown
+		defer scheduler.Del(id)
+	}
+
 	// Register WASM Handler
 	srv.httpRouter.GET("/", srv.middleware(srv.WASMHandler))
 	srv.httpRouter.POST("/", srv.middleware(srv.WASMHandler))
 	srv.httpRouter.PUT("/", srv.middleware(srv.WASMHandler))
 	srv.httpRouter.DELETE("/", srv.middleware(srv.WASMHandler))
+	srv.httpRouter.HEAD("/", srv.middleware(srv.WASMHandler))
 
 	// Start HTTP Listener
 	log.Infof("Starting Listener on %s", cfg.GetString("listen_addr"))

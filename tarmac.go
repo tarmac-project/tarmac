@@ -9,7 +9,7 @@ host-level actions such as storing data within the database, logging specific da
 package tarmac
 
 // ServerRequest is used to create the Payload JSON sent to Tarmac WASM functions for incoming requests. A
-// "request:handler" function will recieve this Request type in JSON format and will need to parse it accordingly.
+// "request:handler" function will receive this Request type in JSON format and will need to parse it accordingly.
 type ServerRequest struct {
 
 	// Headers are request headers such as HTTP headers, or other metadata depending on the protocol the request as

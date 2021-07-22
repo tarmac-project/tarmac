@@ -45,6 +45,17 @@ When using Environment Variables, all configurations are prefixed with `APP_`. T
 | `APP_CASSANDRA_USER` | `cassandra_user` | `string` | Username to authenticate with |
 | `APP_CASSANDRA_PASSWORD` | `cassandra_password` | `string` | Password to authenticate with |
 | `APP_CASSANDRA_HOSTNAME_VERIFY` | `cassandra_hostname_verify` | `bool` | Enable/Disable hostname verification for TLS |
+| | `scheduled_tasks` | `map[string]ScheduledTask` | Configured Scheduled WASM Function executions |
+
+### Scheduled Task Definition
+
+The below options are used to configure scheduled tasks.
+
+| JSON | Type | Description |
+| :--- | :--- | :--- |
+| `interval` | `int` | Interval (in seconds) task execution should run (recurring) |
+| `wasm_function` | `string` | Path and Filename of the WASM Function to execute |
+| `headers` | `map[string]string` | Custom headers applied to the ServerRequest provided to WASM functions during execution |
 
 ## Consul Format
 
