@@ -1,6 +1,6 @@
-```
-description: "Scheduling WASM functions as tasks"
-``` 
+---
+description: Scheduling WASM functions as tasks
+---
 
 # Scheduled Tasks
 
