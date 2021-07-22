@@ -1,6 +1,6 @@
 # Tarmac
 
-![Tarmac Logo](tarmac-logo.png)
+![](tarmac-logo.png)
 
 Framework for building distributed services with Web Assembly
 
