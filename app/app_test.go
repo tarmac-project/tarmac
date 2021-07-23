@@ -154,7 +154,7 @@ func TestRunningTLSServer(t *testing.T) {
 
 	// Setup Config
 	cfg := viper.New()
-	cfg.Set("disable_logging", false)
+	cfg.Set("disable_logging", true)
 	cfg.Set("enable_tls", true)
 	cfg.Set("cert_file", "/tmp/cert")
 	cfg.Set("key_file", "/tmp/key")
