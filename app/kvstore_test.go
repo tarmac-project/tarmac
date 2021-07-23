@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"github.com/madflojo/hord/drivers/mock"
 	"github.com/madflojo/tarmac"
 	"github.com/pquerna/ffjson/ffjson"
@@ -8,6 +9,7 @@ import (
 )
 
 type kvStoreCase struct {
+	err  bool
 	pass bool
 	name string
 	call string
@@ -18,12 +20,33 @@ func TestKVStore(t *testing.T) {
 	k := &kvStore{}
 
 	// Set DB as a Mocked Database
-	kv, _ = mock.Dial(mock.Config{})
+	kv, _ = mock.Dial(mock.Config{
+		GetFunc: func(key string) ([]byte, error) {
+			if key == "testing-happy" {
+				return []byte("somedata"), nil
+			}
+			return []byte(""), fmt.Errorf("Forced Error")
+		},
+		SetFunc: func(key string, data []byte) error {
+			if key == "testing-happy" {
+				return nil
+			}
+			return fmt.Errorf("Error inserting data")
+		},
+		// Create a fake Delete function
+		DeleteFunc: func(key string) error {
+			if key == "testing-happy" {
+				return nil
+			}
+			return fmt.Errorf("Error deleting data")
+		},
+	})
 
 	var kc []kvStoreCase
 
 	// Create a collection of test cases
 	kc = append(kc, kvStoreCase{
+		err:  false,
 		pass: true,
 		name: "Happy Path",
 		call: "Get",
@@ -31,6 +54,7 @@ func TestKVStore(t *testing.T) {
 	})
 
 	kc = append(kc, kvStoreCase{
+		err:  false,
 		pass: true,
 		name: "Happy Path",
 		call: "Set",
@@ -38,6 +62,7 @@ func TestKVStore(t *testing.T) {
 	})
 
 	kc = append(kc, kvStoreCase{
+		err:  false,
 		pass: true,
 		name: "Happy Path",
 		call: "Delete",
@@ -45,6 +70,7 @@ func TestKVStore(t *testing.T) {
 	})
 
 	kc = append(kc, kvStoreCase{
+		err:  true,
 		pass: false,
 		name: "Invalid Request JSON",
 		call: "Get",
@@ -52,6 +78,7 @@ func TestKVStore(t *testing.T) {
 	})
 
 	kc = append(kc, kvStoreCase{
+		err:  true,
 		pass: false,
 		name: "Invalid Request JSON",
 		call: "Set",
@@ -59,6 +86,7 @@ func TestKVStore(t *testing.T) {
 	})
 
 	kc = append(kc, kvStoreCase{
+		err:  true,
 		pass: false,
 		name: "Invalid Request JSON",
 		call: "Delete",
@@ -66,10 +94,35 @@ func TestKVStore(t *testing.T) {
 	})
 
 	kc = append(kc, kvStoreCase{
+		err:  true,
 		pass: false,
 		name: "Payload Not Base64",
 		call: "Set",
 		json: `{"key":"testing-happy","data":"not base64"}`,
+	})
+
+	kc = append(kc, kvStoreCase{
+		err:  true,
+		pass: false,
+		name: "Key not found",
+		call: "Get",
+		json: `{"key":""}`,
+	})
+
+	kc = append(kc, kvStoreCase{
+		err:  true,
+		pass: false,
+		name: "Failing Call",
+		call: "Delete",
+		json: `{"key": "invalid-key"}`,
+	})
+
+	kc = append(kc, kvStoreCase{
+		err:  true,
+		pass: false,
+		name: "No Data",
+		call: "Set",
+		json: `{"key":"no-data"}`,
 	})
 
 	// Loop through test cases executing and validating
@@ -79,10 +132,10 @@ func TestKVStore(t *testing.T) {
 			t.Run(c.name+" Set", func(t *testing.T) {
 				// Set data first
 				b, err := k.Set([]byte(c.json))
-				if err != nil && c.pass {
+				if err != nil && !c.err {
 					t.Fatalf("KVStore Callback Set failed unexpectedly - %s", err)
 				}
-				if err == nil && !c.pass {
+				if err == nil && c.err {
 					t.Fatalf("KVStore Callback Set unexpectedly passed")
 				}
 
@@ -105,10 +158,10 @@ func TestKVStore(t *testing.T) {
 			t.Run(c.name+" Get", func(t *testing.T) {
 				// Get data
 				b, err := k.Get([]byte(c.json))
-				if err != nil && c.pass {
+				if err != nil && !c.err {
 					t.Fatalf("KVStore Callback Get failed unexpectedly - %s", err)
 				}
-				if err == nil && !c.pass {
+				if err == nil && c.err {
 					t.Fatalf("KVStore Callback Get unexpectedly passed")
 				}
 
@@ -131,10 +184,10 @@ func TestKVStore(t *testing.T) {
 			t.Run(c.name+" Delete", func(t *testing.T) {
 				// Delete data
 				b, err := k.Delete([]byte(c.json))
-				if err != nil && c.pass {
+				if err != nil && !c.err {
 					t.Fatalf("KVStore Callback Delete failed unexpectedly - %s", err)
 				}
-				if err == nil && !c.pass {
+				if err == nil && c.err {
 					t.Fatalf("KVStore Callback Delete unexpectedly passed")
 				}
 

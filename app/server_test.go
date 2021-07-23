@@ -93,7 +93,6 @@ func TestHandlers(t *testing.T) {
 			t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
 		}
 	})
-
 }
 
 func TestWASMRunner(t *testing.T) {
