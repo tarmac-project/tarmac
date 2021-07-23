@@ -2,6 +2,7 @@ package callbacks
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 )
@@ -24,7 +25,14 @@ func (c *Counter) Value() int {
 }
 
 func TestCallbacks(t *testing.T) {
-	router := New(Config{})
+	router := New(Config{
+		PreFunc: func(namespace, op string, b []byte) ([]byte, error) {
+			if namespace == "badfunc" {
+				return []byte(""), fmt.Errorf("Forced Error")
+			}
+			return []byte(""), nil
+		},
+	})
 	counter := &Counter{}
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -64,6 +72,38 @@ func TestCallbacks(t *testing.T) {
 		_, err := router.Callback(context.Background(), "default", "counter", "++", []byte(""))
 		if err == nil {
 			t.Errorf("Expected error when calling Callback function after deletion")
+		}
+	})
+
+	t.Run("Empty namespace", func(t *testing.T) {
+		_, err := router.Callback(context.Background(), "default", "", "++", []byte(""))
+		if err == nil {
+			t.Errorf("Expected error when calling Callback function, got nil")
+		}
+	})
+
+	t.Run("Empty op", func(t *testing.T) {
+		_, err := router.Callback(context.Background(), "default", "counter", "", []byte(""))
+		if err == nil {
+			t.Errorf("Expected error when calling Callback function, got nil")
+		}
+	})
+
+	t.Run("Bad PreFunc Callback", func(t *testing.T) {
+		// Add a Nil Function
+		router.RegisterCallback("badfunc", "nil", nil)
+		_, err := router.Callback(ctx, "default", "badfunc", "nil", []byte(""))
+		if err == nil {
+			t.Errorf("Expected error when calling Callback function with nil func")
+		}
+	})
+
+	t.Run("Nil Func Callback", func(t *testing.T) {
+		// Add a Nil Function
+		router.RegisterCallback("badfunc2", "nil", nil)
+		_, err := router.Callback(ctx, "default2", "badfunc", "nil", []byte(""))
+		if err == nil {
+			t.Errorf("Expected error when calling Callback function with nil func")
 		}
 	})
 }
