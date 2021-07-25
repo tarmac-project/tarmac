@@ -139,6 +139,97 @@ func TestRunningServer(t *testing.T) {
 
 }
 
+func TestPProfServerEnabled(t *testing.T) {
+	cfg := viper.New()
+	cfg.Set("disable_logging", true)
+	cfg.Set("listen_addr", "localhost:9000")
+	cfg.Set("config_watch_interval", 5)
+	cfg.Set("use_consul", false)
+	cfg.Set("debug", true)
+	cfg.Set("trace", true)
+	cfg.Set("enable_pprof", true)
+	go func() {
+		err := Run(cfg)
+		if err != nil && err != ErrShutdown {
+			t.Errorf("Run unexpectedly stopped - %s", err)
+		}
+	}()
+	// Clean up
+	defer Stop()
+
+	// Wait for app to start
+	time.Sleep(10 * time.Second)
+
+	urls := []string{
+		"debug/pprof",
+		"debug/pprof/allocs",
+		"debug/pprof/cmdline",
+		"debug/pprof/goroutine",
+		"debug/pprof/heap",
+		"debug/pprof/mutex",
+		"debug/pprof/profile",
+		"debug/pprof/threadcreate",
+		"debug/pprof/trace",
+	}
+
+	for _, u := range urls {
+		t.Run("Verifying URL "+u, func(t *testing.T) {
+			r, err := http.Get("http://localhost:9000/" + u)
+			if err != nil {
+				t.Errorf("Unexpected error when validating pprof - %s", err)
+			}
+			if r.StatusCode > 399 {
+				t.Errorf("Unexpected http status code when validating pprof - %d", r.StatusCode)
+			}
+		})
+	}
+}
+
+func TestPProfServerDisabled(t *testing.T) {
+	cfg := viper.New()
+	cfg.Set("disable_logging", true)
+	cfg.Set("listen_addr", "localhost:9000")
+	cfg.Set("config_watch_interval", 5)
+	cfg.Set("use_consul", false)
+	cfg.Set("debug", true)
+	cfg.Set("trace", true)
+	go func() {
+		err := Run(cfg)
+		if err != nil && err != ErrShutdown {
+			t.Errorf("Run unexpectedly stopped - %s", err)
+		}
+	}()
+	// Clean up
+	defer Stop()
+
+	// Wait for app to start
+	time.Sleep(10 * time.Second)
+
+	urls := []string{
+		"debug/pprof",
+		"debug/pprof/allocs",
+		"debug/pprof/cmdline",
+		"debug/pprof/goroutine",
+		"debug/pprof/heap",
+		"debug/pprof/mutex",
+		"debug/pprof/profile",
+		"debug/pprof/threadcreate",
+		"debug/pprof/trace",
+	}
+
+	for _, u := range urls {
+		t.Run("Verifying URL "+u, func(t *testing.T) {
+			r, err := http.Get("http://localhost:9000/" + u)
+			if err != nil {
+				t.Errorf("Unexpected error when validating pprof - %s", err)
+			}
+			if r.StatusCode != 403 {
+				t.Errorf("Unexpected http status code when validating pprof - %d", r.StatusCode)
+			}
+		})
+	}
+}
+
 func TestRunningTLSServer(t *testing.T) {
 	// Create Test Certs
 	err := testcerts.GenerateCertsToFile("/tmp/cert", "/tmp/key")

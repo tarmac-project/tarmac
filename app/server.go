@@ -9,8 +9,12 @@ import (
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strings"
 )
+
+// isPProf is a regex that validates if the given path is used for PProf
+var isPProf = regexp.MustCompile(`.*debug\/pprof.*`)
 
 // server is used as an interface for managing the HTTP server.
 type server struct {
@@ -63,9 +67,30 @@ func (s *server) middleware(n httprouter.Handle) httprouter.Handle {
 			"content-length": r.ContentLength,
 		}).Debugf("HTTP Request to %s", r.URL)
 
+		// Verify if PProf
+		if isPProf.MatchString(r.URL.Path) && cfg.GetBool("enable_pprof") == false {
+			log.WithFields(logrus.Fields{
+				"method":         r.Method,
+				"remote-addr":    r.RemoteAddr,
+				"http-protocol":  r.Proto,
+				"headers":        r.Header,
+				"content-length": r.ContentLength,
+			}).Debugf("Request to PProf Address failed, PProf disabled")
+			w.WriteHeader(http.StatusForbidden)
+
+			return
+		}
+
 		// Call registered handler
 		n(w, r, ps)
 	}
+}
+
+// handlerWrapper is used to wrap http.Handler functions with the server middleware.
+func (s *server) handlerWrapper(h http.Handler) httprouter.Handle {
+	return s.middleware(func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		h.ServeHTTP(w, r)
+	})
 }
 
 // WASMHandler is the primary HTTP handler for WASM Module traffic. This handler will load the
