@@ -8,6 +8,7 @@
 * [Key:Value Datastore](running-tarmac/kvstore.md)
 * [Logging](running-tarmac/logging.md)
 * [Scheduled Tasks](running-tarmac/scheduled-tasks.md)
+* [Troubleshooting Performance](running-tarmac/profiling.md)
 
 ## WASM Functions
 

@@ -23,6 +23,7 @@ When using Environment Variables, all configurations are prefixed with `APP_`. T
 | `APP_CERT_FILE` | `cert_file` | `string` | Certificate File Path \(i.e. `/some/path/cert.crt`\) |
 | `APP_KEY_FILE` | `key_file` | `string` | Key File Path \(i.e. `/some/path/cert.key`\) |
 | `APP_WASM_FUNCTION` | `wasm_function` | `string` | Path and Filename of the WASM Function to execute \(Default: `/functions/tarmac.wasm`\) |
+| `APP_ENABLE_PPROF` | `enable_pprof` | `bool` | Enable PProf Collection HTTP end-points |
 | `APP_ENABLE_KVSTORE` | `enable_kvstore` | `bool` | Enable the KV Store |
 | `APP_KVSTORE_TYPE` | `kvstore_type` | `string` | Select KV Store to use (Options: `redis`, `cassandra`)|
 | `APP_REDIS_SERVER` | `redis_server` | `string` | Redis server address |
