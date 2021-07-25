@@ -155,6 +155,8 @@ func TestRunningTLSServer(t *testing.T) {
 	// Setup Config
 	cfg := viper.New()
 	cfg.Set("disable_logging", true)
+	cfg.Set("trace", true)
+	cfg.Set("debug", true)
 	cfg.Set("enable_tls", true)
 	cfg.Set("cert_file", "/tmp/cert")
 	cfg.Set("key_file", "/tmp/key")
@@ -183,7 +185,7 @@ func TestRunningTLSServer(t *testing.T) {
 	defer Stop()
 
 	// Wait for app to start
-	time.Sleep(10 * time.Second)
+	time.Sleep(15 * time.Second)
 
 	t.Run("Check Health HTTP Handler", func(t *testing.T) {
 		r, err := http.Get("https://localhost:9000/health")

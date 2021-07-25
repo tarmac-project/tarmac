@@ -40,6 +40,9 @@ func TestKVStore(t *testing.T) {
 			}
 			return fmt.Errorf("Error deleting data")
 		},
+		KeysFunc: func() ([]string, error) {
+			return []string{}, fmt.Errorf("Forced Error")
+		},
 	})
 
 	var kc []kvStoreCase
@@ -125,6 +128,14 @@ func TestKVStore(t *testing.T) {
 		json: `{"key":"no-data"}`,
 	})
 
+	kc = append(kc, kvStoreCase{
+		err:  true,
+		pass: false,
+		name: "Errored Keys",
+		call: "Keys",
+		json: ``,
+	})
+
 	// Loop through test cases executing and validating
 	for _, c := range kc {
 		switch c.call {
@@ -204,6 +215,33 @@ func TestKVStore(t *testing.T) {
 				if rsp.Status.Code != 200 && c.pass {
 					t.Fatalf("KVStore Callback Delete returned an unexpected failure - %+v", rsp)
 				}
+			})
+
+		case "Keys":
+			t.Run(c.name+" Keys", func(t *testing.T) {
+				// Fetch keys
+				b, err := k.Keys([]byte(c.json))
+				if err != nil && !c.err {
+					t.Fatalf("KVStore Callback Keys failed unexpectedly - %s", err)
+				}
+				if err == nil && c.err {
+					t.Fatalf("KVStore Callback Keys unexpectedly passed")
+				}
+
+				// Validate Response
+				var rsp tarmac.KVStoreKeysResponse
+				err = ffjson.Unmarshal(b, &rsp)
+				if err != nil {
+					t.Fatalf("KVStore Callback Keys replied with an invalid JSON - %s", err)
+				}
+
+				if rsp.Status.Code == 200 && !c.pass {
+					t.Fatalf("KVStore Callback Keys returned an unexpected success - %+v", rsp)
+				}
+				if rsp.Status.Code != 200 && c.pass {
+					t.Fatalf("KVStore Callback Keys returned an unexpected failure - %+v", rsp)
+				}
+
 			})
 
 		}
