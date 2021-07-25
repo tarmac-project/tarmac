@@ -1,2 +1,2 @@
 tarmac:
-  config: '{"from_consul":true,"debug":true,"trace":true,"scheduled_tasks":{"task1":{"interval":5,"wasm_function":"/testdata/scheduler.wasm","headers":{"task-name":"task1"}},"task2":{"interval":5,"wasm_function":"/testdata/notfound.wasm","headers":{"task-name":"task2"}}},"task3":{"interval":5,"wasm_function":"/testdata/tarmac.wasm","headers":{"task-name":"task3"}}}'
+  config: '{"from_consul":true,"debug":true,"trace":true,"scheduled_tasks":{"task1":{"interval":1,"wasm_function":"/testdata/scheduler.wasm","headers":{"task-name":"task1"}},"task2":{"interval":5,"wasm_function":"/testdata/notfound.wasm","headers":{"task-name":"task2"}}},"task3":{"interval":5,"wasm_function":"/testdata/tarmac.wasm","headers":{"task-name":"task3"}}}'

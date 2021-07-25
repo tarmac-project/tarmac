@@ -229,6 +229,7 @@ func Run(c *viper.Viper) error {
 		router.RegisterCallback("kvstore", "get", srv.kvStore.Get)
 		router.RegisterCallback("kvstore", "set", srv.kvStore.Set)
 		router.RegisterCallback("kvstore", "delete", srv.kvStore.Delete)
+		router.RegisterCallback("kvstore", "keys", srv.kvStore.Keys)
 	}
 
 	// Setup Logger Callbacks
@@ -259,37 +260,38 @@ func Run(c *viper.Viper) error {
 
 	// Setup Scheduler based tasks
 	for k := range cfg.GetStringMap("scheduled_tasks") {
-		log.Infof("Scheduling Task - %s", k)
+		name := k
+		log.Infof("Scheduling Task - %s", name)
 
 		// Preload WASM Function
 		err = engine.LoadModule(wasm.ModuleConfig{
-			Name:     "scheduler-" + k,
-			Filepath: cfg.GetString("scheduled_tasks." + k + ".wasm_function"),
+			Name:     "scheduler-" + name,
+			Filepath: cfg.GetString("scheduled_tasks." + name + ".wasm_function"),
 		})
 		if err != nil {
-			log.Errorf("Error loading WASM module for scheduled task %s - %s", k, err)
+			log.Errorf("Error loading WASM module for scheduled task %s - %s", name, err)
 		}
 
 		// Create Scheduled Task
-		headers := cfg.GetStringMapString("scheduled_tasks." + k + ".headers")
+		headers := cfg.GetStringMapString("scheduled_tasks." + name + ".headers")
 		headers["request_type"] = "scheduler"
 		id, err := scheduler.Add(&tasks.Task{
-			Interval: time.Duration(cfg.GetInt("scheduled_tasks."+k+".interval")) * time.Second,
+			Interval: time.Duration(cfg.GetInt("scheduled_tasks."+name+".interval")) * time.Second,
 			TaskFunc: func() error {
-				log.WithFields(logrus.Fields{"task-name": k}).Tracef("Executing Scheduled task")
-				r, err := runWASM("scheduler-"+k, "scheduler:RUN", tarmac.ServerRequest{Headers: headers})
+				log.WithFields(logrus.Fields{"task-name": name}).Tracef("Executing Scheduled task")
+				r, err := runWASM("scheduler-"+name, "scheduler:RUN", tarmac.ServerRequest{Headers: headers})
 				if err != nil {
-					log.WithFields(logrus.Fields{"task-name": k}).Debugf("Error executing task - %s", err)
+					log.WithFields(logrus.Fields{"task-name": name}).Debugf("Error executing task - %s", err)
 					return err
 				}
 				if r.Status.Code == 200 {
-					log.WithFields(logrus.Fields{"task-name": k}).Debugf("Task execution completed successfully")
+					log.WithFields(logrus.Fields{"task-name": name}).Debugf("Task execution completed successfully")
 				}
 				return nil
 			},
 		})
 		if err != nil {
-			log.Errorf("Error scheduling scheduled task %s - %s", k, err)
+			log.Errorf("Error scheduling scheduled task %s - %s", name, err)
 		}
 
 		// Clean up Task on Shutdown

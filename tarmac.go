@@ -100,3 +100,12 @@ type KVStoreDeleteResponse struct {
 	// Status is the human readible error message or success message for function execution.
 	Status Status `json:"status"`
 }
+
+// KVStoreKeysResponse is a structure supplied as a response message to the KVStore Keys callback function. This
+// response is a general response type used for all KVStore types provided by Tarmac.
+type KVStoreKeysResponse struct {
+	// Keys is a list of keys available within the KV Store.
+	Keys []string `json: keys`
+	// Status is the human readible error message or success message for function execution.
+	Status Status `json:"status"`
+}

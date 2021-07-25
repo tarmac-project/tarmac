@@ -139,3 +139,32 @@ func (k *kvStore) Delete(b []byte) ([]byte, error) {
 	}
 	return rsp, fmt.Errorf("%s", r.Status.Status)
 }
+
+// Keys will return a list of all keys stored within the key:value datastore. Logging and error handling are
+// all handled via this callback function. Note, this function will return a KVStoreKeysResponse JSON.
+func (k *kvStore) Keys(b []byte) ([]byte, error) {
+	// Start Response Message assuming everything is good
+	r := tarmac.KVStoreKeysResponse{}
+	r.Status.Code = 200
+	r.Status.Status = "OK"
+
+	// Fetch keys from datastore
+	var err error
+	r.Keys, err = kv.Keys()
+	if err != nil {
+		r.Status.Code = 500
+		r.Status.Status = fmt.Sprintf("Unable to fetch keys - %s", err)
+	}
+
+	// Marshal a response JSON to return to caller
+	rsp, err := ffjson.Marshal(r)
+	if err != nil {
+		log.Errorf("Unable to marshal kvstore:delete response - %s", err)
+		return []byte(""), fmt.Errorf("unable to marshal kvstore:delete response")
+	}
+
+	if r.Status.Code == 200 {
+		return rsp, nil
+	}
+	return rsp, fmt.Errorf("%s", r.Status.Status)
+}
