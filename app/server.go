@@ -68,7 +68,7 @@ func (s *server) middleware(n httprouter.Handle) httprouter.Handle {
 		}).Debugf("HTTP Request to %s", r.URL)
 
 		// Verify if PProf
-		if isPProf.MatchString(r.URL.Path) && cfg.GetBool("enable_pprof") == false {
+		if isPProf.MatchString(r.URL.Path) && !cfg.GetBool("enable_pprof") {
 			log.WithFields(logrus.Fields{
 				"method":         r.Method,
 				"remote-addr":    r.RemoteAddr,
