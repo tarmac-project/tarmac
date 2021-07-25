@@ -122,3 +122,38 @@ This callback uses JSON messages as input and output to facilitate communication
 
 The Status structure within the response JSON denotes the success of the database call. The status code value follows the HTTP status code standards, with anything higher than 399 is an error.
 
+
+## Keys
+
+The Keys function provides users with the ability to fetch a list of all keys available within the Key:Value datastore.
+
+
+```golang
+_, err := wapc.HostCall("tarmac", "kvstore", "keys", []byte())
+```
+
+Note: This callback requires no input JSON. However, the callback function will require users to provide a byte slice.
+
+### Interface Details
+
+| Namespace | Capability | Function | Input | Output |
+| --------- | ---------- | -------- | ----- | ------ |
+| `tarmac` | `kvstore` | `keys` | `EmptyByteSlice` | `KVStoreKeysResponse` |
+
+### Example JSON
+
+This callback uses JSON messages as input and output to facilitate communications between WASM functions and the Tarmac host.
+
+#### KVStoreKeysResponse
+
+```json
+{
+	"keys": ["key1", "key2"],
+	"status": {
+		"code": 200,
+		"status": "OK"
+	}
+}
+```
+
+The Status structure within the response JSON denotes the success of the database call. The status code value follows the HTTP status code standards, with anything higher than 399 is an error.
