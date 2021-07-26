@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 )
 
 // isPProf is a regex that validates if the given path is used for PProf
@@ -55,6 +56,8 @@ func (s *server) Ready(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 // them. e.g. Metrics, Logging...
 func (s *server) middleware(n httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		now := time.Now()
+
 		// Set the Tarmac server response header
 		w.Header().Set("Server", "tarmac")
 
@@ -78,11 +81,13 @@ func (s *server) middleware(n httprouter.Handle) httprouter.Handle {
 			}).Debugf("Request to PProf Address failed, PProf disabled")
 			w.WriteHeader(http.StatusForbidden)
 
+			stats.srv.WithLabelValues(r.URL.Path).Observe(time.Since(now).Seconds())
 			return
 		}
 
 		// Call registered handler
 		n(w, r, ps)
+		stats.srv.WithLabelValues(r.URL.Path).Observe(time.Since(now).Seconds())
 	}
 }
 
@@ -180,30 +185,36 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 // runWASM will load and execute the specified WASM module.
 func runWASM(module, handler string, rq tarmac.ServerRequest) (tarmac.ServerResponse, error) {
 	var rsp tarmac.ServerResponse
+	now := time.Now()
 
 	// Convert request to JSON payload
 	d, err := ffjson.Marshal(rq)
 	if err != nil {
+		stats.wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
 		return rsp, fmt.Errorf("unable to marshal server request - %s", err)
 	}
 
 	// Fetch Module and run with payload
 	m, err := engine.Module(module)
 	if err != nil {
+		stats.wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
 		return rsp, fmt.Errorf("unable to load wasi environment - %s", err)
 	}
 
 	// Execute the WASM Handler
 	data, err := m.Run(handler, d)
 	if err != nil {
+		stats.wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
 		return rsp, fmt.Errorf("failed to execute wasm module - %s", err)
 	}
 
 	// Unmarshal WASM JSON response
 	err = ffjson.Unmarshal(data, &rsp)
 	if err != nil {
+		stats.wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
 		return rsp, fmt.Errorf("failed to unmarshal response - %s", err)
 	}
 
+	stats.wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
 	return rsp, nil
 }

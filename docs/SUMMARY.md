@@ -7,6 +7,7 @@
 * [Configuration](running-tarmac/configuration.md)
 * [Key:Value Datastore](running-tarmac/kvstore.md)
 * [Logging](running-tarmac/logging.md)
+* [Monitoring](running-tarmac/metrics.md)
 * [Scheduled Tasks](running-tarmac/scheduled-tasks.md)
 * [Troubleshooting Performance](running-tarmac/profiling.md)
 

@@ -15,6 +15,7 @@ import (
 	"github.com/madflojo/tarmac/callbacks"
 	"github.com/madflojo/tarmac/wasm"
 	"github.com/madflojo/tasks"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"net/http"
@@ -53,6 +54,9 @@ var log *logrus.Logger
 
 // scheduler is a internal task scheduler for recurring tasks
 var scheduler *tasks.Scheduler
+
+// stats is used across the app package to manage and access system metrics.
+var stats = newMetrics()
 
 // Run starts the primary application. It handles starting background services,
 // populating package globals & structures, and clean up tasks.
@@ -217,6 +221,7 @@ func Run(c *viper.Viper) error {
 	// Create WASM Callback Router
 	router := callbacks.New(callbacks.Config{
 		PreFunc: func(namespace, op string, data []byte) ([]byte, error) {
+			stats.callbacks.WithLabelValues(fmt.Sprintf("%s:%s", namespace, op)).Inc()
 			log.WithFields(logrus.Fields{
 				"namespace": namespace,
 				"function":  op,
@@ -279,15 +284,18 @@ func Run(c *viper.Viper) error {
 		id, err := scheduler.Add(&tasks.Task{
 			Interval: time.Duration(cfg.GetInt("scheduled_tasks."+name+".interval")) * time.Second,
 			TaskFunc: func() error {
+				now := time.Now()
 				log.WithFields(logrus.Fields{"task-name": name}).Tracef("Executing Scheduled task")
 				r, err := runWASM("scheduler-"+name, "scheduler:RUN", tarmac.ServerRequest{Headers: headers})
 				if err != nil {
 					log.WithFields(logrus.Fields{"task-name": name}).Debugf("Error executing task - %s", err)
+					stats.tasks.WithLabelValues(name).Observe(time.Since(now).Seconds())
 					return err
 				}
 				if r.Status.Code == 200 {
 					log.WithFields(logrus.Fields{"task-name": name}).Debugf("Task execution completed successfully")
 				}
+				stats.tasks.WithLabelValues(name).Observe(time.Since(now).Seconds())
 				return nil
 			},
 		})
@@ -298,6 +306,9 @@ func Run(c *viper.Viper) error {
 		// Clean up Task on Shutdown
 		defer scheduler.Del(id)
 	}
+
+	// Register Metrics Handler
+	srv.httpRouter.GET("/metrics", srv.handlerWrapper(promhttp.Handler()))
 
 	// Register PProf Handlers
 	srv.httpRouter.GET("/debug/pprof/", srv.handlerWrapper(http.HandlerFunc(pprof.Index)))
