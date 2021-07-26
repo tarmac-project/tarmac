@@ -137,6 +137,16 @@ func TestRunningServer(t *testing.T) {
 		}
 	})
 
+	t.Run("Check Metrics HTTP Handler", func(t *testing.T) {
+		r, err := http.Get("http://localhost:9000/metrics")
+		if err != nil {
+			t.Errorf("Unexpected error when requesting metrics status - %s", err)
+		}
+		if r.StatusCode != 200 {
+			t.Errorf("Unexpected http status code when checking metrics - %d", r.StatusCode)
+		}
+	})
+
 }
 
 func TestPProfServerEnabled(t *testing.T) {

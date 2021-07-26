@@ -8,7 +8,7 @@ Troubleshooting Performance Issues or Memory leaks within running services can b
 
 PProf is a Go tool for capturing and visualizing profiling data. Tarmac uses the `net/http/pprof` package to make PProf available via HTTP end-points.
 
-By default, all PProf end-points are disabled, preventing unauthorized use of PProf (which itself can affect performance). To enable PProf, set the Configuration value of `enable-pprof` to `true`. Using a distributed configuration service such as Consul, users can change this value live without restarting the application instance.
+By default, all PProf end-points are disabled, preventing unauthorized use of PProf (which itself can affect performance). To enable PProf, set the Configuration value of `enable_pprof` to `true`. Using a distributed configuration service such as Consul, users can change this value live without restarting the application instance.
 
 Follow the [Configuration guide](configuration.md) for more details on configuring Tarmac.
 

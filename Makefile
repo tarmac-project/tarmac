@@ -4,7 +4,7 @@
 tests:
 	@echo "Launching Tests in Docker Compose"
 	docker-compose -f dev-compose.yml up -d cassandra-primary cassandra
-	sleep 15
+	sleep 30
 	docker-compose -f dev-compose.yml up --build tests
 
 clean:
