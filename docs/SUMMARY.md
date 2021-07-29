@@ -21,8 +21,9 @@
 ## Callback Functions
 
 * [Callbacks](callback-functions/callbacks.md)
-* [Logger](callback-functions/logger.md)
 * [Key:Value Datastore](callback-functions/key-value-store.md)
+* [Logger](callback-functions/logger.md)
+* [Metrics](callback-functions/metrics.md)
 
 ## Developer Resources
 
