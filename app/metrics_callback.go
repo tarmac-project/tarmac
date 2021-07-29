@@ -41,7 +41,7 @@ func NewMetricsCallback() *metricsCallback {
 	m.all = make(map[string]string)
 	m.counters = make(map[string]prometheus.Counter)
 	m.gauges = make(map[string]prometheus.Gauge)
-	m.histograms = make(map[string]prometheus.Histogram)
+	m.histograms = make(map[string]prometheus.Summary)
 	return m
 }
 
