@@ -109,3 +109,28 @@ type KVStoreKeysResponse struct {
 	// Status is the human readible error message or success message for function execution.
 	Status Status `json:"status"`
 }
+
+// MetricsCounter is a structure used to create Counter metrics callback requests to the Tarmac Metrics interface.
+type MetricsCounter struct {
+	// Name is the name of the metric as exposed via the metrics HTTP end-point. Name must be unique across
+	// all metrics; duplicate names will create a panic.
+	Name string `json:"name"`
+}
+
+// MetricsGauge is a structure used to create Gauge metrics callback requests to the Tarmacs Metrics interface.
+type MetricsGauge struct {
+	// Name is the name of the metric as exposed via the metrics HTTP end-point. Name must be unique across all
+	// metrics; duplicate names will create a panic.
+	Name string `json:"name"`
+	// Action is the action to be performed for the Gauge metric. Valid options are inc (Increment) and dec (Decrement).
+	Action string `json:"action"`
+}
+
+// MetricsHistogram is a structure used to create Histogram metrics callback requests to the Tarmacs Metrics interface.
+type MetricsHistogram struct {
+	// Name is the name of the metric as exposed via the metrics HTTP end-point. Name must be unique across all
+	// metrics; duplicate names will create a panic.
+	Name string `json:"name"`
+	// Value is the value to Observe for the Histogram metric.
+	Value float64 `json:"value"`
+}

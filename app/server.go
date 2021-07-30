@@ -30,6 +30,9 @@ type server struct {
 
 	// logger provides access to the logging callback functions for WASM Modules.
 	logger *logger
+
+	// metrics provides access to the metrics callback functions for WASM Modules.
+	metrics *metricsCallback
 }
 
 // Health is used to handle HTTP Health requests to this service. Use this for liveness
