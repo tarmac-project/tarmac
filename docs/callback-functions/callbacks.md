@@ -12,7 +12,7 @@ This ability to perform a Host Callback is what sets Tarmac apart from most othe
 
 Essentially, Host Callbacks allow Tarmac to provide developers the functionality of a standard Microservice Framework along with the convenience of a serverless runtime.
 
-Using Host Callbacks
+## Using Host Callbacks
 
 Calling a Host Callback is relatively straightforward for WASM functions. As outlined in the language guides, each WASM function must import a waPC compliant guest library. This guest library will allow users to access a `HostCall()` function for their language of choice. 
 
