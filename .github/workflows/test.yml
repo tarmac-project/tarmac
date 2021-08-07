@@ -26,4 +26,4 @@ jobs:
     - name: Update Coveralls
       env:
         COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: $GOBIN/goveralls -coverprofile=coverage/coverage.out -service=github
+      run: goveralls -coverprofile=coverage/coverage.out -service=github
