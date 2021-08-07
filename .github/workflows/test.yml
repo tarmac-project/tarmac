@@ -17,8 +17,10 @@ jobs:
       uses: actions/setup-go@v1
       with:
         go-version: '1.16'
+    - name: Install cover
+      run: go get golang.org/x/tools/cmd/cover
     - name: Install goveralls
-      run: go get -u github.com/mattn/goveralls
+      run: go get github.com/mattn/goveralls
     - name: Execute Tests
       run: make tests
     - name: Update Coveralls
