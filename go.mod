@@ -10,6 +10,6 @@ require (
 	github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7
 	github.com/prometheus/client_golang v0.9.3
 	github.com/sirupsen/logrus v1.8.1
-	github.com/spf13/viper v1.7.1
+	github.com/spf13/viper v1.8.1
 	github.com/wapc/wapc-go v0.3.0
 )
