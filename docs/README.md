@@ -5,7 +5,7 @@
 Framework for building distributed services with Web Assembly
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/madflojo/tarmac)](https://pkg.go.dev/github.com/madflojo/tarmac)
-[![Documentation](https://img.shields.io/badge/Docs-latest-blue)](https://tarmac.gitbook.io/tarmac/)
+[![Documentation](https://img.shields.io/badge/framework-docs-latest-blue)](https://tarmac.gitbook.io/tarmac/)
 [![Build Status](https://github.com/madflojo/tarmac/actions/workflows/build.yml/badge.svg)](https://github.com/madflojo/tarmac/actions/workflows/build.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/madflojo/tarmac)](https://goreportcard.com/report/github.com/madflojo/tarmac)
 [![Coverage Status](https://coveralls.io/repos/github/madflojo/tarmac/badge.svg?branch=master)](https://coveralls.io/github/madflojo/tarmac?branch=master)
