@@ -1,15 +1,13 @@
-name: tests
+name: build
 
 on:
   push:
-    #branches: [ $default-branch ]
-    branches:
-      - actions 
+    branches: [ $default-branch ]
   pull_request:
     branches: [ $default-branch ]
 
 jobs:
-  build:
+  tests:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
