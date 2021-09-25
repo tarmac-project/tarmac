@@ -106,6 +106,7 @@ type KVStoreDeleteResponse struct {
 type KVStoreKeysResponse struct {
 	// Keys is a list of keys available within the KV Store.
 	Keys []string `json:"keys"`
+
 	// Status is the human readible error message or success message for function execution.
 	Status Status `json:"status"`
 }
@@ -122,6 +123,7 @@ type MetricsGauge struct {
 	// Name is the name of the metric as exposed via the metrics HTTP end-point. Name must be unique across all
 	// metrics; duplicate names will create a panic.
 	Name string `json:"name"`
+
 	// Action is the action to be performed for the Gauge metric. Valid options are inc (Increment) and dec (Decrement).
 	Action string `json:"action"`
 }
@@ -131,6 +133,42 @@ type MetricsHistogram struct {
 	// Name is the name of the metric as exposed via the metrics HTTP end-point. Name must be unique across all
 	// metrics; duplicate names will create a panic.
 	Name string `json:"name"`
+
 	// Value is the value to Observe for the Histogram metric.
 	Value float64 `json:"value"`
+}
+
+// HTTPCall is a structure used to create HTTP calls to remote systems.
+type HTTPCall struct {
+	// Method is the HTTP method type for the HTTP request; valid options are GET, POST, PUT, PATCH, HEAD, & DELETE.
+	Method string `json:"method"`
+
+	// Headers are the HTTP headers to include in the HTTP request.
+	Headers map[string]string `json:"headers"`
+
+	// URL is the HTTP URL to call.
+	URL string `json:"url"`
+
+	// Body is the user-supplied HTTP body data. This field should contain a base64 encoded string. Tarmac expects this
+	// field to be based64 encoded, and neglecting to do so will result in an error from the callback function.
+	Body string `json:"body"`
+
+	// Insecure will disable TLS host verification; this is common with self-signed certificates; however, use caution.
+	Insecure bool `json:"insecure"`
+}
+
+// HTTPCallResponse is a structure supplied as a response message to a remote HTTP call callback function.
+type HTTPCallResponse struct {
+	// Status is the human readible error message or success message for function execution.
+	Status Status
+
+	// Code is the HTTP Status Code returned from the target server.
+	Code int `json:"status"`
+
+	// Headers are the HTTP headers returned from the HTTP request.
+	Headers map[string]string `json:"headers"`
+
+	// Body is the server-supplied HTTP payload data. The server-supplied payload will be base64 encoded to provide a
+	// simple JSON-friendly field for arbitrary data.
+	Body string `json:"body"`
 }
