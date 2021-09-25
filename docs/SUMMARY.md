@@ -22,6 +22,7 @@
 
 * [Callbacks](callback-functions/callbacks.md)
 * [Key:Value Datastore](callback-functions/key-value-store.md)
+* [HTTP Call](callback-functions/http-call.md)
 * [Logger](callback-functions/logger.md)
 * [Metrics](callback-functions/metrics.md)
 

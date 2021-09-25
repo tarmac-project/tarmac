@@ -21,6 +21,9 @@ type metrics struct {
 
 	// kvstore is a summary metric of the KVStore callback executions.
 	kvstore *prometheus.SummaryVec
+
+	// httpcall is a summary metric of the HTTPCall callback executions.
+	httpcall *prometheus.SummaryVec
 }
 
 // newMetrics will return an initialized systems metrics instance.
@@ -61,6 +64,14 @@ func newMetrics() *metrics {
 	m.kvstore = promauto.NewSummaryVec(prometheus.SummaryOpts{
 		Name:       "kvstore_callbacks",
 		Help:       "Summary of kvstore callback executions",
+		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
+	},
+		[]string{"callback"},
+	)
+
+	m.httpcall = promauto.NewSummaryVec(prometheus.SummaryOpts{
+		Name:       "httpcall_callbacks",
+		Help:       "Summary of httpcall callback executions",
 		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
 	},
 		[]string{"callback"},
