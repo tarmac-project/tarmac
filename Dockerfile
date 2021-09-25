@@ -1,4 +1,4 @@
-FROM golang:1.16.8
+FROM golang:latest
 
 ADD . /go/src/github.com/madflojo/tarmac
 WORKDIR /go/src/github.com/madflojo/tarmac/cmd/tarmac
