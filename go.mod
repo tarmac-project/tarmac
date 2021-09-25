@@ -1,6 +1,6 @@
 module github.com/madflojo/tarmac
 
-go 1.17
+go 1.16
 
 require (
 	github.com/julienschmidt/httprouter v1.3.0
