@@ -64,9 +64,8 @@ func (hc *httpcall) Call(b []byte) ([]byte, error) {
 		}
 
 		// Set user-supplied headers
-		headers := make(map[string][]string)
 		for k, v := range rq.Headers {
-			headers[k] = []string{v}
+			request.Header.Set(k, v)
 		}
 	}
 

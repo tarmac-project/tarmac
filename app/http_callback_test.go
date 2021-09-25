@@ -29,6 +29,12 @@ func TestHTTPCall(t *testing.T) {
 		// Set a header to validate
 		w.Header().Set("Server", "tarmac")
 
+		// Check Header
+		if r.Header.Get("teapot") != "true" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
 		// Process methods with and without payloads
 		switch r.Method {
 		case "POST", "PUT", "PATCH":
@@ -57,7 +63,7 @@ func TestHTTPCall(t *testing.T) {
 		httpCode: 200,
 		name:     "Simple GET",
 		call:     "Call",
-		json:     fmt.Sprintf(`{"method":"GET","insecure":true,"url":"%s"}`, ts.URL),
+		json:     fmt.Sprintf(`{"method":"GET","headers":{"teapot": "true"},"insecure":true,"url":"%s"}`, ts.URL),
 	})
 
 	tc = append(tc, httpcallCase{
@@ -66,7 +72,7 @@ func TestHTTPCall(t *testing.T) {
 		httpCode: 0,
 		name:     "Simple GET without SkipVerify",
 		call:     "Call",
-		json:     fmt.Sprintf(`{"method":"GET","url":"%s"}`, ts.URL),
+		json:     fmt.Sprintf(`{"method":"GET","headers":{"teapot": "true"},"url":"%s"}`, ts.URL),
 	})
 
 	tc = append(tc, httpcallCase{
@@ -75,7 +81,7 @@ func TestHTTPCall(t *testing.T) {
 		httpCode: 200,
 		name:     "Simple HEAD",
 		call:     "Call",
-		json:     fmt.Sprintf(`{"method":"HEAD","insecure":true,"url":"%s"}`, ts.URL),
+		json:     fmt.Sprintf(`{"method":"HEAD","headers":{"teapot": "true"},"insecure":true,"url":"%s"}`, ts.URL),
 	})
 
 	tc = append(tc, httpcallCase{
@@ -84,7 +90,7 @@ func TestHTTPCall(t *testing.T) {
 		httpCode: 200,
 		name:     "Simple DELETE",
 		call:     "Call",
-		json:     fmt.Sprintf(`{"method":"DELETE","insecure":true,"url":"%s"}`, ts.URL),
+		json:     fmt.Sprintf(`{"method":"DELETE","headers":{"teapot": "true"},"insecure":true,"url":"%s"}`, ts.URL),
 	})
 
 	tc = append(tc, httpcallCase{
@@ -93,7 +99,7 @@ func TestHTTPCall(t *testing.T) {
 		httpCode: 200,
 		name:     "Simple POST",
 		call:     "Call",
-		json:     fmt.Sprintf(`{"method":"POST","insecure":true,"url":"%s","body":"UE9TVA=="}`, ts.URL),
+		json:     fmt.Sprintf(`{"method":"POST","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"UE9TVA=="}`, ts.URL),
 	})
 
 	tc = append(tc, httpcallCase{
@@ -102,7 +108,7 @@ func TestHTTPCall(t *testing.T) {
 		httpCode: 400,
 		name:     "Invalid POST",
 		call:     "Call",
-		json:     fmt.Sprintf(`{"method":"POST","insecure":true,"url":"%s","body":"NotValid"}`, ts.URL),
+		json:     fmt.Sprintf(`{"method":"POST","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"NotValid"}`, ts.URL),
 	})
 
 	tc = append(tc, httpcallCase{
@@ -111,7 +117,7 @@ func TestHTTPCall(t *testing.T) {
 		httpCode: 200,
 		name:     "Simple PUT",
 		call:     "Call",
-		json:     fmt.Sprintf(`{"method":"PUT","insecure":true,"url":"%s","body":"UFVU"}`, ts.URL),
+		json:     fmt.Sprintf(`{"method":"PUT","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"UFVU"}`, ts.URL),
 	})
 
 	tc = append(tc, httpcallCase{
@@ -120,7 +126,7 @@ func TestHTTPCall(t *testing.T) {
 		httpCode: 400,
 		name:     "Invalid PUT",
 		call:     "Call",
-		json:     fmt.Sprintf(`{"method":"PUT","insecure":true,"url":"%s","body":"NotValid"}`, ts.URL),
+		json:     fmt.Sprintf(`{"method":"PUT","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"NotValid"}`, ts.URL),
 	})
 
 	tc = append(tc, httpcallCase{
@@ -129,7 +135,7 @@ func TestHTTPCall(t *testing.T) {
 		httpCode: 200,
 		name:     "Simple PATCH",
 		call:     "Call",
-		json:     fmt.Sprintf(`{"method":"PATCH","insecure":true,"url":"%s","body":"UEFUQ0g="}`, ts.URL),
+		json:     fmt.Sprintf(`{"method":"PATCH","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"UEFUQ0g="}`, ts.URL),
 	})
 
 	tc = append(tc, httpcallCase{
@@ -138,7 +144,7 @@ func TestHTTPCall(t *testing.T) {
 		httpCode: 400,
 		name:     "Simple PATCH",
 		call:     "Call",
-		json:     fmt.Sprintf(`{"method":"PATCH","insecure":true,"url":"%s","body":"NotValid"}`, ts.URL),
+		json:     fmt.Sprintf(`{"method":"PATCH","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"NotValid"}`, ts.URL),
 	})
 
 	// Loop through test cases executing and validating
@@ -171,8 +177,15 @@ func TestHTTPCall(t *testing.T) {
 				}
 
 				// HTTP Response
-				if rsp.Code < c.httpCode || rsp.Code > c.httpCode+99 {
+				if rsp.Code != c.httpCode {
 					t.Fatalf("HTTPCall returned an unexpected response code - %+v", rsp)
+					return
+				}
+
+				// Validate Response Header
+				v, ok := rsp.Headers["server"]
+				if rsp.Code == 200 && (!ok || v != "tarmac") {
+					t.Errorf("HTTPCall returned an unexpected header - %+v", rsp)
 				}
 
 				// Validate Payload
@@ -185,7 +198,7 @@ func TestHTTPCall(t *testing.T) {
 					case "PUT", "POST", "PATCH":
 						return
 					default:
-						t.Fatalf("HTTPCall returned unexpected payload - %s", body)
+						t.Errorf("HTTPCall returned unexpected payload - %s", body)
 					}
 				}
 			})

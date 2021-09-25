@@ -183,6 +183,7 @@ func Run(c *viper.Viper) error {
 		kvStore:    &kvStore{},
 		logger:     &logger{},
 		metrics:    NewMetricsCallback(),
+		httpcall:   &httpcall{},
 	}
 	srv.httpServer = &http.Server{
 		Addr:    cfg.GetString("listen_addr"),
@@ -238,6 +239,9 @@ func Run(c *viper.Viper) error {
 		router.RegisterCallback("kvstore", "delete", srv.kvStore.Delete)
 		router.RegisterCallback("kvstore", "keys", srv.kvStore.Keys)
 	}
+
+	// Setup HTTP Callbacks
+	router.RegisterCallback("httpcall", "call", srv.httpcall.Call)
 
 	// Setup Logger Callbacks
 	router.RegisterCallback("logger", "info", srv.logger.Info)
