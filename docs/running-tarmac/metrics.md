@@ -13,9 +13,8 @@ Some valuable metrics to monitor are in the below table.
 | Metric Name | Metric Type | Description |
 | ----------- | ----------- | ----------- |
 | `http_server` | Summary | Summary of HTTP Server requests |
-| `kvstore_callbacks` | Summary | Summary of kvstore callback executions |
 | `scheduled_tasks` | Summary | Summary of user defined scheduled task WASM function executions |
-| `server_callbacks` | Counter | waPC callback function executions |
+| `wasm_callbacks` | Summary | Summary of Tarmac callback function executions |
 | `wasm_functions` | Summary | Summary of wasm function executions |
 
 These metrics do not need to be enabled and are "on by default".

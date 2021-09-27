@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 	"testing"
+	"time"
 )
 
 type Counter struct {
@@ -24,13 +25,40 @@ func (c *Counter) Value() int {
 	return c.count
 }
 
+func TestCallbacksDefaults(t *testing.T) {
+	router := New(Config{})
+	counter := &Counter{}
+
+	t.Run("Add New Callback", func(t *testing.T) {
+		router.RegisterCallback("counter", "++", func([]byte) ([]byte, error) {
+			counter.Increment()
+			return []byte(""), nil
+		})
+	})
+
+	t.Run("Call Callback", func(t *testing.T) {
+		_, err := router.Callback(context.Background(), "default", "counter", "++", []byte(""))
+		if err != nil {
+			t.Errorf("Unexpected error when calling Callback function for registered callback - %s", err)
+		}
+
+		if counter.Value() != 1 {
+			t.Errorf("Counter was not called")
+		}
+	})
+}
+
 func TestCallbacks(t *testing.T) {
+	postCount := &Counter{}
 	router := New(Config{
 		PreFunc: func(namespace, op string, b []byte) ([]byte, error) {
 			if namespace == "badfunc" {
 				return []byte(""), fmt.Errorf("Forced Error")
 			}
 			return []byte(""), nil
+		},
+		PostFunc: func(CallbackResult) {
+			postCount.Increment()
 		},
 	})
 	counter := &Counter{}
@@ -104,6 +132,20 @@ func TestCallbacks(t *testing.T) {
 		_, err := router.Callback(ctx, "default2", "badfunc", "nil", []byte(""))
 		if err == nil {
 			t.Errorf("Expected error when calling Callback function with nil func")
+		}
+	})
+
+	t.Run("Verify PostFunc was called", func(t *testing.T) {
+		router.RegisterCallback("goodfunc1", "post", func([]byte) ([]byte, error) { return []byte(""), nil })
+		_, err := router.Callback(context.Background(), "default", "goodfunc1", "post", []byte(""))
+		if err != nil {
+			t.Errorf("Unexpected error calling good callback - %s", err)
+		}
+
+		<-time.After(time.Duration(10) * time.Second)
+
+		if postCount.Value() < 1 {
+			t.Errorf("Expected post func to be called, but it was not - %d", postCount.Value())
 		}
 	})
 }

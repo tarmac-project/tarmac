@@ -2,28 +2,28 @@
 description: Make HTTP requests with a simple HTTP client
 ---
 
-# HTTP Call
+# HTTPClient 
 
-The HTTP Call capability provides WASM function developers to perform HTTP client requests to remote or local HTTP servers. While a simplistic client, Tarmac supports multiple HTTP requests, setting headers, and custom payloads. 
+The HTTPClient capability provides WASM function developers to perform HTTP client requests to remote or local HTTP servers. While a simplistic client, Tarmac supports multiple HTTP requests, setting headers, and custom payloads. 
 
 ## Call
 
 The Call function provides users with the ability to make HTTP client requests to the specified URL. The `body` key within the request and response JSON will be base64 encoded to avoid conflicts.
 
 ```golang
-_, err := wapc.HostCall("tarmac", "httpcall", "call", HTTPCallJSON)
+_, err := wapc.HostCall("tarmac", "httpclient", "call", HTTPClientJSON)
 ```
 ### Interface Details
 
 | Namespace | Capability | Function | Input | Output |
 | --------- | ---------- | -------- | ----- | ------ |
-| `tarmac` | `httpcall` | `call` | `HTTPCall` | `HTTPCallResponse` |
+| `tarmac` | `httpclient` | `call` | `HTTPClient` | `HTTPClientResponse` |
 
 ### Example JSON
 
 This callback uses JSON messages as input and output to facilitate communications between WASM functions and the Tarmac host.
 
-#### HTTPCall
+#### HTTPClient
 
 ```json
 {
@@ -37,7 +37,7 @@ This callback uses JSON messages as input and output to facilitate communication
 }
 ```
 
-#### HTTPCallResponse
+#### HTTPClientResponse
 
 ```json
 {

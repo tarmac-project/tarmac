@@ -1,4 +1,26 @@
-package app
+/*
+Package metrics is part of the Tarmac suite of Host Callback packages. This package provides users with the ability
+to provide WASM functions with a host callback interface that provides metrics tracking capabilities.
+
+	package main
+
+	import (
+		"github.com/madflojo/tarmac/callbacks"
+		"github.com/madflojo/tarmac/callbacks/metrics"
+	)
+
+	func main() {
+		// Create instance of metrics to register for callback execution
+		metrics := metrics.New(metrics.Config{})
+
+		// Create Callback router and register metrics
+		router := callbacks.New()
+		router.RegisterCallback("metrics", "Counter", metrics.Counter)
+	}
+
+
+*/
+package metrics
 
 import (
 	"fmt"
@@ -10,9 +32,9 @@ import (
 	"sync"
 )
 
-// metricsCallback stores and manages the user-defined metrics created via
+// Metrics stores and manages the user-defined metrics created via
 // WASM function callbacks.
-type metricsCallback struct {
+type Metrics struct {
 	sync.Mutex
 	// all contains a map of all custom defined metrics
 	all map[string]string
@@ -34,20 +56,24 @@ var ErrInvalidMetricName = fmt.Errorf("invalid metric name")
 // isMetricNameValid is a regex used to validate metric names.
 var isMetricNameValid = regexp.MustCompile(`^[a-zA-Z0-9_:][a-zA-Z0-9_:]*$`)
 
-// NewMetricsCallback will create a new instance of metrics enabling users to
+// Config is provided to users to configure the Host Callback. All Tarmac Callbacks follow the same configuration
+// format; each Config struct gives the specific Host Callback unique functionality.
+type Config struct{}
+
+// New will create a new instance of metrics enabling users to
 // collect custom metrics.
-func NewMetricsCallback() *metricsCallback {
-	m := &metricsCallback{}
+func New(cfg Config) (*Metrics, error) {
+	m := &Metrics{}
 	m.all = make(map[string]string)
 	m.counters = make(map[string]prometheus.Counter)
 	m.gauges = make(map[string]prometheus.Gauge)
 	m.histograms = make(map[string]prometheus.Summary)
-	return m
+	return m, nil
 }
 
 // Counter will create and increment a counter metric. The expected input for
 // this function is a MetricsCounter JSON.
-func (m *metricsCallback) Counter(b []byte) ([]byte, error) {
+func (m *Metrics) Counter(b []byte) ([]byte, error) {
 	// Parse incoming Request
 	var rq tarmac.MetricsCounter
 	err := ffjson.Unmarshal(b, &rq)
@@ -86,7 +112,7 @@ func (m *metricsCallback) Counter(b []byte) ([]byte, error) {
 // Guage will create a gauge metric and either increment or decrement the value
 // based on the provided input. The expected input for this function is a
 // MetricsGauge JSON.
-func (m *metricsCallback) Gauge(b []byte) ([]byte, error) {
+func (m *Metrics) Gauge(b []byte) ([]byte, error) {
 	// Parse incoming Request
 	var rq tarmac.MetricsGauge
 	err := ffjson.Unmarshal(b, &rq)
@@ -133,7 +159,7 @@ func (m *metricsCallback) Gauge(b []byte) ([]byte, error) {
 // Histogram will create a histogram or summary metric and observe the
 // provided values. The expected input for this function is a
 // MetricsHistogram JSON.
-func (m *metricsCallback) Histogram(b []byte) ([]byte, error) {
+func (m *Metrics) Histogram(b []byte) ([]byte, error) {
 	// Parse incoming Request
 	var rq tarmac.MetricsHistogram
 	err := ffjson.Unmarshal(b, &rq)

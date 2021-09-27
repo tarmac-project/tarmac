@@ -14,6 +14,8 @@ services:
       - "CONSUL_HTTP_ADDR=consul:8500"
       - "CONSUL_HTTP_SSL=false"
       - "APP_WASM_FUNCTION=./testdata/tarmac.wasm"
+    volumes:
+      - "./testdata:/testdata"
     depends_on:
       - redis
       - consul

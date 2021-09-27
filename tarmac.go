@@ -138,8 +138,8 @@ type MetricsHistogram struct {
 	Value float64 `json:"value"`
 }
 
-// HTTPCall is a structure used to create HTTP calls to remote systems.
-type HTTPCall struct {
+// HTTPClient is a structure used to create HTTP calls to remote systems.
+type HTTPClient struct {
 	// Method is the HTTP method type for the HTTP request; valid options are GET, POST, PUT, PATCH, HEAD, & DELETE.
 	Method string `json:"method"`
 
@@ -157,8 +157,8 @@ type HTTPCall struct {
 	Insecure bool `json:"insecure"`
 }
 
-// HTTPCallResponse is a structure supplied as a response message to a remote HTTP call callback function.
-type HTTPCallResponse struct {
+// HTTPClientResponse is a structure supplied as a response message to a remote HTTP call callback function.
+type HTTPClientResponse struct {
 	// Status is the human readible error message or success message for function execution.
 	Status Status
 

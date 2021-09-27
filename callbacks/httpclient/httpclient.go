@@ -1,4 +1,25 @@
-package app
+/*
+Package httpclient is part of the Tarmac suite of Host Callback packages. This package provides users with the
+ability to provide WASM functions with a host callback interface that provides HTTP client capabilities.
+
+	package main
+
+	import (
+		"github.com/madflojo/tarmac/callbacks"
+		"github.com/madflojo/tarmac/callbacks/httpclient"
+	)
+
+	func main() {
+		// Create instance of httpclient to register for callback execution
+		httpclient := httpclient.New(httpclient.Config{})
+
+		// Create Callback router and register httpclient
+		router := callbacks.New()
+		router.RegisterCallback("httpclient", "Call", httpclient.Call)
+	}
+
+*/
+package httpclient
 
 import (
 	"bytes"
@@ -10,27 +31,35 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"time"
 )
 
-// httpcall provides access to Host Callbacks that interact with an HTTP client. These callbacks offer all of the logic
+// HTTPClient provides access to Host Callbacks that interact with an HTTP client. These callbacks offer all of the logic
 // and error handlings of interacting with an HTTP server. Users will send the specified JSON request and receive
 // an appropriate JSON response.
-type httpcall struct{}
+type HTTPClient struct{}
+
+// Config is provided to users to configure the Host Callback. All Tarmac Callbacks follow the same configuration
+// format; each Config struct gives the specific Host Callback unique functionality.
+type Config struct{}
+
+// New will create and return a new HTTPClient instance that users can register as a Tarmac Host Callback function.
+// Users can provide any custom HTTP Client configurations using the configuration options supplied.
+func New(cfg Config) (*HTTPClient, error) {
+	hc := &HTTPClient{}
+	return hc, nil
+}
 
 // Call will perform the desired HTTP request using the supplied JSON as configuration. Logging, error handling, and
 // base64 decoding of payload data are all handled via this function. Note, this function expects the
-// HTTPCallRequest JSON type as input and will return a KVStoreGetResponse JSON.
-func (hc *httpcall) Call(b []byte) ([]byte, error) {
-	now := time.Now()
-
+// HTTPClientRequest JSON type as input and will return a KVStoreGetResponse JSON.
+func (hc *HTTPClient) Call(b []byte) ([]byte, error) {
 	// Start Response Message assuming everything is good
-	r := tarmac.HTTPCallResponse{}
+	r := tarmac.HTTPClientResponse{}
 	r.Status.Code = 200
 	r.Status.Status = "OK"
 
 	// Parse incoming Request
-	var rq tarmac.HTTPCall
+	var rq tarmac.HTTPClient
 	err := ffjson.Unmarshal(b, &rq)
 	if err != nil {
 		r.Status.Code = 400
@@ -96,16 +125,12 @@ func (hc *httpcall) Call(b []byte) ([]byte, error) {
 	// Marshal a response JSON to return to caller
 	rsp, err := ffjson.Marshal(r)
 	if err != nil {
-		log.Errorf("Unable to marshal httpcall:call response - %s", err)
-		stats.httpcall.WithLabelValues("call").Observe(time.Since(now).Seconds())
-		return []byte(""), fmt.Errorf("unable to marshal httpcall:call response")
+		return []byte(""), fmt.Errorf("unable to marshal HTTPClient:call response")
 	}
 
 	// Return response to caller
 	if r.Status.Code == 200 {
-		stats.httpcall.WithLabelValues("call").Observe(time.Since(now).Seconds())
 		return rsp, nil
 	}
-	stats.httpcall.WithLabelValues("call").Observe(time.Since(now).Seconds())
 	return rsp, fmt.Errorf("%s", r.Status.Status)
 }

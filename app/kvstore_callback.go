@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/madflojo/tarmac"
 	"github.com/pquerna/ffjson/ffjson"
-	"time"
 )
 
 // kvStore provides access to Host Callbacks that interact with the key:value datastores within Tarmac. The callbacks
@@ -17,7 +16,6 @@ type kvStore struct{}
 // base64 encoding of data are all handled via this function. Note, this function expects the KVStoreGetRequest
 // JSON type as input and will return a KVStoreGetResponse JSON.
 func (k *kvStore) Get(b []byte) ([]byte, error) {
-	now := time.Now()
 	// Start Response Message assuming everything is good
 	r := tarmac.KVStoreGetResponse{}
 	r.Status.Code = 200
@@ -48,15 +46,12 @@ func (k *kvStore) Get(b []byte) ([]byte, error) {
 	rsp, err := ffjson.Marshal(r)
 	if err != nil {
 		log.Errorf("Unable to marshal kvstore:get response - %s", err)
-		stats.kvstore.WithLabelValues("get").Observe(time.Since(now).Seconds())
 		return []byte(""), fmt.Errorf("unable to marshal kvstore:get response")
 	}
 
 	if r.Status.Code == 200 {
-		stats.kvstore.WithLabelValues("get").Observe(time.Since(now).Seconds())
 		return rsp, nil
 	}
-	stats.kvstore.WithLabelValues("get").Observe(time.Since(now).Seconds())
 	return rsp, fmt.Errorf("%s", r.Status.Status)
 }
 
@@ -64,7 +59,6 @@ func (k *kvStore) Get(b []byte) ([]byte, error) {
 // handling, and base64 decoding of data are all handled via this function. Note, this function expects the
 // KVStoreSetRequest JSON type as input and will return a KVStoreSetResponse JSON.
 func (k *kvStore) Set(b []byte) ([]byte, error) {
-	now := time.Now()
 	// Start Response Message assuming everything is good
 	r := tarmac.KVStoreSetResponse{}
 	r.Status.Code = 200
@@ -98,15 +92,12 @@ func (k *kvStore) Set(b []byte) ([]byte, error) {
 	rsp, err := ffjson.Marshal(r)
 	if err != nil {
 		log.Errorf("Unable to marshal kvstore:set response - %s", err)
-		stats.kvstore.WithLabelValues("set").Observe(time.Since(now).Seconds())
 		return []byte(""), fmt.Errorf("unable to marshal kvstore:set response")
 	}
 
 	if r.Status.Code == 200 {
-		stats.kvstore.WithLabelValues("set").Observe(time.Since(now).Seconds())
 		return rsp, nil
 	}
-	stats.kvstore.WithLabelValues("set").Observe(time.Since(now).Seconds())
 	return rsp, fmt.Errorf("%s", r.Status.Status)
 }
 
@@ -114,7 +105,6 @@ func (k *kvStore) Set(b []byte) ([]byte, error) {
 // JSON. Logging and error handling are all handled via this callback function. Note, this function expects the
 // KVStoreDeleteRequest JSON type as input and will return a KVStoreDeleteResponse JSON.
 func (k *kvStore) Delete(b []byte) ([]byte, error) {
-	now := time.Now()
 	// Start Response Message assuming everything is good
 	r := tarmac.KVStoreDeleteResponse{}
 	r.Status.Code = 200
@@ -141,22 +131,18 @@ func (k *kvStore) Delete(b []byte) ([]byte, error) {
 	rsp, err := ffjson.Marshal(r)
 	if err != nil {
 		log.Errorf("Unable to marshal kvstore:delete response - %s", err)
-		stats.kvstore.WithLabelValues("delete").Observe(time.Since(now).Seconds())
 		return []byte(""), fmt.Errorf("unable to marshal kvstore:delete response")
 	}
 
 	if r.Status.Code == 200 {
-		stats.kvstore.WithLabelValues("delete").Observe(time.Since(now).Seconds())
 		return rsp, nil
 	}
-	stats.kvstore.WithLabelValues("delete").Observe(time.Since(now).Seconds())
 	return rsp, fmt.Errorf("%s", r.Status.Status)
 }
 
 // Keys will return a list of all keys stored within the key:value datastore. Logging and error handling are
 // all handled via this callback function. Note, this function will return a KVStoreKeysResponse JSON.
 func (k *kvStore) Keys(b []byte) ([]byte, error) {
-	now := time.Now()
 	// Start Response Message assuming everything is good
 	r := tarmac.KVStoreKeysResponse{}
 	r.Status.Code = 200
@@ -174,14 +160,11 @@ func (k *kvStore) Keys(b []byte) ([]byte, error) {
 	rsp, err := ffjson.Marshal(r)
 	if err != nil {
 		log.Errorf("Unable to marshal kvstore:delete response - %s", err)
-		stats.kvstore.WithLabelValues("keys").Observe(time.Since(now).Seconds())
 		return []byte(""), fmt.Errorf("unable to marshal kvstore:delete response")
 	}
 
 	if r.Status.Code == 200 {
-		stats.kvstore.WithLabelValues("keys").Observe(time.Since(now).Seconds())
 		return rsp, nil
 	}
-	stats.kvstore.WithLabelValues("keys").Observe(time.Since(now).Seconds())
 	return rsp, fmt.Errorf("%s", r.Status.Status)
 }

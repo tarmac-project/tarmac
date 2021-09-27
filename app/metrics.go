@@ -5,30 +5,24 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
-// metrics provides the capability to manage and hold system internal metrics.
-type metrics struct {
+// telemetry provides the capability to manage and hold system internal metrics.
+type telemetry struct {
 	// tasks is a summary metric of user scheduled task executions.
 	tasks *prometheus.SummaryVec
 
 	// srv is a summary metric of the HTTP server request processing.
 	srv *prometheus.SummaryVec
 
-	// callbacks is a counter metric of the WASM callbacks guests make.
-	callbacks *prometheus.CounterVec
+	// callbacks is a summary metric of the WASM callbacks guests make.
+	callbacks *prometheus.SummaryVec
 
 	// wasm is a summary metric of the WASM guest module executions.
 	wasm *prometheus.SummaryVec
-
-	// kvstore is a summary metric of the KVStore callback executions.
-	kvstore *prometheus.SummaryVec
-
-	// httpcall is a summary metric of the HTTPCall callback executions.
-	httpcall *prometheus.SummaryVec
 }
 
-// newMetrics will return an initialized systems metrics instance.
-func newMetrics() *metrics {
-	m := &metrics{}
+// newTelemetry will return an initialized systems metrics instance.
+func newTelemetry() *telemetry {
+	m := &telemetry{}
 
 	m.srv = promauto.NewSummaryVec(prometheus.SummaryOpts{
 		Name:       "http_server",
@@ -46,9 +40,10 @@ func newMetrics() *metrics {
 		[]string{"tasks"},
 	)
 
-	m.callbacks = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "server_callbacks",
-		Help: "Count of waPC callback function executions",
+	m.callbacks = promauto.NewSummaryVec(prometheus.SummaryOpts{
+		Name:       "wasm_callbacks",
+		Help:       "Summary of server callbacks from WASM function executions",
+		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
 	},
 		[]string{"callback"},
 	)
@@ -59,22 +54,6 @@ func newMetrics() *metrics {
 		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
 	},
 		[]string{"route"},
-	)
-
-	m.kvstore = promauto.NewSummaryVec(prometheus.SummaryOpts{
-		Name:       "kvstore_callbacks",
-		Help:       "Summary of kvstore callback executions",
-		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
-	},
-		[]string{"callback"},
-	)
-
-	m.httpcall = promauto.NewSummaryVec(prometheus.SummaryOpts{
-		Name:       "httpcall_callbacks",
-		Help:       "Summary of httpcall callback executions",
-		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
-	},
-		[]string{"callback"},
 	)
 
 	return m

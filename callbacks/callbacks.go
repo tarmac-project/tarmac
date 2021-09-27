@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 )
 
 var (
@@ -40,6 +41,10 @@ type Router struct {
 	// preFunc holds a user-defined function called as part of the primary Callback method but before the user-specified callback.
 	// This preFunc can act as middleware enabling users to restrict access to specific callbacks or perform standard functions with all callbacks.
 	preFunc func(string, string, []byte) ([]byte, error)
+
+	// postFunc is a user-defined function called after the execution of the registered callback function. This postFunc is
+	// used to enable tracking of callback execution as well as the results of each execution.
+	postFunc func(CallbackResult)
 }
 
 // Config will configure the Callbacks router and allows users to specify items such as the PreFunc or any router level configurations.
@@ -47,6 +52,10 @@ type Config struct {
 	// PreFunc holds a user-defined function called as part of the primary Callback method but before the user-specified callback.
 	// This PreFunc can act as middleware enabling users to restrict access to specific callbacks or perform standard functions with all callbacks.
 	PreFunc func(string, string, []byte) ([]byte, error)
+
+	// PostFunc is a user-defined function called after the execution of the registered callback function. This PostFunc is
+	// used to enable tracking of callback execution as well as the results of each execution.
+	PostFunc func(CallbackResult)
 }
 
 // Callback is a type that holds the details and function used for callback execution. This type is primarily used internally but
@@ -64,10 +73,37 @@ type Callback struct {
 	Func func([]byte) ([]byte, error)
 }
 
+// CallbackResult provides detailed information regarding Callback execution. The callback result is the input to the
+// user-defined PostFunc added in the callback configuration.
+type CallbackResult struct {
+	// Namespace is the common namespace for this callback, and an example could be "database" or for a specific type of
+	// database, "database:kv".
+	Namespace string
+
+	// Operation is the function within the namespace to call. For example, a "database:kv" namespace may have a "Get" function.
+	Operation string
+
+	// Input is the WASM function supplied input data.
+	Input []byte
+
+	// Output is the Callback function returned output data.
+	Output []byte
+
+	// Err is the Callback function returned error.
+	Err error
+
+	// StartTime provides the time captured at the begging of Callback execution.
+	StartTime time.Time
+
+	// EndTime provides the time captured at the end of Callback execution.
+	EndTime time.Time
+}
+
 // New will return a Router instance that users can use to register callbacks and provide a generic host callback function.
 func New(cfg Config) *Router {
 	r := &Router{
-		preFunc: cfg.PreFunc,
+		preFunc:  cfg.PreFunc,
+		postFunc: cfg.PostFunc,
 	}
 	r.callbacks = make(map[string]*Callback)
 	return r
@@ -113,7 +149,22 @@ func (r *Router) Callback(ctx context.Context, binding, namespace, op string, da
 
 	// Run the callback returning to user
 	if c.Func != nil {
-		return c.Func(data)
+		result := CallbackResult{
+			Namespace: namespace,
+			Operation: op,
+			Input:     data,
+			StartTime: time.Now(),
+		}
+
+		// Call user-function and capture results
+		result.Output, result.Err = c.Func(result.Input)
+		result.EndTime = time.Now()
+
+		// Call user-defined PostFunc
+		if r.postFunc != nil {
+			go r.postFunc(result)
+		}
+		return result.Output, result.Err
 	}
 	return []byte(""), fmt.Errorf("unable to execute callback function, function is nil")
 }
