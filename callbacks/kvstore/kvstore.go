@@ -2,8 +2,6 @@
 Package kvstore is part of the Tarmac suite of Host Callback packages. This package provides users with the ability to
 provide WASM functions with a host callback interface that provides key:value storage capabilities.
 
-	package main
-
 	import (
 		"github.com/madflojo/tarmac/callbacks"
 		"github.com/madflojo/tarmac/callbacks/kvstore"
@@ -16,8 +14,8 @@ provide WASM functions with a host callback interface that provides key:value st
 		// Create Callback router and register httpclient
 		router := callbacks.New()
 		router.RegisterCallback("kvstore", "get", kvStore.Get)
-		router.RegisterCallback("kvstore", "get", kvStore.Set)
-		router.RegisterCallback("kvstore", "get", kvStore.Delete)
+		router.RegisterCallback("kvstore", "set", kvStore.Set)
+		router.RegisterCallback("kvstore", "delete", kvStore.Delete)
 	}
 
 */
@@ -35,12 +33,18 @@ import (
 // within KVStore provided all of the logic and error handlings of accessing and interacting with a key:value
 // database. Users will send the specified JSON request and receive an appropriate JSON response.
 type KVStore struct {
+	// KV is the user-provided Key:Value store instance using the github.com/madflojo/hord package. This package by
+	// itself does not manage database connections but rather relies on the hord.Database interface. Users must
+	// supply an initiated hord.Database to work with.
 	kv hord.Database
 }
 
 // Config is provided to users to configure the Host Callback. All Tarmac Callbacks follow the same configuration
 // format; each Config struct gives the specific Host Callback unique functionality.
 type Config struct {
+	// KV is the user-provided Key:Value store instance using the github.com/madflojo/hord package. This package by
+	// itself does not manage database connections but rather relies on the hord.Database interface. Users must
+	// supply an initiated hord.Database to work with.
 	KV hord.Database
 }
 
