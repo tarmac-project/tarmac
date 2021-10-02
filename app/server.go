@@ -24,9 +24,6 @@ type server struct {
 
 	// httpRouter is used to store and access the HTTP Request Router.
 	httpRouter *httprouter.Router
-
-	// kvStore provides access to the key:value datastore callback functions for WASM Modules.
-	kvStore *kvStore
 }
 
 // Health is used to handle HTTP Health requests to this service. Use this for liveness

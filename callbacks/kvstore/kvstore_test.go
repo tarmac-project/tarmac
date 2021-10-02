@@ -1,4 +1,4 @@
-package app
+package kvstore
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-type kvStoreCase struct {
+type KVStoreCase struct {
 	err  bool
 	pass bool
 	name string
@@ -17,10 +17,8 @@ type kvStoreCase struct {
 }
 
 func TestKVStore(t *testing.T) {
-	k := &kvStore{}
-
 	// Set DB as a Mocked Database
-	kv, _ = mock.Dial(mock.Config{
+	kv, _ := mock.Dial(mock.Config{
 		GetFunc: func(key string) ([]byte, error) {
 			if key == "testing-happy" {
 				return []byte("somedata"), nil
@@ -45,10 +43,16 @@ func TestKVStore(t *testing.T) {
 		},
 	})
 
-	var kc []kvStoreCase
+	// Create new KVStore instance
+	k, err := New(Config{KV: kv})
+	if err != nil {
+		t.Errorf("Unable to create new KVStore Instance - %s", err)
+	}
+
+	var kc []KVStoreCase
 
 	// Create a collection of test cases
-	kc = append(kc, kvStoreCase{
+	kc = append(kc, KVStoreCase{
 		err:  false,
 		pass: true,
 		name: "Happy Path",
@@ -56,7 +60,7 @@ func TestKVStore(t *testing.T) {
 		json: `{"key":"testing-happy"}`,
 	})
 
-	kc = append(kc, kvStoreCase{
+	kc = append(kc, KVStoreCase{
 		err:  false,
 		pass: true,
 		name: "Happy Path",
@@ -64,7 +68,7 @@ func TestKVStore(t *testing.T) {
 		json: `{"key":"testing-happy","data":"QmVjYXVzZSBJJ20gSGFwcHk="}`,
 	})
 
-	kc = append(kc, kvStoreCase{
+	kc = append(kc, KVStoreCase{
 		err:  false,
 		pass: true,
 		name: "Happy Path",
@@ -72,7 +76,7 @@ func TestKVStore(t *testing.T) {
 		json: `{"key":"testing-happy"}`,
 	})
 
-	kc = append(kc, kvStoreCase{
+	kc = append(kc, KVStoreCase{
 		err:  true,
 		pass: false,
 		name: "Invalid Request JSON",
@@ -80,7 +84,7 @@ func TestKVStore(t *testing.T) {
 		json: `{"ke:"testing-happy"}`,
 	})
 
-	kc = append(kc, kvStoreCase{
+	kc = append(kc, KVStoreCase{
 		err:  true,
 		pass: false,
 		name: "Invalid Request JSON",
@@ -88,7 +92,7 @@ func TestKVStore(t *testing.T) {
 		json: `{"ke:"testing-happy","data":"QmVjYXVzZSBJJ20gSGFwcHk="}`,
 	})
 
-	kc = append(kc, kvStoreCase{
+	kc = append(kc, KVStoreCase{
 		err:  true,
 		pass: false,
 		name: "Invalid Request JSON",
@@ -96,7 +100,7 @@ func TestKVStore(t *testing.T) {
 		json: `{"ke:"testing-happy"}`,
 	})
 
-	kc = append(kc, kvStoreCase{
+	kc = append(kc, KVStoreCase{
 		err:  true,
 		pass: false,
 		name: "Payload Not Base64",
@@ -104,7 +108,7 @@ func TestKVStore(t *testing.T) {
 		json: `{"key":"testing-happy","data":"not base64"}`,
 	})
 
-	kc = append(kc, kvStoreCase{
+	kc = append(kc, KVStoreCase{
 		err:  true,
 		pass: false,
 		name: "Key not found",
@@ -112,7 +116,7 @@ func TestKVStore(t *testing.T) {
 		json: `{"key":""}`,
 	})
 
-	kc = append(kc, kvStoreCase{
+	kc = append(kc, KVStoreCase{
 		err:  true,
 		pass: false,
 		name: "Failing Call",
@@ -120,7 +124,7 @@ func TestKVStore(t *testing.T) {
 		json: `{"key": "invalid-key"}`,
 	})
 
-	kc = append(kc, kvStoreCase{
+	kc = append(kc, KVStoreCase{
 		err:  true,
 		pass: false,
 		name: "No Data",
@@ -128,7 +132,7 @@ func TestKVStore(t *testing.T) {
 		json: `{"key":"no-data"}`,
 	})
 
-	kc = append(kc, kvStoreCase{
+	kc = append(kc, KVStoreCase{
 		err:  true,
 		pass: false,
 		name: "Errored Keys",

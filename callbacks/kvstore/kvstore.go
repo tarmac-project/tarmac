@@ -1,21 +1,64 @@
-package app
+/*
+Package kvstore is part of the Tarmac suite of Host Callback packages. This package provides users with the ability to
+provide WASM functions with a host callback interface that provides key:value storage capabilities.
+
+	package main
+
+	import (
+		"github.com/madflojo/tarmac/callbacks"
+		"github.com/madflojo/tarmac/callbacks/kvstore"
+	)
+
+	func main() {
+		// Create instance of kvstore to register for callback execution
+		kvStore := kvstore.New(kvstore.Config{})
+
+		// Create Callback router and register httpclient
+		router := callbacks.New()
+		router.RegisterCallback("kvstore", "get", kvStore.Get)
+		router.RegisterCallback("kvstore", "get", kvStore.Set)
+		router.RegisterCallback("kvstore", "get", kvStore.Delete)
+	}
+
+*/
+package kvstore
 
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/madflojo/hord"
 	"github.com/madflojo/tarmac"
 	"github.com/pquerna/ffjson/ffjson"
 )
 
-// kvStore provides access to Host Callbacks that interact with the key:value datastores within Tarmac. The callbacks
-// within kvStore provided all of the logic and error handlings of accessing and interacting with a key:value
+// KVStore provides access to Host Callbacks that interact with the key:value datastores within Tarmac. The callbacks
+// within KVStore provided all of the logic and error handlings of accessing and interacting with a key:value
 // database. Users will send the specified JSON request and receive an appropriate JSON response.
-type kvStore struct{}
+type KVStore struct {
+	kv hord.Database
+}
+
+// Config is provided to users to configure the Host Callback. All Tarmac Callbacks follow the same configuration
+// format; each Config struct gives the specific Host Callback unique functionality.
+type Config struct {
+	KV hord.Database
+}
+
+// New will create and return a new KVStore instance that users can register as a Tarmac Host Callback function. Users
+// can provide any custom KVStore configurations using the configuration options supplied.
+func New(cfg Config) (*KVStore, error) {
+	k := &KVStore{}
+	if cfg.KV == nil {
+		return k, fmt.Errorf("KV Store cannot be nil")
+	}
+	k.kv = cfg.KV
+	return k, nil
+}
 
 // Get will fetch the stored data using the key specified within the incoming JSON. Logging, error handling, and
 // base64 encoding of data are all handled via this function. Note, this function expects the KVStoreGetRequest
 // JSON type as input and will return a KVStoreGetResponse JSON.
-func (k *kvStore) Get(b []byte) ([]byte, error) {
+func (k *KVStore) Get(b []byte) ([]byte, error) {
 	// Start Response Message assuming everything is good
 	r := tarmac.KVStoreGetResponse{}
 	r.Status.Code = 200
@@ -31,7 +74,7 @@ func (k *kvStore) Get(b []byte) ([]byte, error) {
 
 	// Fetch data from KVStore if we do not have any other errors
 	if r.Status.Code == 200 {
-		data, err := kv.Get(rq.Key)
+		data, err := k.kv.Get(rq.Key)
 		if err != nil {
 			r.Status.Code = 404
 			r.Status.Status = fmt.Sprintf("Unable to fetch key %s - %s", rq.Key, err)
@@ -45,7 +88,6 @@ func (k *kvStore) Get(b []byte) ([]byte, error) {
 	// Marshal a resposne JSON to return to caller
 	rsp, err := ffjson.Marshal(r)
 	if err != nil {
-		log.Errorf("Unable to marshal kvstore:get response - %s", err)
 		return []byte(""), fmt.Errorf("unable to marshal kvstore:get response")
 	}
 
@@ -58,7 +100,7 @@ func (k *kvStore) Get(b []byte) ([]byte, error) {
 // Set will store data within the key:value datastore using the key specified within the incoming JSON. Logging, error
 // handling, and base64 decoding of data are all handled via this function. Note, this function expects the
 // KVStoreSetRequest JSON type as input and will return a KVStoreSetResponse JSON.
-func (k *kvStore) Set(b []byte) ([]byte, error) {
+func (k *KVStore) Set(b []byte) ([]byte, error) {
 	// Start Response Message assuming everything is good
 	r := tarmac.KVStoreSetResponse{}
 	r.Status.Code = 200
@@ -81,7 +123,7 @@ func (k *kvStore) Set(b []byte) ([]byte, error) {
 
 	// Store data in KVStore if we do not have any other errors
 	if r.Status.Code == 200 {
-		err = kv.Set(rq.Key, data)
+		err = k.kv.Set(rq.Key, data)
 		if err != nil {
 			r.Status.Code = 500
 			r.Status.Status = fmt.Sprintf("Unable to store data using key %s - %s", rq.Key, err)
@@ -91,7 +133,6 @@ func (k *kvStore) Set(b []byte) ([]byte, error) {
 	// Marshal a resposne JSON to return to caller
 	rsp, err := ffjson.Marshal(r)
 	if err != nil {
-		log.Errorf("Unable to marshal kvstore:set response - %s", err)
 		return []byte(""), fmt.Errorf("unable to marshal kvstore:set response")
 	}
 
@@ -104,7 +145,7 @@ func (k *kvStore) Set(b []byte) ([]byte, error) {
 // Delete will remove the key and data stored within the key:value datastore using the key specified within the incoming
 // JSON. Logging and error handling are all handled via this callback function. Note, this function expects the
 // KVStoreDeleteRequest JSON type as input and will return a KVStoreDeleteResponse JSON.
-func (k *kvStore) Delete(b []byte) ([]byte, error) {
+func (k *KVStore) Delete(b []byte) ([]byte, error) {
 	// Start Response Message assuming everything is good
 	r := tarmac.KVStoreDeleteResponse{}
 	r.Status.Code = 200
@@ -120,7 +161,7 @@ func (k *kvStore) Delete(b []byte) ([]byte, error) {
 
 	// Delete data in KVStore if we do not have any other errors
 	if r.Status.Code == 200 {
-		err = kv.Delete(rq.Key)
+		err = k.kv.Delete(rq.Key)
 		if err != nil {
 			r.Status.Code = 404
 			r.Status.Status = fmt.Sprintf("Unable to delete key %s - %s", rq.Key, err)
@@ -130,7 +171,6 @@ func (k *kvStore) Delete(b []byte) ([]byte, error) {
 	// Marshal a response JSON to return to caller
 	rsp, err := ffjson.Marshal(r)
 	if err != nil {
-		log.Errorf("Unable to marshal kvstore:delete response - %s", err)
 		return []byte(""), fmt.Errorf("unable to marshal kvstore:delete response")
 	}
 
@@ -142,7 +182,7 @@ func (k *kvStore) Delete(b []byte) ([]byte, error) {
 
 // Keys will return a list of all keys stored within the key:value datastore. Logging and error handling are
 // all handled via this callback function. Note, this function will return a KVStoreKeysResponse JSON.
-func (k *kvStore) Keys(b []byte) ([]byte, error) {
+func (k *KVStore) Keys(b []byte) ([]byte, error) {
 	// Start Response Message assuming everything is good
 	r := tarmac.KVStoreKeysResponse{}
 	r.Status.Code = 200
@@ -150,7 +190,7 @@ func (k *kvStore) Keys(b []byte) ([]byte, error) {
 
 	// Fetch keys from datastore
 	var err error
-	r.Keys, err = kv.Keys()
+	r.Keys, err = k.kv.Keys()
 	if err != nil {
 		r.Status.Code = 500
 		r.Status.Status = fmt.Sprintf("Unable to fetch keys - %s", err)
@@ -159,7 +199,6 @@ func (k *kvStore) Keys(b []byte) ([]byte, error) {
 	// Marshal a response JSON to return to caller
 	rsp, err := ffjson.Marshal(r)
 	if err != nil {
-		log.Errorf("Unable to marshal kvstore:delete response - %s", err)
 		return []byte(""), fmt.Errorf("unable to marshal kvstore:delete response")
 	}
 

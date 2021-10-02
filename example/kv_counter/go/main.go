@@ -59,6 +59,14 @@ func Count(payload []byte) ([]byte, error) {
 // IncCount is a custom Tarmac Handler function that will fetch a counter from the datastore, increase it by one
 // and then write that counter to the datastore
 func IncCount(payload []byte) ([]byte, error) {
+	go func() {
+		// Update custom metric
+		_, err := wapc.HostCall("tarmac", "metrics", "counter", []byte(`{"name":"kv_counter_inc_called"}`))
+		if err != nil {
+			return
+		}
+	}()
+
 	i := 0
 
 	// Fetch current value from Database

@@ -14,6 +14,7 @@ import (
 	"github.com/madflojo/tarmac"
 	"github.com/madflojo/tarmac/callbacks"
 	"github.com/madflojo/tarmac/callbacks/httpclient"
+	"github.com/madflojo/tarmac/callbacks/kvstore"
 	"github.com/madflojo/tarmac/callbacks/logging"
 	"github.com/madflojo/tarmac/callbacks/metrics"
 	"github.com/madflojo/tarmac/wasm"
@@ -183,7 +184,6 @@ func Run(c *viper.Viper) error {
 	// Setup the HTTP Server
 	srv = &server{
 		httpRouter: httprouter.New(),
-		kvStore:    &kvStore{},
 	}
 	srv.httpServer = &http.Server{
 		Addr:    cfg.GetString("listen_addr"),
@@ -245,10 +245,16 @@ func Run(c *viper.Viper) error {
 
 	// Setup KVStore Callbacks
 	if cfg.GetBool("enable_kvstore") {
-		router.RegisterCallback("kvstore", "get", srv.kvStore.Get)
-		router.RegisterCallback("kvstore", "set", srv.kvStore.Set)
-		router.RegisterCallback("kvstore", "delete", srv.kvStore.Delete)
-		router.RegisterCallback("kvstore", "keys", srv.kvStore.Keys)
+		cbKVStore, err := kvstore.New(kvstore.Config{KV: kv})
+		if err != nil {
+			return fmt.Errorf("unable to initialize callback kvstore for WASM functions - %s", err)
+		}
+
+		// Register KVStore Callbacks
+		router.RegisterCallback("kvstore", "get", cbKVStore.Get)
+		router.RegisterCallback("kvstore", "set", cbKVStore.Set)
+		router.RegisterCallback("kvstore", "delete", cbKVStore.Delete)
+		router.RegisterCallback("kvstore", "keys", cbKVStore.Keys)
 	}
 
 	// Setup HTTP Callbacks
