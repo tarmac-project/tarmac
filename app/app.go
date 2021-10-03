@@ -13,6 +13,10 @@ import (
 	"github.com/madflojo/hord/drivers/redis"
 	"github.com/madflojo/tarmac"
 	"github.com/madflojo/tarmac/callbacks"
+	"github.com/madflojo/tarmac/callbacks/httpclient"
+	"github.com/madflojo/tarmac/callbacks/kvstore"
+	"github.com/madflojo/tarmac/callbacks/logging"
+	"github.com/madflojo/tarmac/callbacks/metrics"
 	"github.com/madflojo/tarmac/wasm"
 	"github.com/madflojo/tasks"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -56,7 +60,7 @@ var log *logrus.Logger
 var scheduler *tasks.Scheduler
 
 // stats is used across the app package to manage and access system metrics.
-var stats = newMetrics()
+var stats = newTelemetry()
 
 // Run starts the primary application. It handles starting background services,
 // populating package globals & structures, and clean up tasks.
@@ -180,10 +184,6 @@ func Run(c *viper.Viper) error {
 	// Setup the HTTP Server
 	srv = &server{
 		httpRouter: httprouter.New(),
-		kvStore:    &kvStore{},
-		logger:     &logger{},
-		metrics:    NewMetricsCallback(),
-		httpcall:   &httpcall{},
 	}
 	srv.httpServer = &http.Server{
 		Addr:    cfg.GetString("listen_addr"),
@@ -223,37 +223,75 @@ func Run(c *viper.Viper) error {
 	// Create WASM Callback Router
 	router := callbacks.New(callbacks.Config{
 		PreFunc: func(namespace, op string, data []byte) ([]byte, error) {
-			stats.callbacks.WithLabelValues(fmt.Sprintf("%s:%s", namespace, op)).Inc()
 			log.WithFields(logrus.Fields{
 				"namespace": namespace,
 				"function":  op,
-			}).Infof("CallbackRouter called with payload %s", data)
+			}).Debugf("CallbackRouter called with payload %s", data)
 			return []byte(""), nil
+		},
+		PostFunc: func(r callbacks.CallbackResult) {
+			// Measure Callback Execution time and counts
+			stats.callbacks.WithLabelValues(fmt.Sprintf("%s:%s", r.Namespace, r.Operation)).Observe(r.EndTime.Sub(r.StartTime).Seconds())
+
+			// Log Callback failures as warnings
+			if r.Err != nil {
+				log.WithFields(logrus.Fields{
+					"namespace": r.Namespace,
+					"function":  r.Operation,
+				}).Warnf("Callback call resulted in error after %f seconds - %s", r.EndTime.Sub(r.StartTime).Seconds(), r.Err)
+			}
 		},
 	})
 
 	// Setup KVStore Callbacks
 	if cfg.GetBool("enable_kvstore") {
-		router.RegisterCallback("kvstore", "get", srv.kvStore.Get)
-		router.RegisterCallback("kvstore", "set", srv.kvStore.Set)
-		router.RegisterCallback("kvstore", "delete", srv.kvStore.Delete)
-		router.RegisterCallback("kvstore", "keys", srv.kvStore.Keys)
+		cbKVStore, err := kvstore.New(kvstore.Config{KV: kv})
+		if err != nil {
+			return fmt.Errorf("unable to initialize callback kvstore for WASM functions - %s", err)
+		}
+
+		// Register KVStore Callbacks
+		router.RegisterCallback("kvstore", "get", cbKVStore.Get)
+		router.RegisterCallback("kvstore", "set", cbKVStore.Set)
+		router.RegisterCallback("kvstore", "delete", cbKVStore.Delete)
+		router.RegisterCallback("kvstore", "keys", cbKVStore.Keys)
 	}
 
 	// Setup HTTP Callbacks
-	router.RegisterCallback("httpcall", "call", srv.httpcall.Call)
+	cbHTTPClient, err := httpclient.New(httpclient.Config{})
+	if err != nil {
+		return fmt.Errorf("unable to initialize callback http client for WASM functions - %s", err)
+	}
+
+	// Register HTTPClient Functions
+	router.RegisterCallback("httpclient", "call", cbHTTPClient.Call)
 
 	// Setup Logger Callbacks
-	router.RegisterCallback("logger", "info", srv.logger.Info)
-	router.RegisterCallback("logger", "error", srv.logger.Error)
-	router.RegisterCallback("logger", "warn", srv.logger.Warn)
-	router.RegisterCallback("logger", "debug", srv.logger.Debug)
-	router.RegisterCallback("logger", "trace", srv.logger.Trace)
+	cbLogger, err := logging.New(logging.Config{
+		// Pass general logger into host callback
+		Log: log,
+	})
+	if err != nil {
+		return fmt.Errorf("unable to initialize callback logger for WASM functions - %s", err)
+	}
+
+	// Register Logger Functions
+	router.RegisterCallback("logger", "info", cbLogger.Info)
+	router.RegisterCallback("logger", "error", cbLogger.Error)
+	router.RegisterCallback("logger", "warn", cbLogger.Warn)
+	router.RegisterCallback("logger", "debug", cbLogger.Debug)
+	router.RegisterCallback("logger", "trace", cbLogger.Trace)
 
 	// Setup Metrics Callbacks
-	router.RegisterCallback("metrics", "counter", srv.metrics.Counter)
-	router.RegisterCallback("metrics", "gauge", srv.metrics.Gauge)
-	router.RegisterCallback("metrics", "histogram", srv.metrics.Histogram)
+	cbMetrics, err := metrics.New(metrics.Config{})
+	if err != nil {
+		return fmt.Errorf("unable to initialize callback metrics for WASM functions - %s", err)
+	}
+
+	// Register Metrics Callbacks
+	router.RegisterCallback("metrics", "counter", cbMetrics.Counter)
+	router.RegisterCallback("metrics", "gauge", cbMetrics.Gauge)
+	router.RegisterCallback("metrics", "histogram", cbMetrics.Histogram)
 
 	// Start WASM Engine
 	engine, err = wasm.NewServer(wasm.Config{
