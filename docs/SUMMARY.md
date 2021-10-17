@@ -28,5 +28,6 @@
 
 ## Developer Resources
 
+* [WASM Host Toolkit](developers/toolkit.md)
 * [GitHub](https://github.com/madflojo/tarmac)
 
