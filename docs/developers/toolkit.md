@@ -1,10 +1,10 @@
 ---
-description: Using Tarmac as a WASM capabilities toolkit
+description: Using Tarmac as a toolkit
 ---
 
 # Toolkit
 
-In addition to being a Framework for building WASM-based distributed services, Tarmac can also be used as a toolkit to add WASM execution and host callback capabilities to any Go application. 
+In addition to being a Framework for building WASM-based distributed services, Tarmac can also be used as a toolkit to add WASM execution and host callback capabilities to existing Go applications. 
 
 This document will show an example of importing the core capabilities of Tarmac to provide WASM host and callback capabilities.
 
