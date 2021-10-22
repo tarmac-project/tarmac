@@ -31,7 +31,7 @@ At the moment, Tramac is executing WASM functions by executing a defined set of 
 
 As part of the WASM Function, users must register their handlers using the pre-defined function signatures.
 
-To understand this better, look at one of our simple examples written in Rust \(found in [example/](https://github.com/madflojo/tarmac/tree/e1e6e952a1f6e2f89448e17d15862e199ff64e84/docs/example/README.md)\).
+To understand this better, look at one of our simple examples written in Rust \(found in [example/](https://github.com/madflojo/tarmac/blob/main/example/tac/README.md)\).
 
 ```rust
 // Tac is a small, simple Rust program that is an example WASM function for Tarmac.
