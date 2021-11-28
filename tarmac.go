@@ -172,3 +172,18 @@ type HTTPClientResponse struct {
 	// simple JSON-friendly field for arbitrary data.
 	Body string `json:"body"`
 }
+
+// SQLQuery is a structure used to create SQL queries to a SQL Database.
+type SQLQuery struct {
+	// Query is the SQL Query to be executed. This field should be base64 encoded to avoid conflicts with JSON encoding.
+	Query string `json:"query"`
+}
+
+// SQLQueryResponse is a structure supplied as a response message to a SQL Database Query.
+type SQLQueryResponse struct {
+	// Status is the human readible error message or success message for function execution.
+	Status Status `json:"status"`
+
+	// Data is a base64 encoded JSON represented the returned rows. Each row will contain a column name based map to access data.
+	Data string `json:"data"`
+}
