@@ -80,7 +80,7 @@ func (db *Database) Query(b []byte) ([]byte, error) {
 
 	if len(q) < 1 {
 		r.Status.Code = 400
-		r.Status.Status = fmt.Sprintf("SQL Query must be defined")
+		r.Status.Status = "SQL Query must be defined"
 	}
 
 	if r.Status.Code == 200 {
