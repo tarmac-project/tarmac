@@ -4,20 +4,20 @@ provide WASM functions with a host callback interface that provides SQL database
 
 	import (
 		"github.com/madflojo/tarmac/callbacks"
-		"github.com/madflojo/tarmac/callbacks/database"
+		"github.com/madflojo/tarmac/callbacks/sql"
 	)
 
 	func main() {
 		// Create instance of database to register for callback execution
-		dBase := database.New(database.Config{})
+		dBase := database.New(sql.Config{})
 
 		// Create Callback router and register
 		router := callbacks.New()
-		router.RegisterCallback("database", "query", dBase.Query)
+		router.RegisterCallback("sql", "query", dBase.Query)
 	}
 
 */
-package database
+package sql
 
 import (
 	"database/sql"
