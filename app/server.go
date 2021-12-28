@@ -206,7 +206,7 @@ func runWASM(module, handler string, rq tarmac.ServerRequest) (tarmac.ServerResp
 	err = ffjson.Unmarshal(data, &rsp)
 	if err != nil {
 		stats.wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
-		return rsp, fmt.Errorf("failed to unmarshal response - %s", err)
+		return rsp, fmt.Errorf("failed to unmarshal response - %s - %s", err, data)
 	}
 
 	stats.wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())

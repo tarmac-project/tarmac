@@ -12,6 +12,7 @@ import (
 
 type RunnerCase struct {
 	name    string
+	err     bool
 	pass    bool
 	module  string
 	handler string
@@ -121,6 +122,7 @@ func TestWASMRunner(t *testing.T) {
 
 	tc = append(tc, RunnerCase{
 		name:    "Module Doesn't Exist",
+		err:     true,
 		pass:    false,
 		module:  "notfound",
 		handler: "http:GET",
@@ -129,14 +131,16 @@ func TestWASMRunner(t *testing.T) {
 
 	tc = append(tc, RunnerCase{
 		name:    "Happy Path - Bad Payload",
+		err:     false,
 		pass:    false,
 		module:  "default",
 		handler: "http:POST",
-		request: tarmac.ServerRequest{},
+		request: tarmac.ServerRequest{Payload: "ohmy"},
 	})
 
 	tc = append(tc, RunnerCase{
 		name:    "Bad Handler Route",
+		err:     true,
 		pass:    false,
 		module:  "default",
 		handler: "noroute",
@@ -146,14 +150,14 @@ func TestWASMRunner(t *testing.T) {
 	for _, c := range tc {
 		t.Run(c.name, func(t *testing.T) {
 			rsp, err := runWASM(c.module, c.handler, c.request)
-			if err != nil && c.pass {
+			if err != nil && !c.err {
 				t.Errorf("Unexpected error executing module - %s", err)
 			}
-			if err == nil && !c.pass {
+			if err == nil && c.err {
 				t.Errorf("Unexpected success executing module")
 			}
 
-			if rsp.Status.Code != 200 && rsp.Status.Code != 0 {
+			if c.pass && (rsp.Status.Code != 200 && rsp.Status.Code != 0) {
 				t.Errorf("Unexpected failure from WASM response status code %d", rsp.Status.Code)
 			}
 		})
