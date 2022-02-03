@@ -53,25 +53,13 @@ func Handler(payload []byte) ([]byte, error) {
 		return []byte(fmt.Sprintf(`{"status":{"code":500,"status":"Failed to call host callback - %s"}}`, err)), nil
 	}
 
-	/*
-		// HTTP Client
-		r, err := wapc.HostCall("tarmac", "httpclient", "call", []byte(`{"method":"GET","insecure":true,"url":"http://localhost:9000/health"}`))
-		if err != nil {
-			return []byte(fmt.Sprintf(`{"status":{"code":500,"status":"Failed to call host callback"}}`)), nil
-		}
-
-		hr, err := fastjson.ParseBytes(r)
-		if err != nil {
-			return []byte(fmt.Sprintf(`{"status":{"code":500,"status":"Failed to parse host callback json"}}`)), nil
-		}
-
-		if hr.GetInt("code") == 200 {
-			return []byte(fmt.Sprintf(`{"status":{"code":500,"status":"Host callback results failure"}}`)), nil
-		}
-	*/
-
 	// KVStore
 	_, err = wapc.HostCall("tarmac", "kvstore", "set", []byte(`{"key":"test-data","data":"aSBhbSBhIGxpdHRsZSB0ZWFwb3Q="}`))
+	if err != nil {
+		return []byte(fmt.Sprintf(`{"status":{"code":500,"status":"Failed to call host callback - %s"}}`, err)), nil
+	}
+
+	_, err = wapc.HostCall("tarmac", "kvstore", "get", []byte(`{"key":"test-data"}`))
 	if err != nil {
 		return []byte(fmt.Sprintf(`{"status":{"code":500,"status":"Failed to call host callback - %s"}}`, err)), nil
 	}

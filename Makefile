@@ -1,16 +1,21 @@
 # Makefile is used to drive the build and installation of this application
 # this is meant to be used with a local copy of code repository.
 
-tests:
+build: build-testdata
+
+build-testdata:
+	$(MAKE) -C testdata build
+
+tests: build
 	@echo "Launching Tests in Docker Compose"
 	docker-compose -f dev-compose.yml up -d cassandra-primary cassandra
-	sleep 30
+	sleep 120 
 	docker-compose -f dev-compose.yml up --build tests
 
 benchmarks:
 	@echo "Launching Tests in Docker Compose"
 	docker-compose -f dev-compose.yml up -d cassandra-primary cassandra
-	sleep 30
+	sleep 120
 	docker-compose -f dev-compose.yml up --build benchmarks
 
 clean:

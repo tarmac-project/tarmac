@@ -97,6 +97,7 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: example
   consul:
     image: consul
     ports:

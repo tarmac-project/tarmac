@@ -27,6 +27,9 @@ func TestHandlers(t *testing.T) {
 	cfg.Set("kvstore_type", "redis")
 	cfg.Set("redis_server", "redis:6379")
 	cfg.Set("enable_kvstore", true)
+	cfg.Set("enable_sql", true)
+	cfg.Set("sql_type", "mysql")
+	cfg.Set("sql_dns", "root:example@mysql/example")
 	cfg.Set("config_watch_interval", 5)
 	cfg.Set("wasm_function", "/testdata/tarmac.wasm")
 	go func() {
