@@ -92,12 +92,13 @@ services:
       - 9042
       - 9160
   mysql:
-    image: mysql
-    command: --default-authentication-plugin=mysql_native_password
+    image: bitnami/mysql:latest
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: example
       MYSQL_DATABASE: example
+    ports:
+      - 3306:3306
   consul:
     image: consul
     ports:

@@ -22,6 +22,7 @@ import (
 	"github.com/madflojo/tarmac/callbacks/kvstore"
 	"github.com/madflojo/tarmac/callbacks/logging"
 	"github.com/madflojo/tarmac/callbacks/metrics"
+	sqlstore "github.com/madflojo/tarmac/callbacks/sql"
 	"github.com/madflojo/tarmac/wasm"
 	"github.com/madflojo/tasks"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -272,6 +273,17 @@ func Run(c *viper.Viper) error {
 			}
 		},
 	})
+
+	// Setup SQL Callbacks
+	if cfg.GetBool("enable_sql") {
+		cbSQL, err := sqlstore.New(sqlstore.Config{DB: db})
+		if err != nil {
+			return fmt.Errorf("unable to initialize callback sqlstore for WASM functions - %s", err)
+		}
+
+		// Register SQLStore Callbacks
+		router.RegisterCallback("sql", "query", cbSQL.Query)
+	}
 
 	// Setup KVStore Callbacks
 	if cfg.GetBool("enable_kvstore") {

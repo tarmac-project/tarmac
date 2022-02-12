@@ -64,6 +64,12 @@ func Handler(payload []byte) ([]byte, error) {
 		return []byte(fmt.Sprintf(`{"status":{"code":500,"status":"Failed to call host callback - %s"}}`, err)), nil
 	}
 
+	// SQL Query
+	_, err = wapc.HostCall("tarmac", "sql", "query", []byte(`{"query":"Q1JFQVRFIFRBQkxFIElGIE5PVCBFWElTVFMgd2FzbWd1ZXN0ICggaWQgaW50IE5PVCBOVUxMLCBuYW1lIHZhcmNoYXIoMjU1KSwgUFJJTUFSWSBLRVkgKGlkKSApOw=="}`))
+	if err != nil {
+		return []byte(fmt.Sprintf(`{"status":{"code":500,"status":"Failed to call host callback - %s"}}`, err)), nil
+	}
+
 	// Return the payload via a ServerResponse JSON
 	return []byte(fmt.Sprintf(`{"payload":"%s","status":{"code":200,"status":"Success"}}`, base64.StdEncoding.EncodeToString(b))), nil
 }

@@ -29,7 +29,7 @@ func TestHandlers(t *testing.T) {
 	cfg.Set("enable_kvstore", true)
 	cfg.Set("enable_sql", true)
 	cfg.Set("sql_type", "mysql")
-	cfg.Set("sql_dns", "root:example@mysql/example")
+	cfg.Set("sql_dsn", "root:example@tcp(mysql:3306)/example")
 	cfg.Set("config_watch_interval", 5)
 	cfg.Set("wasm_function", "/testdata/tarmac.wasm")
 	go func() {
@@ -108,6 +108,9 @@ func TestWASMRunner(t *testing.T) {
 	cfg.Set("redis_server", "redis:6379")
 	cfg.Set("enable_kvstore", true)
 	cfg.Set("config_watch_interval", 5)
+	cfg.Set("enable_sql", true)
+	cfg.Set("sql_type", "mysql")
+	cfg.Set("sql_dsn", "root:example@tcp(mysql:3306)/example")
 	cfg.Set("wasm_function", "/testdata/tarmac.wasm")
 	go func() {
 		err := Run(cfg)

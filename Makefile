@@ -8,13 +8,13 @@ build-testdata:
 
 tests: build
 	@echo "Launching Tests in Docker Compose"
-	docker-compose -f dev-compose.yml up -d cassandra-primary cassandra
+	docker-compose -f dev-compose.yml up -d cassandra-primary cassandra mysql
 	sleep 120 
 	docker-compose -f dev-compose.yml up --build tests
 
 benchmarks:
 	@echo "Launching Tests in Docker Compose"
-	docker-compose -f dev-compose.yml up -d cassandra-primary cassandra
+	docker-compose -f dev-compose.yml up -d cassandra-primary cassandra mysql
 	sleep 120
 	docker-compose -f dev-compose.yml up --build benchmarks
 

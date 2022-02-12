@@ -268,6 +268,9 @@ func TestRunningTLSServer(t *testing.T) {
 	cfg.Set("use_consul", true)
 	cfg.Set("listen_addr", "localhost:9000")
 	cfg.Set("config_watch_interval", 1)
+	cfg.Set("enable_sql", true)
+	cfg.Set("sql_type", "mysql")
+	cfg.Set("sql_dsn", "root:example@tcp(mysql:3306)/example")
 	err = cfg.AddRemoteProvider("consul", "consul:8500", "tarmac/config")
 	if err != nil {
 		t.Fatalf("Failed to create Consul config provider - %s", err)
