@@ -131,10 +131,12 @@ func TestWASMExecution(t *testing.T) {
 		t.Fatalf("Cannot find module - %s - %+v", err, s)
 	}
 
-	_, err = m.Run("http:POST", []byte(`{"headers":{},"payload":"aGVsbG8="}`))
-	if err != nil {
-		t.Fatalf("Could not execute the wasm function - %s", err)
-	}
+	go func() {
+		_, err = m.Run("http:POST", []byte(`{"headers":{},"payload":"aGVsbG8="}`))
+		if err != nil {
+			t.Logf("Could not execute the wasm function - %s", err)
+		}
+	}()
 
 	// Check for Callback execution
 	select {
