@@ -98,7 +98,6 @@ func TestSQLQuery(t *testing.T) {
 	})
 
 	t.Run("Happy Path", func(t *testing.T) {
-
 		t.Run("Create Table", func(t *testing.T) {
 			q := base64.StdEncoding.EncodeToString([]byte(`CREATE TABLE IF NOT EXISTS testing ( id int NOT NULL, name varchar(255), PRIMARY KEY (id) );`))
 			j := fmt.Sprintf(`{"query":"%s"}`, q)
@@ -169,7 +168,7 @@ func TestSQLQuery(t *testing.T) {
 
 			// Parse returned SQL Data
 			type rowData struct {
-				Id   int    `json:"id"`
+				ID   int    `json:"id"`
 				Name string `json:"name"`
 			}
 
@@ -180,10 +179,9 @@ func TestSQLQuery(t *testing.T) {
 			}
 
 			// Verify data
-			if records[0].Id != 1 {
+			if records[0].ID != 1 {
 				t.Fatalf("Unexpected user id returned - %v", records)
 			}
-
 		})
 
 		t.Run("Delete Table", func(t *testing.T) {

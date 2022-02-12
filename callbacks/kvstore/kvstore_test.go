@@ -245,9 +245,7 @@ func TestKVStore(t *testing.T) {
 				if rsp.Status.Code != 200 && c.pass {
 					t.Fatalf("KVStore Callback Keys returned an unexpected failure - %+v", rsp)
 				}
-
 			})
-
 		}
 	}
 }

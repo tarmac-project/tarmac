@@ -102,7 +102,6 @@ func TestWASMModuleCreation(t *testing.T) {
 			t.Fatalf("Non-existent module lookup succeeded...")
 		}
 	})
-
 }
 
 func TestWASMExecution(t *testing.T) {

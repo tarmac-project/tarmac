@@ -95,7 +95,6 @@ func (s *server) handlerWrapper(h http.Handler) httprouter.Handle {
 // WASMHandler is the primary HTTP handler for WASM Module traffic. This handler will load the
 // specified module and create an execution environment for that module.
 func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-
 	// Read the HTTP Payload
 	var payload []byte
 	var err error

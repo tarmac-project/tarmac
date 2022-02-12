@@ -105,7 +105,8 @@ func (hc *HTTPClient) Call(b []byte) ([]byte, error) {
 		}
 
 		// Populate Response with Response
-		if response != nil {
+		if response != nil { // nolint
+			defer response.Body.Close()
 			r.Code = response.StatusCode
 			r.Headers = make(map[string]string)
 			for k := range response.Header {

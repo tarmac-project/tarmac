@@ -87,5 +87,4 @@ func TestLoggingFunc(t *testing.T) {
 			t.Errorf("Invalid return from logger function - %s", err)
 		}
 	})
-
 }

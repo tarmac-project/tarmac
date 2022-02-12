@@ -4,9 +4,9 @@ Package app is the primary runtime service.
 package app
 
 import (
-	"database/sql"
 	"context"
 	"crypto/tls"
+	"database/sql"
 	"fmt"
 	// MySQL Database Driver
 	_ "github.com/go-sql-driver/mysql"

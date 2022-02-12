@@ -104,7 +104,6 @@ func (db *Database) Query(b []byte) ([]byte, error) {
 			}
 
 			if len(columns) > 0 {
-
 				// Loop through results creating a list of maps
 				for rows.Next() {
 					colNames := make([]interface{}, len(columns))
@@ -143,7 +142,6 @@ func (db *Database) Query(b []byte) ([]byte, error) {
 
 				// Base64 encode results to avoid JSON format conflicts
 				r.Data = base64.StdEncoding.EncodeToString(j)
-
 			}
 		}
 	}

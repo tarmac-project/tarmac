@@ -16,7 +16,7 @@ type Counter struct {
 func (c *Counter) Increment() {
 	c.Lock()
 	defer c.Unlock()
-	c.count += 1
+	c.count++
 }
 
 func (c *Counter) Value() int {

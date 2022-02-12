@@ -132,6 +132,7 @@ func TestRunningServer(t *testing.T) {
 		if err != nil {
 			t.Errorf("Unexpected error when requesting health status - %s", err)
 		}
+		defer r.Body.Close()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when checking health - %d", r.StatusCode)
 		}
@@ -142,6 +143,7 @@ func TestRunningServer(t *testing.T) {
 		if err != nil {
 			t.Errorf("Unexpected error when requesting metrics status - %s", err)
 		}
+		defer r.Body.Close()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when checking metrics - %d", r.StatusCode)
 		}
@@ -188,6 +190,7 @@ func TestPProfServerEnabled(t *testing.T) {
 			if err != nil {
 				t.Errorf("Unexpected error when validating pprof - %s", err)
 			}
+			defer r.Body.Close()
 			if r.StatusCode > 399 {
 				t.Errorf("Unexpected http status code when validating pprof - %d", r.StatusCode)
 			}
@@ -233,6 +236,7 @@ func TestPProfServerDisabled(t *testing.T) {
 			if err != nil {
 				t.Errorf("Unexpected error when validating pprof - %s", err)
 			}
+			defer r.Body.Close()
 			if r.StatusCode != 403 {
 				t.Errorf("Unexpected http status code when validating pprof - %d", r.StatusCode)
 			}
@@ -297,6 +301,7 @@ func TestRunningTLSServer(t *testing.T) {
 			t.Errorf("Unexpected error when requesting health status - %s", err)
 			t.FailNow()
 		}
+		defer r.Body.Close()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when checking health - %d", r.StatusCode)
 		}
@@ -308,6 +313,7 @@ func TestRunningTLSServer(t *testing.T) {
 			t.Errorf("Unexpected error when requesting ready status - %s", err)
 			t.FailNow()
 		}
+		defer r.Body.Close()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when checking readiness - %d", r.StatusCode)
 		}
@@ -329,6 +335,7 @@ func TestRunningTLSServer(t *testing.T) {
 			t.Errorf("Unexpected error when requesting ready status - %s", err)
 			t.FailNow()
 		}
+		defer r.Body.Close()
 		if r.StatusCode != 503 {
 			t.Errorf("Unexpected http status code when checking readiness - %d", r.StatusCode)
 		}

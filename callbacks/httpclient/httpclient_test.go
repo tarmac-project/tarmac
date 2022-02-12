@@ -54,7 +54,6 @@ func Test(t *testing.T) {
 		default:
 			return
 		}
-
 	}))
 
 	var tc []HTTPClientCase

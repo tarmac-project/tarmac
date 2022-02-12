@@ -49,6 +49,7 @@ func TestHandlers(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Unexpected error when making HTTP request - %s", err)
 		}
+		defer r.Body.Close()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when making HTTP request %d", r.StatusCode)
 		}
@@ -66,6 +67,7 @@ func TestHandlers(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Unexpected error when making HTTP request - %s", err)
 		}
+		defer r.Body.Close()
 		if r.StatusCode != 503 {
 			t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
 		}
@@ -76,6 +78,7 @@ func TestHandlers(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Unexpected error when making HTTP request - %s", err)
 		}
+		defer r.Body.Close()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when making HTTP request %d", r.StatusCode)
 		}
@@ -93,6 +96,7 @@ func TestHandlers(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Unexpected error when making HTTP request - %s", err)
 		}
+		defer r.Body.Close()
 		if r.StatusCode < 500 {
 			t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
 		}
