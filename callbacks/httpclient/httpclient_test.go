@@ -196,7 +196,7 @@ func Test(t *testing.T) {
 					if err != nil {
 						t.Fatalf("Error decoding  returned body - %s", err)
 					}
-					switch fmt.Sprintf("%s", body) {
+					switch string(body) {
 					case "PUT", "POST", "PATCH":
 						return
 					default:
