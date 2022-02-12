@@ -24,7 +24,7 @@ func TestInterface(t *testing.T) {
 
 func TestSQLQuery(t *testing.T) {
 	// Create a DB connection using in-memory SQLLite
-	mockDB, err := sql.Open("sqlite3", "file:locked.sqlite?cache=shared")
+	mockDB, err := sql.Open("sqlite3", "file:locked.sqlite?cache=shared&mode=memory")
 	if err != nil {
 		t.Fatalf("Unable to create sqllite DB for testing")
 	}
