@@ -46,6 +46,9 @@ jobs:
       with:
         go-version: 1.16
 
+    - name: Go Mod Tidy
+      run: go mod tidy
+
     - name: Install Tickeryzer
       run: go get -u github.com/orijtech/tickeryzer/cmd/tickeryzer
 

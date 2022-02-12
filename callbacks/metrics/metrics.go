@@ -107,7 +107,7 @@ func (m *Metrics) Counter(b []byte) ([]byte, error) {
 	return []byte(""), nil
 }
 
-// Guage will create a gauge metric and either increment or decrement the value
+// Gauge will create a gauge metric and either increment or decrement the value
 // based on the provided input. The expected input for this function is a
 // MetricsGauge JSON.
 func (m *Metrics) Gauge(b []byte) ([]byte, error) {

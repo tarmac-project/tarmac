@@ -5,10 +5,10 @@ package app
 
 import (
 	"database/sql"
-	// MySQL Database Driver
 	"context"
 	"crypto/tls"
 	"fmt"
+	// MySQL Database Driver
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/julienschmidt/httprouter"
 	// PostgreSQL Database Driver

@@ -27,7 +27,7 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 )
 
-// Database provides access to Host Callbacks that interace with a SQL database within Tarmac. The callbacks
+// Database provides access to Host Callbacks that interface with a SQL database within Tarmac. The callbacks
 // within Database provide all the logic and error hangling of accessing and interacting with a SQL database.
 // Users will send the specified JSON request to execute a query and receive an appropriate JSON response.
 type Database struct {
