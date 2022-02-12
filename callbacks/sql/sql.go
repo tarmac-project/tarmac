@@ -87,7 +87,8 @@ func (db *Database) Query(b []byte) ([]byte, error) {
 		var results []map[string]interface{}
 
 		// Query database
-		rows, err := db.db.Query(string(q))
+		qry := fmt.Sprintf("%s", q)
+		rows, err := db.db.Query(qry)
 		if err != nil {
 			r.Status.Code = 500
 			r.Status.Status = fmt.Sprintf("Unable to execute query - %s", err)
