@@ -23,7 +23,7 @@ jobs:
           # working-directory: somedir
 
           # Optional: golangci-lint command line arguments.
-          args: -E misspell -E revive -E bodyclose -E errname -E gofmt -E whitespace
+          args: -E misspell -E revive -E bodyclose -E errname -E gofmt
 
           # Optional: show only new issues if it's a pull request. The default value is `false`.
           # only-new-issues: true

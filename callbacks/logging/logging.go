@@ -69,31 +69,31 @@ func New(cfg Config) (*Logger, error) {
 
 // Info will take the incoming byte slice data and call the internal logger converting the data to a string.
 func (l *Logger) Info(b []byte) ([]byte, error) {
-	l.log.Info(fmt.Sprintf("%s", b))
+	l.log.Info(strings(b))
 	return []byte(""), nil
 }
 
 // Error will take the incoming byte slice data and call the internal logger converting the data to a string.
 func (l *Logger) Error(b []byte) ([]byte, error) {
-	l.log.Error(fmt.Sprintf("%s", b))
+	l.log.Error(strings(b))
 	return []byte(""), nil
 }
 
 // Debug will take the incoming byte slice data and call the internal logger converting the data to a string.
 func (l *Logger) Debug(b []byte) ([]byte, error) {
-	l.log.Debug(fmt.Sprintf("%s", b))
+	l.log.Debug(strings(b))
 	return []byte(""), nil
 }
 
 // Trace will take the incoming byte slice data and call the internal logger converting the data to a string.
 func (l *Logger) Trace(b []byte) ([]byte, error) {
-	l.log.Trace(fmt.Sprintf("%s", b))
+	l.log.Trace(strings(b))
 	return []byte(""), nil
 }
 
 // Warn will take the incoming byte slice data and call the internal logger converting the data to a string.
 func (l *Logger) Warn(b []byte) ([]byte, error) {
-	l.log.Warn(fmt.Sprintf("%s", b))
+	l.log.Warn(strings(b))
 	return []byte(""), nil
 }
 
