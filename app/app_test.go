@@ -269,7 +269,7 @@ func TestRunningTLSServer(t *testing.T) {
 	cfg.Set("cassandra_hosts", []string{"cassandra-primary", "cassandra"})
 	cfg.Set("cassandra_keyspace", "tarmac")
 	cfg.Set("enable_kvstore", true)
-	cfg.Set("use_consul", true)
+	cfg.Set("use_consul", false)
 	cfg.Set("listen_addr", "localhost:9000")
 	cfg.Set("config_watch_interval", 1)
 	cfg.Set("enable_sql", true)
@@ -319,12 +319,14 @@ func TestRunningTLSServer(t *testing.T) {
 		}
 	})
 
-	t.Run("Verify Scheduled Tasks ran as expected", func(t *testing.T) {
-		_, err := kv.Get("test-data")
-		if err != nil {
-			t.Errorf("Unexpected error checking KV Counter value via scheduled WASM function")
-		}
-	})
+	/*
+		t.Run("Verify Scheduled Tasks ran as expected", func(t *testing.T) {
+			_, err := kv.Get("test-data")
+			if err != nil {
+				t.Errorf("Unexpected error checking KV Counter value via scheduled WASM function")
+			}
+		})
+	*/
 
 	// Kill the DB sessions for unhappy path testing
 	kv.Close()
