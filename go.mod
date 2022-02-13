@@ -3,9 +3,11 @@ module github.com/madflojo/tarmac
 go 1.17
 
 require (
+	github.com/go-sql-driver/mysql v1.6.0
 	github.com/julienschmidt/httprouter v1.3.0
+	github.com/lib/pq v1.10.4
 	github.com/madflojo/hord v0.1.3
-	github.com/madflojo/tasks v1.0.0
+	github.com/madflojo/tasks v1.0.1
 	github.com/madflojo/testcerts v1.0.1
 	github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7
 	github.com/prometheus/client_golang v1.11.0
@@ -55,7 +57,7 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.26.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
-	github.com/rs/xid v1.2.1 // indirect
+	github.com/rs/xid v1.3.0 // indirect
 	github.com/sagikazarmark/crypt v0.1.0 // indirect
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cast v1.4.1 // indirect

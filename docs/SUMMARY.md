@@ -5,7 +5,11 @@
 ## Running Tarmac
 
 * [Configuration](running-tarmac/configuration.md)
-* [Key:Value Datastore](running-tarmac/kvstore.md)
+  * [Redis](running-tarmac/redis.md)
+  * [Cassandra](running-tarmac/cassandra.md)
+* Datastores
+  * [Key:Value](running-tarmac/kvstore.md)
+  * [SQL](running-tarmac/sql.md)
 * [Logging](running-tarmac/logging.md)
 * [Monitoring](running-tarmac/metrics.md)
 * [Scheduled Tasks](running-tarmac/scheduled-tasks.md)
@@ -25,6 +29,7 @@
 * [HTTP Client](callback-functions/http-call.md)
 * [Logger](callback-functions/logger.md)
 * [Metrics](callback-functions/metrics.md)
+* [SQL Datastore](callback-functions/sql.md)
 
 ## Developer Resources
 

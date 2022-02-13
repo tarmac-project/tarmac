@@ -86,7 +86,6 @@ func (k *KVStore) Get(b []byte) ([]byte, error) {
 
 		// Encode Fetched Data to store within JSON
 		r.Data = base64.StdEncoding.EncodeToString(data)
-
 	}
 
 	// Marshal a resposne JSON to return to caller

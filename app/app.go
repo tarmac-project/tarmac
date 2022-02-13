@@ -6,8 +6,13 @@ package app
 import (
 	"context"
 	"crypto/tls"
+	"database/sql"
 	"fmt"
+	// MySQL Database Driver
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/julienschmidt/httprouter"
+	// PostgreSQL Database Driver
+	_ "github.com/lib/pq"
 	"github.com/madflojo/hord"
 	"github.com/madflojo/hord/drivers/cassandra"
 	"github.com/madflojo/hord/drivers/redis"
@@ -17,6 +22,7 @@ import (
 	"github.com/madflojo/tarmac/callbacks/kvstore"
 	"github.com/madflojo/tarmac/callbacks/logging"
 	"github.com/madflojo/tarmac/callbacks/metrics"
+	sqlstore "github.com/madflojo/tarmac/callbacks/sql"
 	"github.com/madflojo/tarmac/wasm"
 	"github.com/madflojo/tasks"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -43,6 +49,9 @@ var engine *wasm.Server
 
 // kv is the global reference for the K/V Store.
 var kv hord.Database
+
+// db is the global reference for the SQL DB.
+var db *sql.DB
 
 // runCtx is a global context used to control shutdown of the application.
 var runCtx context.Context
@@ -128,6 +137,7 @@ func Run(c *viper.Viper) error {
 
 	// Setup the KV Connection
 	if cfg.GetBool("enable_kvstore") {
+		log.Infof("Connecting to KV Store")
 		switch cfg.GetString("kvstore_type") {
 		case "redis":
 			kv, err = redis.Dial(redis.Config{
@@ -179,6 +189,27 @@ func Run(c *viper.Viper) error {
 
 	if kv == nil {
 		log.Infof("KV Store not configured, skipping")
+	}
+
+	if cfg.GetBool("enable_sql") {
+		log.Infof("Connecting to SQL DB")
+		switch cfg.GetString("sql_type") {
+		case "mysql":
+			db, err = sql.Open("mysql", cfg.GetString("sql_dsn"))
+			if err != nil {
+				return fmt.Errorf("could not establish sql db connection - %s", err)
+			}
+		case "postgres":
+			db, err = sql.Open("postgres", cfg.GetString("sql_dsn"))
+			if err != nil {
+				return fmt.Errorf("could not establish sql db connection - %s", err)
+			}
+		default:
+			return fmt.Errorf("unknown sql store specified - %s", cfg.GetString("sql_type"))
+		}
+	}
+	if db == nil {
+		log.Infof("SQL DB not configured, skipping")
 	}
 
 	// Setup the HTTP Server
@@ -242,6 +273,17 @@ func Run(c *viper.Viper) error {
 			}
 		},
 	})
+
+	// Setup SQL Callbacks
+	if cfg.GetBool("enable_sql") {
+		cbSQL, err := sqlstore.New(sqlstore.Config{DB: db})
+		if err != nil {
+			return fmt.Errorf("unable to initialize callback sqlstore for WASM functions - %s", err)
+		}
+
+		// Register SQLStore Callbacks
+		router.RegisterCallback("sql", "query", cbSQL.Query)
+	}
 
 	// Setup KVStore Callbacks
 	if cfg.GetBool("enable_kvstore") {

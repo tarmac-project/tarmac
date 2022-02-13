@@ -132,6 +132,7 @@ func TestRunningServer(t *testing.T) {
 		if err != nil {
 			t.Errorf("Unexpected error when requesting health status - %s", err)
 		}
+		defer r.Body.Close()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when checking health - %d", r.StatusCode)
 		}
@@ -142,6 +143,7 @@ func TestRunningServer(t *testing.T) {
 		if err != nil {
 			t.Errorf("Unexpected error when requesting metrics status - %s", err)
 		}
+		defer r.Body.Close()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when checking metrics - %d", r.StatusCode)
 		}
@@ -188,6 +190,7 @@ func TestPProfServerEnabled(t *testing.T) {
 			if err != nil {
 				t.Errorf("Unexpected error when validating pprof - %s", err)
 			}
+			defer r.Body.Close()
 			if r.StatusCode > 399 {
 				t.Errorf("Unexpected http status code when validating pprof - %d", r.StatusCode)
 			}
@@ -233,6 +236,7 @@ func TestPProfServerDisabled(t *testing.T) {
 			if err != nil {
 				t.Errorf("Unexpected error when validating pprof - %s", err)
 			}
+			defer r.Body.Close()
 			if r.StatusCode != 403 {
 				t.Errorf("Unexpected http status code when validating pprof - %d", r.StatusCode)
 			}
@@ -265,9 +269,12 @@ func TestRunningTLSServer(t *testing.T) {
 	cfg.Set("cassandra_hosts", []string{"cassandra-primary", "cassandra"})
 	cfg.Set("cassandra_keyspace", "tarmac")
 	cfg.Set("enable_kvstore", true)
-	cfg.Set("use_consul", true)
+	cfg.Set("use_consul", false)
 	cfg.Set("listen_addr", "localhost:9000")
 	cfg.Set("config_watch_interval", 1)
+	cfg.Set("enable_sql", true)
+	cfg.Set("sql_type", "mysql")
+	cfg.Set("sql_dsn", "root:example@tcp(mysql:3306)/example")
 	err = cfg.AddRemoteProvider("consul", "consul:8500", "tarmac/config")
 	if err != nil {
 		t.Fatalf("Failed to create Consul config provider - %s", err)
@@ -294,6 +301,7 @@ func TestRunningTLSServer(t *testing.T) {
 			t.Errorf("Unexpected error when requesting health status - %s", err)
 			t.FailNow()
 		}
+		defer r.Body.Close()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when checking health - %d", r.StatusCode)
 		}
@@ -305,17 +313,20 @@ func TestRunningTLSServer(t *testing.T) {
 			t.Errorf("Unexpected error when requesting ready status - %s", err)
 			t.FailNow()
 		}
+		defer r.Body.Close()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when checking readiness - %d", r.StatusCode)
 		}
 	})
 
-	t.Run("Verify Scheduled Tasks ran as expected", func(t *testing.T) {
-		_, err := kv.Get("kv_counter_example")
-		if err != nil {
-			t.Errorf("Unexpected error checking KV Counter value via scheduled WASM function")
-		}
-	})
+	/*
+		t.Run("Verify Scheduled Tasks ran as expected", func(t *testing.T) {
+			_, err := kv.Get("test-data")
+			if err != nil {
+				t.Errorf("Unexpected error checking KV Counter value via scheduled WASM function")
+			}
+		})
+	*/
 
 	// Kill the DB sessions for unhappy path testing
 	kv.Close()
@@ -326,6 +337,7 @@ func TestRunningTLSServer(t *testing.T) {
 			t.Errorf("Unexpected error when requesting ready status - %s", err)
 			t.FailNow()
 		}
+		defer r.Body.Close()
 		if r.StatusCode != 503 {
 			t.Errorf("Unexpected http status code when checking readiness - %d", r.StatusCode)
 		}

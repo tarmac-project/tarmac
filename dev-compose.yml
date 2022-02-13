@@ -14,6 +14,12 @@ services:
       - "CONSUL_HTTP_ADDR=consul:8500"
       - "CONSUL_HTTP_SSL=false"
       - "APP_WASM_FUNCTION=./testdata/tarmac.wasm"
+      - "ENABLE_SQL=true"
+      - "ENABLE_KVSTORE=true"
+      - "SQL_TYPE=mysql"
+      - "SQL_DSN=root:example@tcp(mysql:3306)/example"
+      - "KVSTORE_TYPE=redis"
+      - "REDIS_SERVER=redis:6379"
     volumes:
       - "./testdata:/testdata"
     depends_on:
@@ -40,6 +46,28 @@ services:
       - cassandra
       - consul
       - consulator
+      - mysql
+  benchmarks:
+    build: .
+    working_dir: /go/src/github.com/madflojo/tarmac
+    entrypoint: go test -v -run=XXX -bench=. ./...
+    volumes:
+      - "./coverage:/tmp/coverage"
+      - "./example:/example"
+      - "./testdata:/testdata"
+    environment:
+      - "APP_ENABLE_TLS=false"
+      - "APP_CONSUL_ADDR=consul:8500"
+      - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
+      - "CONSUL_HTTP_ADDR=consul:8500"
+      - "CONSUL_HTTP_SSL=false"
+    depends_on:
+      - redis
+      - cassandra-primary
+      - cassandra
+      - consul
+      - consulator
+      - mysql
   redis:
     image: bitnami/redis:latest
     environment:
@@ -69,6 +97,14 @@ services:
       - 7199
       - 9042
       - 9160
+  mysql:
+    image: bitnami/mysql:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: example
+    ports:
+      - 3306:3306
   consul:
     image: consul
     ports:

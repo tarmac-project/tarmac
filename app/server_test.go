@@ -12,6 +12,7 @@ import (
 
 type RunnerCase struct {
 	name    string
+	err     bool
 	pass    bool
 	module  string
 	handler string
@@ -26,6 +27,9 @@ func TestHandlers(t *testing.T) {
 	cfg.Set("kvstore_type", "redis")
 	cfg.Set("redis_server", "redis:6379")
 	cfg.Set("enable_kvstore", true)
+	cfg.Set("enable_sql", true)
+	cfg.Set("sql_type", "mysql")
+	cfg.Set("sql_dsn", "root:example@tcp(mysql:3306)/example")
 	cfg.Set("config_watch_interval", 5)
 	cfg.Set("wasm_function", "/testdata/tarmac.wasm")
 	go func() {
@@ -45,6 +49,7 @@ func TestHandlers(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Unexpected error when making HTTP request - %s", err)
 		}
+		defer r.Body.Close()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when making HTTP request %d", r.StatusCode)
 		}
@@ -62,6 +67,7 @@ func TestHandlers(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Unexpected error when making HTTP request - %s", err)
 		}
+		defer r.Body.Close()
 		if r.StatusCode != 503 {
 			t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
 		}
@@ -72,6 +78,7 @@ func TestHandlers(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Unexpected error when making HTTP request - %s", err)
 		}
+		defer r.Body.Close()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when making HTTP request %d", r.StatusCode)
 		}
@@ -89,6 +96,7 @@ func TestHandlers(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Unexpected error when making HTTP request - %s", err)
 		}
+		defer r.Body.Close()
 		if r.StatusCode < 500 {
 			t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
 		}
@@ -104,6 +112,9 @@ func TestWASMRunner(t *testing.T) {
 	cfg.Set("redis_server", "redis:6379")
 	cfg.Set("enable_kvstore", true)
 	cfg.Set("config_watch_interval", 5)
+	cfg.Set("enable_sql", true)
+	cfg.Set("sql_type", "mysql")
+	cfg.Set("sql_dsn", "root:example@tcp(mysql:3306)/example")
 	cfg.Set("wasm_function", "/testdata/tarmac.wasm")
 	go func() {
 		err := Run(cfg)
@@ -121,6 +132,7 @@ func TestWASMRunner(t *testing.T) {
 
 	tc = append(tc, RunnerCase{
 		name:    "Module Doesn't Exist",
+		err:     true,
 		pass:    false,
 		module:  "notfound",
 		handler: "http:GET",
@@ -129,14 +141,16 @@ func TestWASMRunner(t *testing.T) {
 
 	tc = append(tc, RunnerCase{
 		name:    "Happy Path - Bad Payload",
+		err:     false,
 		pass:    false,
 		module:  "default",
 		handler: "http:POST",
-		request: tarmac.ServerRequest{},
+		request: tarmac.ServerRequest{Payload: "ohmy"},
 	})
 
 	tc = append(tc, RunnerCase{
 		name:    "Bad Handler Route",
+		err:     true,
 		pass:    false,
 		module:  "default",
 		handler: "noroute",
@@ -146,14 +160,14 @@ func TestWASMRunner(t *testing.T) {
 	for _, c := range tc {
 		t.Run(c.name, func(t *testing.T) {
 			rsp, err := runWASM(c.module, c.handler, c.request)
-			if err != nil && c.pass {
+			if err != nil && !c.err {
 				t.Errorf("Unexpected error executing module - %s", err)
 			}
-			if err == nil && !c.pass {
+			if err == nil && c.err {
 				t.Errorf("Unexpected success executing module")
 			}
 
-			if rsp.Status.Code != 200 && rsp.Status.Code != 0 {
+			if c.pass && (rsp.Status.Code != 200 && rsp.Status.Code != 0) {
 				t.Errorf("Unexpected failure from WASM response status code %d", rsp.Status.Code)
 			}
 		})
