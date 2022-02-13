@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"fmt"
+	"strconv"
+	// Import MySQL Driver
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/madflojo/tarmac"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/pquerna/ffjson/ffjson"
 	"testing"
 )
@@ -24,7 +26,7 @@ func TestInterface(t *testing.T) {
 
 func TestSQLQuery(t *testing.T) {
 	// Create a DB connection using in-memory SQLLite
-	mockDB, err := sql.Open("sqlite3", "file:locked.sqlite?cache=shared&mode=memory")
+	mockDB, err := sql.Open("mysql", "root:example@tcp(mysql:3306)/example")
 	if err != nil {
 		t.Fatalf("Unable to create sqllite DB for testing")
 	}
@@ -99,7 +101,7 @@ func TestSQLQuery(t *testing.T) {
 
 	t.Run("Happy Path", func(t *testing.T) {
 		t.Run("Create Table", func(t *testing.T) {
-			q := base64.StdEncoding.EncodeToString([]byte(`CREATE TABLE IF NOT EXISTS testing ( id int NOT NULL, name varchar(255), PRIMARY KEY (id) );`))
+			q := base64.StdEncoding.EncodeToString([]byte(`CREATE TABLE IF NOT EXISTS testpkg ( id int NOT NULL, name varchar(255), PRIMARY KEY (id) );`))
 			j := fmt.Sprintf(`{"query":"%s"}`, q)
 			r, err := db.Query([]byte(j))
 			if err != nil {
@@ -120,7 +122,7 @@ func TestSQLQuery(t *testing.T) {
 		})
 
 		t.Run("Insert Data", func(t *testing.T) {
-			q := base64.StdEncoding.EncodeToString([]byte(`INSERT INTO testing (id, name)  VALUES ("1", "John Smith");`))
+			q := base64.StdEncoding.EncodeToString([]byte(`INSERT INTO testpkg (id, name)  VALUES (1, "John Smith");`))
 			j := fmt.Sprintf(`{"query":"%s"}`, q)
 			r, err := db.Query([]byte(j))
 			if err != nil {
@@ -141,7 +143,7 @@ func TestSQLQuery(t *testing.T) {
 		})
 
 		t.Run("Select Data", func(t *testing.T) {
-			q := base64.StdEncoding.EncodeToString([]byte(`SELECT * from testing;`))
+			q := base64.StdEncoding.EncodeToString([]byte(`SELECT * from testpkg;`))
 			j := fmt.Sprintf(`{"query":"%s"}`, q)
 			r, err := db.Query([]byte(j))
 			if err != nil {
@@ -168,8 +170,8 @@ func TestSQLQuery(t *testing.T) {
 
 			// Parse returned SQL Data
 			type rowData struct {
-				ID   int    `json:"id"`
-				Name string `json:"name"`
+				ID   []byte `json:"id"`
+				Name []byte `json:"name"`
 			}
 
 			var records []rowData
@@ -178,14 +180,19 @@ func TestSQLQuery(t *testing.T) {
 				t.Fatalf("Unable to unmarshal SQL response - %s", err)
 			}
 
-			// Verify data
-			if records[0].ID != 1 {
-				t.Fatalf("Unexpected user id returned - %v", records)
+			id, err := strconv.Atoi(string(records[0].ID))
+			if err != nil {
+				t.Fatalf("Unable to convert ID to integer - %s", err)
 			}
+
+			if id != 1 {
+				t.Fatalf("Unexpected value from Database got %d", id)
+			}
+
 		})
 
 		t.Run("Delete Table", func(t *testing.T) {
-			q := base64.StdEncoding.EncodeToString([]byte(`DROP TABLE IF EXISTS testing;`))
+			q := base64.StdEncoding.EncodeToString([]byte(`DROP TABLE IF EXISTS testpkg;`))
 			j := fmt.Sprintf(`{"query":"%s"}`, q)
 			r, err := db.Query([]byte(j))
 			if err != nil {
