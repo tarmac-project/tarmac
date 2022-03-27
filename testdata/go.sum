@@ -1,4 +1,2 @@
-github.com/valyala/fastjson v1.6.3 h1:tAKFnnwmeMGPbwJ7IwxcTPCNr3uIzoIj3/Fh90ra4xc=
-github.com/valyala/fastjson v1.6.3/go.mod h1:CLCAqky6SMuOcxStkYQvblddUtoRxhYMGLrsQns1aXY=
 github.com/wapc/wapc-guest-tinygo v0.3.1 h1:ecmT4W+ynsNvRvLolPw2rQRafCAoLMh7L/u6ZxVSWXU=
 github.com/wapc/wapc-guest-tinygo v0.3.1/go.mod h1:Jssn+ovE+Y2oueUgVeLyGZf2ipUPngVnWTNPM8zmhn0=

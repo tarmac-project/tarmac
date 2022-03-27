@@ -2,7 +2,6 @@ package app
 
 import (
 	"bytes"
-	"github.com/madflojo/tarmac"
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
@@ -16,7 +15,7 @@ type RunnerCase struct {
 	pass    bool
 	module  string
 	handler string
-	request tarmac.ServerRequest
+	request []byte
 }
 
 func TestHandlers(t *testing.T) {
@@ -68,7 +67,7 @@ func TestHandlers(t *testing.T) {
 			t.Fatalf("Unexpected error when making HTTP request - %s", err)
 		}
 		defer r.Body.Close()
-		if r.StatusCode != 503 {
+		if r.StatusCode != 500 {
 			t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
 		}
 	})
@@ -86,7 +85,7 @@ func TestHandlers(t *testing.T) {
 		if err != nil {
 			t.Errorf("Unexpected error reading http response - %s", err)
 		}
-		if string(body) != string([]byte("")) {
+		if string(body) != string([]byte("Howdie")) {
 			t.Errorf("Unexpected reply from http response - got %s", body)
 		}
 	})
@@ -135,8 +134,8 @@ func TestWASMRunner(t *testing.T) {
 		err:     true,
 		pass:    false,
 		module:  "notfound",
-		handler: "http:GET",
-		request: tarmac.ServerRequest{},
+		handler: "GET",
+		request: []byte(""),
 	})
 
 	tc = append(tc, RunnerCase{
@@ -144,8 +143,17 @@ func TestWASMRunner(t *testing.T) {
 		err:     false,
 		pass:    false,
 		module:  "default",
-		handler: "http:POST",
-		request: tarmac.ServerRequest{Payload: "ohmy"},
+		handler: "POST",
+		request: []byte("ohmy"),
+	})
+
+	tc = append(tc, RunnerCase{
+		name:    "Happy Path",
+		err:     false,
+		pass:    true,
+		module:  "default",
+		handler: "POST",
+		request: []byte("howdie"),
 	})
 
 	tc = append(tc, RunnerCase{
@@ -154,7 +162,7 @@ func TestWASMRunner(t *testing.T) {
 		pass:    false,
 		module:  "default",
 		handler: "noroute",
-		request: tarmac.ServerRequest{},
+		request: []byte(""),
 	})
 
 	for _, c := range tc {
@@ -167,9 +175,7 @@ func TestWASMRunner(t *testing.T) {
 				t.Errorf("Unexpected success executing module")
 			}
 
-			if c.pass && (rsp.Status.Code != 200 && rsp.Status.Code != 0) {
-				t.Errorf("Unexpected failure from WASM response status code %d", rsp.Status.Code)
-			}
+			t.Logf("%s", rsp)
 		})
 	}
 

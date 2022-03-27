@@ -1,16 +1,12 @@
 package app
 
 import (
-	"encoding/base64"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
-	"github.com/madflojo/tarmac"
-	"github.com/pquerna/ffjson/ffjson"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"regexp"
-	"strings"
 	"time"
 )
 
@@ -113,24 +109,8 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 	}
 
-	// Create Request type
-	req := tarmac.ServerRequest{
-		Headers: map[string]string{
-			"request_type": "http",
-			"http_method":  r.Method,
-			"http_path":    r.URL.Path,
-			"remote_addr":  r.RemoteAddr,
-		},
-		Payload: base64.StdEncoding.EncodeToString(payload),
-	}
-
-	// Append Request Headers
-	for k := range r.Header {
-		req.Headers[strings.ToLower(k)] = r.Header.Get(k)
-	}
-
 	// Execute WASM Module
-	rsp, err := runWASM("default", "http:"+r.Method, req)
+	rsp, err := runWASM("default", r.Method, payload)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"method":         r.Method,
@@ -143,71 +123,30 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 
-	// Decode Response Payload
-	rspPayload, err := base64.StdEncoding.DecodeString(rsp.Payload)
-	if err != nil {
-		log.WithFields(logrus.Fields{
-			"method":         r.Method,
-			"remote-addr":    r.RemoteAddr,
-			"http-protocol":  r.Proto,
-			"headers":        r.Header,
-			"content-length": r.ContentLength,
-		}).Debugf("Error decoing base64 payload response from WASM module - %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	// If Response indicates error print it out
-	if rsp.Status.Code > 399 {
-		// Return status code and print stdout
-		w.WriteHeader(rsp.Status.Code)
-		fmt.Fprintf(w, "%s", rsp.Status.Status)
-		return
-	}
-
-	// Assume if no status code everything worked as expected
-	if rsp.Status.Code == 0 {
-		rsp.Status.Code = 200
-	}
-
 	// Return status code and print stdout
-	w.WriteHeader(rsp.Status.Code)
-	fmt.Fprintf(w, "%s", rspPayload)
+	w.WriteHeader(200)
+	fmt.Fprintf(w, "%s", rsp)
 }
 
 // runWASM will load and execute the specified WASM module.
-func runWASM(module, handler string, rq tarmac.ServerRequest) (tarmac.ServerResponse, error) {
-	var rsp tarmac.ServerResponse
+func runWASM(module, handler string, rq []byte) ([]byte, error) {
 	now := time.Now()
-
-	// Convert request to JSON payload
-	d, err := ffjson.Marshal(rq)
-	if err != nil {
-		stats.wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
-		return rsp, fmt.Errorf("unable to marshal server request - %s", err)
-	}
 
 	// Fetch Module and run with payload
 	m, err := engine.Module(module)
 	if err != nil {
 		stats.wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
-		return rsp, fmt.Errorf("unable to load wasi environment - %s", err)
+		return []byte(""), fmt.Errorf("unable to load wasi environment - %s", err)
 	}
 
 	// Execute the WASM Handler
-	data, err := m.Run(handler, d)
+	rsp, err := m.Run(handler, rq)
 	if err != nil {
 		stats.wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
 		return rsp, fmt.Errorf("failed to execute wasm module - %s", err)
 	}
 
-	// Unmarshal WASM JSON response
-	err = ffjson.Unmarshal(data, &rsp)
-	if err != nil {
-		stats.wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
-		return rsp, fmt.Errorf("failed to unmarshal response - %s - %s", err, data)
-	}
-
+	// Return results
 	stats.wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
 	return rsp, nil
 }

@@ -16,7 +16,6 @@ import (
 	"github.com/madflojo/hord"
 	"github.com/madflojo/hord/drivers/cassandra"
 	"github.com/madflojo/hord/drivers/redis"
-	"github.com/madflojo/tarmac"
 	"github.com/madflojo/tarmac/callbacks"
 	"github.com/madflojo/tarmac/callbacks/httpclient"
 	"github.com/madflojo/tarmac/callbacks/kvstore"
@@ -376,14 +375,11 @@ func Run(c *viper.Viper) error {
 			TaskFunc: func() error {
 				now := time.Now()
 				log.WithFields(logrus.Fields{"task-name": name}).Tracef("Executing Scheduled task")
-				r, err := runWASM("scheduler-"+name, "scheduler:RUN", tarmac.ServerRequest{Headers: headers})
+				_, err := runWASM("scheduler-"+name, "scheduler:RUN", []byte(""))
 				if err != nil {
 					log.WithFields(logrus.Fields{"task-name": name}).Debugf("Error executing task - %s", err)
 					stats.tasks.WithLabelValues(name).Observe(time.Since(now).Seconds())
 					return err
-				}
-				if r.Status.Code == 200 {
-					log.WithFields(logrus.Fields{"task-name": name}).Debugf("Task execution completed successfully")
 				}
 				stats.tasks.WithLabelValues(name).Observe(time.Since(now).Seconds())
 				return nil
