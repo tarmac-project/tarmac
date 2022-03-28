@@ -319,15 +319,6 @@ func TestRunningTLSServer(t *testing.T) {
 		}
 	})
 
-	/*
-		t.Run("Verify Scheduled Tasks ran as expected", func(t *testing.T) {
-			_, err := kv.Get("test-data")
-			if err != nil {
-				t.Errorf("Unexpected error checking KV Counter value via scheduled WASM function")
-			}
-		})
-	*/
-
 	// Kill the DB sessions for unhappy path testing
 	kv.Close()
 

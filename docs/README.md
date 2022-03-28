@@ -27,7 +27,7 @@ In many ways, Tarmac is more akin to a microservices framework with the develope
 
 ## Quick Start
 
-At the moment, Tramac is executing WASM functions by executing a defined set of function signatures. When Tarmac receives an HTTP GET request, it will call the function's registered under the `http:GET` signature.
+At the moment, Tramac is executing WASM functions by executing a defined set of function signatures. When Tarmac receives an HTTP GET request, it will call the function's registered under the `GET` signature.
 
 As part of the WASM Function, users must register their handlers using the pre-defined function signatures.
 

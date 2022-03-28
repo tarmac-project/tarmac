@@ -12,12 +12,10 @@
   * [SQL](running-tarmac/sql.md)
 * [Logging](running-tarmac/logging.md)
 * [Monitoring](running-tarmac/metrics.md)
-* [Scheduled Tasks](running-tarmac/scheduled-tasks.md)
 * [Troubleshooting Performance](running-tarmac/profiling.md)
 
 ## WASM Functions
 
-* [Inputs & Outputs](wasm-functions/inputs-and-outputs.md)
 * [Supported Languages](wasm-functions/supported-languages.md)
 * [Go](wasm-functions/go.md)
 * [Rust](wasm-functions/rust.md)

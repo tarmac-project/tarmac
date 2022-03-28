@@ -131,7 +131,7 @@ func TestWASMExecution(t *testing.T) {
 	}
 
 	go func() {
-		_, err = m.Run("http:POST", []byte(`{"headers":{},"payload":"aGVsbG8="}`))
+		_, err = m.Run("POST", []byte(`hello`))
 		if err != nil {
 			t.Logf("Could not execute the wasm function - %s", err)
 		}
