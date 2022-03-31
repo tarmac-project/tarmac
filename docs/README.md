@@ -31,113 +31,66 @@ At the moment, Tramac is executing WASM functions by executing a defined set of 
 
 As part of the WASM Function, users must register their handlers using the pre-defined function signatures.
 
-To understand this better, look at one of our simple examples written in Rust \(found in [example/](https://github.com/madflojo/tarmac/blob/main/example/tac/README.md)\).
+To understand this better, look at one of our simple examples \(found in [example/](https://github.com/madflojo/tarmac/blob/main/example/tac/README.md)\).
 
-```rust
-// Tac is a small, simple Rust program that is an example WASM function for Tarmac.
-// This program will accept a Tarmac server request, log it, and echo back the payload
-// but with the payload reversed.
-extern crate wapc_guest as guest;
-extern crate base64;
-use serde::{Deserialize, Serialize};
-use serde_json;
-use std::collections::HashMap;
-use guest::prelude::*;
+```golang
+// Tac is a small, simple Go program that is an example WASM module for Tarmac. This program will accept a Tarmac
+// server request, log it, and echo back the payload in reverse.
+package main
 
-#[derive(Serialize, Deserialize)]
-struct ServerRequest {
-  headers: HashMap<String, String>,
-  payload: String,
+import (
+        "fmt"
+        wapc "github.com/wapc/wapc-guest-tinygo"
+)
+
+func main() {
+        // Tarmac uses waPC to facilitate WASM module execution. Modules must register their custom handlers under the
+        // appropriate method as shown below.
+        wapc.RegisterFunctions(wapc.Functions{
+                // Register a GET request handler
+                "GET": NoHandler,
+                // Register a POST request handler
+                "POST": Handler,
+                // Register a PUT request handler
+                "PUT": Handler,
+                // Register a DELETE request handler
+                "DELETE": NoHandler,
+        })
 }
 
-#[derive(Serialize, Deserialize)]
-struct ServerResponse {
-  headers: HashMap<String, String>,
-  status: Status,
-  payload: String,
+// NoHandler is a custom Tarmac Handler function that will return an error that denies
+// the client request.
+func NoHandler(payload []byte) ([]byte, error) {
+        return []byte(""), fmt.Errorf("Not Implemented")
 }
 
-#[derive(Serialize, Deserialize)]
-struct Status {
-  code: u32,
-  status: String,
-}
+// Handler is the custom Tarmac Handler function that will receive a payload and
+// must return a payload along with a nil error.
+func Handler(payload []byte) ([]byte, error) {
+        // Perform a host callback to log the incoming request
+        _, err := wapc.HostCall("tarmac", "logger", "trace", []byte(fmt.Sprintf("Reversing Payload: %s", payload)))
+        if err != nil {
+                return []byte(""), fmt.Errorf("Unable to call callback - %s", err)
+        }
 
-fn main() {}
+        // Flip it and reverse
+        if len(payload) > 0 {
+                for i, n := 0, len(payload)-1; i < n; i, n = i+1, n-1 {
+                        payload[i], payload[n] = payload[n], payload[i]
+                }
+        }
 
-#[no_mangle]
-pub extern "C" fn wapc_init() {
-  // Add Handler for the GET request
-  register_function("http:GET", fail_handler);
-  // Add Handler for the POST request
-  register_function("http:POST", handler);
-  // Add Handler for the PUT request
-  register_function("http:PUT", handler);
-  // Add Handler for the DELETE request
-  register_function("http:DELETE", fail_handler);
-}
-
-// fail_handler will accept the server request and return a server response
-// which rejects the client request
-fn fail_handler(_msg: &[u8]) -> CallResult {
-  // Create the response
-  let rsp = ServerResponse {
-      status: Status {
-        code: 503,
-        status: "Not Implemented".to_string(),
-      },
-      payload: "".to_string(),
-      headers: HashMap::new(),
-  };
-
-  // Marshal the response
-  let r = serde_json::to_vec(&rsp).unwrap();
-
-  // Return JSON byte array
-  Ok(r)
-}
-
-// handler is a simple example of a Tarmac WASM function written in Rust.
-// This function will accept the server request, log it, and echo back the payload
-// but with the payload reversed.
-fn handler(msg: &[u8]) -> CallResult {
-  // Perform a host callback to log the incoming request
-  let _res = host_call("tarmac", "logger", "debug", &msg.to_vec());
-
-  // Unmarshal the request
-  let rq: ServerRequest = serde_json::from_slice(msg).unwrap();
-
-  // Decode Payload
-  let b = base64::decode(rq.payload).unwrap();
-  // Convert to a String
-  let s = String::from_utf8(b).expect("Found Invalid UTF-8");
-  // Reverse it and re-encode
-  let enc = base64::encode(s.chars().rev().collect::<String>());
-
-  // Create the response
-  let rsp = ServerResponse {
-      status: Status {
-        code: 200,
-        status: "OK".to_string(),
-      },
-      payload: enc,
-      headers: HashMap::new(),
-  };
-
-  // Marshal the response
-  let r = serde_json::to_vec(&rsp).unwrap();
-
-  // Return JSON byte array
-  Ok(r)
+        // Return the payload via a ServerResponse JSON
+        return payload, nil
 }
 ```
 
-Tarmac passes the HTTP Context and Payload to the WASM function via the incoming `msg`. The `msg` is a JSON that contains Headers and a Payload which is Base64 encoded but otherwise untouched.
+Tarmac passes the HTTP Payload to the WASM function untouched.
 
 To compile the example above, run:
 
 ```text
-$ cd example/tac/rust
+$ cd example/tac/go
 $ make build
 ```
 

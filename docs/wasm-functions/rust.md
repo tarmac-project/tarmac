@@ -20,10 +20,6 @@ Tarmac internally uses a Web Assembly Procedure Calls \(waPC\) runtime, which me
 
 ```rust
 extern crate wapc_guest as guest;
-extern crate base64;
-use serde::{Deserialize, Serialize};
-use serde_json;
-use std::collections::HashMap;
 use guest::prelude::*;
 
 fn main() {}
@@ -32,25 +28,19 @@ fn main() {}
 pub extern "C" fn wapc_init() {}
 ```
 
-You will see other imports such as `serde` and `HashMap` in the code example above. These provide capabilities for JSON parsing which will be a vital aspect later as we progress.
-
 Along with the waPC imports, you should also see a `wapc_init()` function created. This function is the primary entry point for Tarmac execution. We will register other handler functions for Tarmac to execute using the `register_function()` function within this function.
 
 ```rust
 #[no_mangle]
 pub extern "C" fn wapc_init() {
-  // Add Handler for the GET request
-  register_function("http:GET", fail_handler);
   // Add Handler for the POST request
-  register_function("http:POST", handler);
+  register_function("POST", handler);
   // Add Handler for the PUT request
-  register_function("http:PUT", handler);
-  // Add Handler for the DELETE request
-  register_function("http:DELETE", fail_handler);
+  register_function("PUT", handler);
 }
 ```
 
-In the example above, we have registered the `handler()` function under two Tarmac routes; `http:POST` and `http:PUT`. When Tarmac receives an HTTP POST request for this WASM function, it will execute the handler function as defined. If we wanted this function to be used for HTTP GET requests, we could add another line registering it under `http:GET`.
+In the example above, we have registered the `handler()` function under two Tarmac routes; `POST` and `PUT`. When Tarmac receives an HTTP POST request for this WASM function, it will execute the handler function as defined. If we wanted this function to be used for HTTP GET requests, we could add another line registering it under `GET`.
 
 With our handler function now registered, we must create a basic version of this handler for Tarmac to call.
 
@@ -58,207 +48,57 @@ With our handler function now registered, we must create a basic version of this
 fn handler(msg: &[u8]) -> CallResult {}
 ```
 
-As we can see from the example above, the handler input a slice of 8-bit unsigned integers, a raw Server Request JSON. And a return value of CallResult, which expects a Server Reply JSON back. The Server Request and Server Reply JSON are essential as they enable the Tarmac server to provide the WASM function with request context and the WASM function to provide Tarmac with how to handle the request. To understand more about Server Request and Server Response, refer to our [Inputs & Outputs](inputs-and-outputs.md) documentation.
+As we can see from the example above, the handler input a slice of 8-bit unsigned integers, which is the raw HTTP payload. And a return value of CallResult.
 
 ## Adding Logic
 
 Now that we have the basic structure of our WASM function created, we can start adding logic to the function and process our request.
 
-### Parsing the Server Request
+#### Host Callbacks
 
-The first step in our logic will be to Prase the request payload. As this request payload will come in the form of a JSON, we must also define a `struct` to use to parse the JSON.
+One of the unique benefits of Tarmac is the ability for WASM functions to perform host callbacks to the Tarmac service itself. These Host Callbacks give users the ability to execute common framework code provided to the WASM function by Tarmac. These common framework functions can include storing data within a database, calling a remote API, or logging data. 
 
-```rust
-#[derive(Serialize, Deserialize)]
-struct ServerRequest {
-  headers: HashMap<String, String>,
-  payload: String,
-}
-
-fn handler(msg: &[u8]) -> CallResult {
-  // Unmarshal the request
-  let rq: ServerRequest = serde_json::from_slice(msg).unwrap();
-}
-```
-
-### Decoding the HTTP Payload
-
-After parsing the Server Request JSON, the next step we need to perform is decoding the payload.
-
-```rust
-  // Decode Payload
-  let b = base64::decode(rq.payload).unwrap();
-```
-
-To avoid JSON parsing conflicts, the original HTTP payload is base64 encoded. To access the original contents, we must decode them.
-
-### Do Work and Generate a Response
-
-We can add our logic to the example, which in this case will be a payload reverser.
-
-```rust
-  // Convert to a String
-  let s = String::from_utf8(b).expect("Found Invalid UTF-8")
-  let s = s.chars().rev().collect::<String>();
-```
-
-Now with our WASM function complete, we must create a Server Response JSON with our reply payload. This step will include needing to create another `struct`.
-
-```rust
-#[derive(Serialize, Deserialize)]
-struct ServerResponse {
-  headers: HashMap<String, String>,
-  status: Status,
-  payload: String,
-}
-
-#[derive(Serialize, Deserialize)]
-struct Status {
-  code: u32,
-  status: String,
-}
-
-fn handler(msg: &[u8]) -> CallResult {
-  // Unmarshal the request
-  let rq: ServerRequest = serde_json::from_slice(msg).unwrap();
-
-  // Convert to a String
-  let s = String::from_utf8(b).expect("Found Invalid UTF-8")
-  let s = s.chars().rev().collect::<String>();
-  let enc = base64::encode(s);
-
-  // Create the response
-  let rsp = ServerResponse {
-      status: Status {
-        code: 200,
-        status: "OK".to_string(),
-      },
-      payload: enc,
-      headers: HashMap::new(),
-  };
-
-  // Marshal the response
-  let r = serde_json::to_vec(&rsp).unwrap();
-
-  // Return JSON byte array
-  Ok(r)
-```
-
-Just as the incoming HTTP payload comes in base64 encoded, the Server Response must also be base64 encoded as depicted above.
-
-### Host Callbacks
-
-One of the unique benefits of Tarmac is the ability for WASM functions to perform host callbacks to the Tarmac service itself. These Host Callbacks give users the ability to execute standard framework code provided to the WASM function by Tarmac. These framework functions can include storing data within a database, calling a remote API, or logging data.
-
-We will use the Host Callback to create a Trace log entry of the incoming Server Request for our example.
+For our example, we will use the Host Callbacks to create a Trace log entry.
 
 ```rust
   // Perform a host callback to log the incoming request
   let _res = host_call("tarmac", "logger", "trace", &msg.to_vec());
 ```
 
-The [Callbacks](../callback-functions/callbacks.md) documentation section explains each available Host Callback and the various actions available to WASM functions.
+For a full list of Host Callbacks checkout the [Callbacks](../callback-functions/callbacks.md) documentation.
+
+### Do Work and Generate a Response
+
+We can add our logic to the example, which in this case will just return the input payload.
+
+```rust
+  Ok(msg.to_vec())
+```
 
 ## Full WASM function
 
 For quick reference, the below code is the full WASM function from this example.
 
 ```rust
-// Tac is a small, simple Rust program that is an example WASM module for Tarmac.
-// This program will accept a Tarmac server request, log it, and echo back the payload
-// but with the payload reversed.
+// Echo is a small, simple Rust program that is an example WASM module for Tarmac.
+// This program will accept a Tarmac server request, log it, and echo back the payload.
 extern crate wapc_guest as guest;
-extern crate base64;
-use serde::{Deserialize, Serialize};
-use serde_json;
-use std::collections::HashMap;
 use guest::prelude::*;
-
-#[derive(Serialize, Deserialize)]
-struct ServerRequest {
-  headers: HashMap<String, String>,
-  payload: String,
-}
-
-#[derive(Serialize, Deserialize)]
-struct ServerResponse {
-  headers: HashMap<String, String>,
-  status: Status,
-  payload: String,
-}
-
-#[derive(Serialize, Deserialize)]
-struct Status {
-  code: u32,
-  status: String,
-}
 
 fn main() {}
 
 #[no_mangle]
 pub extern "C" fn wapc_init() {
-  // Add Handler for the GET request
-  register_function("http:GET", fail_handler);
   // Add Handler for the POST request
-  register_function("http:POST", handler);
+  register_function("POST", handler);
   // Add Handler for the PUT request
-  register_function("http:PUT", handler);
-  // Add Handler for the DELETE request
-  register_function("http:DELETE", fail_handler);
+  register_function("PUT", handler);
 }
 
-// fail_handler will accept the server request and return a server response
-// which rejects the client request
-fn fail_handler(_msg: &[u8]) -> CallResult {
-  // Create the response
-  let rsp = ServerResponse {
-      status: Status {
-        code: 503,
-        status: "Not Implemented".to_string(),
-      },
-      payload: "".to_string(),
-      headers: HashMap::new(),
-  };
-
-  // Marshal the response
-  let r = serde_json::to_vec(&rsp).unwrap();
-
-  // Return JSON byte array
-  Ok(r)
-}
-
-// handler is a simple example of a Tarmac WASM module written in Rust.
-// This function will accept the server request, log it, and echo back the payload
-// but with the payload reversed.
 fn handler(msg: &[u8]) -> CallResult {
   // Perform a host callback to log the incoming request
-  let _res = host_call("tarmac", "logger", "debug", &msg.to_vec());
-
-  // Unmarshal the request
-  let rq: ServerRequest = serde_json::from_slice(msg).unwrap();
-
-  // Decode Payload
-  let b = base64::decode(rq.payload).unwrap();
-  // Convert to a String
-  let s = String::from_utf8(b).expect("Found Invalid UTF-8");
-  // Reverse it and re-encode
-  let enc = base64::encode(s.chars().rev().collect::<String>());
-
-  // Create the response
-  let rsp = ServerResponse {
-      status: Status {
-        code: 200,
-        status: "OK".to_string(),
-      },
-      payload: enc,
-      headers: HashMap::new(),
-  };
-
-  // Marshal the response
-  let r = serde_json::to_vec(&rsp).unwrap();
-
-  // Return JSON byte array
-  Ok(r)
+  let _res = host_call("tarmac", "logger", "trace", &msg.to_vec());
+  Ok(msg.to_vec())
 }
 ```
 
@@ -274,7 +114,7 @@ Within the `Cargo.toml` file, we must specify the different packages used in our
 
 ```text
 [package]
-name = "hello"
+name = "echo"
 version = "0.1.0"
 authors = ["Example Developer <developer@example.com>"]
 edition = "2018"
@@ -298,7 +138,7 @@ After the code build completes, we will copy the `.wasm` file into a directory T
 
 ```text
 $ mkdir -p functions
-$ cp target/wasm32-unknown-unknown/release/hello.wasm functions/tarmac.wasm
+$ cp target/wasm32-unknown-unknown/release/echo.wasm functions/tarmac.wasm
 ```
 
 ## Running the WASM Function

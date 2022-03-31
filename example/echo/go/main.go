@@ -1,5 +1,5 @@
-// Tac is a small, simple Go program that is an example WASM module for Tarmac. This program will accept a Tarmac
-// server request, log it, and echo back the payload in reverse.
+// Echo is a small, simple Go program that is an example WASM module for Tarmac. This program will accept a Tarmac
+// server request, log it, and echo back the payload.
 package main
 
 import (
@@ -35,13 +35,6 @@ func Handler(payload []byte) ([]byte, error) {
 	_, err := wapc.HostCall("tarmac", "logger", "trace", []byte(fmt.Sprintf("Reversing Payload: %s", payload)))
 	if err != nil {
 		return []byte(""), fmt.Errorf("Unable to call callback - %s", err)
-	}
-
-	// Flip it and reverse
-	if len(payload) > 0 {
-		for i, n := 0, len(payload)-1; i < n; i, n = i+1, n-1 {
-			payload[i], payload[n] = payload[n], payload[i]
-		}
 	}
 
 	// Return the payload via a ServerResponse JSON
