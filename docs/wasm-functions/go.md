@@ -20,14 +20,10 @@ Tarmac internally uses a Web Assembly Procedure Calls \(waPC\) runtime, which me
 
 ```go
 import (
-	"encoding/base64"
 	"fmt"
-	"github.com/valyala/fastjson"
 	wapc "github.com/wapc/wapc-guest-tinygo"
 )
 ```
-
-In the code example, above you will see other imported packages such as `base64` and `fastjson` these will be used and discussed later in this guide.
 
 Once the waPC package is imported, we will create a `main()` function; this function will be our primary entry point for Tarmac execution. Within this function, we will register other handler functions for Tarmac to execute using the `wapc.RegisterFunctions` function.
 
@@ -35,57 +31,29 @@ Once the waPC package is imported, we will create a `main()` function; this func
 func main() {
 	wapc.RegisterFunctions(wapc.Functions{
 		// Register a POST request handler
-		"http:POST": Handler,
+		"POST": Handler,
 		// Register a PUT request handler
-		"http:PUT": Handler,
+		"PUT": Handler,
 	})
 }
 ```
 
-In the example above, we have registered the `Handler` function under two Tarmac routes; `http:POST` and `http:PUT`. When Tarmac receives an HTTP POST request for this WASM Function, it will execute the handler function as defined. If we wanted this function also to be used for HTTP GET requests, we could add another line registering it under `http:GET`.
+In the example above, we have registered the `Handler` function under two Tarmac routes; `POST` and `PUT`. When Tarmac receives an HTTP POST request for this WASM Function, it will execute the handler function as defined. If we wanted this function also to be used for HTTP GET requests, we could add another line registering it under `GET`.
 
-With our handler function registered, we must create a basic version of this function.
+With our handler function registered, we must create a basic function.
 
 ```go
 func Handler(payload []byte) ([]byte, error) {
-	// Return the payload via a ServerResponse JSON
-	return []byte(`{"payload":"","status":{"code":200,"status":"Success"}}`), nil
+	return []byte(`Success`), nil
 }
 
 ```
 
-As we can see from the example above, the handler has a byte slice input and return value. These are the Server Request and Server Response JSON payloads outlined in the [Inputs & Outputs](inputs-and-outputs.md) documentation.
+As we can see from the example above, the handler has a byte slice input and return value. The HTTP payload is sent as the input untouched.
 
 ### Adding Logic
 
 Now that we have the basic structure of our WASM function created, we can start adding logic to the function and process our request.
-
-#### Parsing the Server Request
-
-The first step in our logic will be to Parse the request payload.
-
-```go
-	// Parse the JSON request
-	rq, err := fastjson.ParseBytes(payload)
-	if err != nil {
-		return []byte(fmt.Sprintf(`{"status":{"code":500,"status":"Failed to call parse json - %s"}}`, err)), nil
-	}
-```
-
-In the above code, we are using the [fastjson](https://github.com/valyala/fastjson) package to parse the Server Request JSON. The reason we are using fastjson instead of the traditional JSON decoder is that TinyGo at the moment has limited JSON support. With fastjson we can parse JSON messages with no problems; however, creating JSON messages for the Server Response \(as shown above\) is a bit manual. As TinyGo progresses or WASM support is added to the main Go project, this issue should be resolved.
-
-#### Decoding the HTTP Payload
-
-After parsing the Server Request JSON, the next step we need to perform is decoding the payload.
-
-```go
-	// Decode the payload
-	s, err := base64.StdEncoding.DecodeString(string(rq.GetStringBytes("payload")))
-	if err != nil {
-		return []byte(fmt.Sprintf(`{"status":{"code":500,"status":"Failed to perform base64 decode - %s"}}`, err)), nil
-	}
-	b := []byte(s)
-```
 
 In order to avoid conflicts with the Server Request JSON, the original HTTP payload is base64 encoded. To access the original contents, we must decode them.
 
@@ -99,7 +67,7 @@ For our example, we will use the Host Callbacks to create a Trace log entry.
 	// Perform a host callback to log the incoming request
 	_, err = wapc.HostCall("tarmac", "logger", "trace", []byte(fmt.Sprintf("Reversing Payload: %s", s)))
 	if err != nil {
-		return []byte(fmt.Sprintf(`{"status":{"code":500,"status":"Failed to call host callback - %s"}}`, err)), nil
+		return []byte(fmt.Sprintf("Failed to call host callback - %s", err)), nil
 	}
 ```
 
@@ -111,21 +79,18 @@ We can add our logic to the example, which in this case will be a payload revers
 
 ```go
 	// Flip it and reverse
-	if len(b) > 0 {
-		for i, n := 0, len(b)-1; i < n; i, n = i+1, n-1 {
-			b[i], b[n] = b[n], b[i]
+	if len(payload) > 0 {
+		for i, n := 0, len(payload)-1; i < n; i, n = i+1, n-1 {
+			payload[i], payload[n] = payload[n], payload[i]
 		}
 	}
 ```
 
-Now with our WASM function complete, we must return a Server Response JSON with our reply payload.
+Now with our WASM function complete, we must return a response.
 
 ```go
-	// Return the payload via a ServerResponse JSON
-	return []byte(fmt.Sprintf(`{"payload":"%s","status":{"code":200,"status":"Success"}}`, base64.StdEncoding.EncodeToString(b))), nil
+	return payload, nil
 ```
-
-As mentioned earlier in this document, in Go creating a JSON must be performed manually. The example above encodes our new payload with base64 and returns it within a JSON string.
 
 ### Full WASM function
 
@@ -137,64 +102,49 @@ For quick reference, below is the full WASM function from this example.
 package main
 
 import (
-	"encoding/base64"
-	"fmt"
-	"github.com/valyala/fastjson"
-	wapc "github.com/wapc/wapc-guest-tinygo"
+        "fmt"
+        wapc "github.com/wapc/wapc-guest-tinygo"
 )
 
 func main() {
-	// Tarmac uses waPC to facilitate WASM module execution. Modules must register their custom handlers under the
-	// appropriate method as shown below.
-	wapc.RegisterFunctions(wapc.Functions{
-		// Register a GET request handler
-		"http:GET": NoHandler,
-		// Register a POST request handler
-		"http:POST": Handler,
-		// Register a PUT request handler
-		"http:PUT": Handler,
-		// Register a DELETE request handler
-		"http:DELETE": NoHandler,
-	})
+        // Tarmac uses waPC to facilitate WASM module execution. Modules must register their custom handlers under the
+        // appropriate method as shown below.
+        wapc.RegisterFunctions(wapc.Functions{
+                // Register a GET request handler
+                "GET": NoHandler,
+                // Register a POST request handler
+                "POST": Handler,
+                // Register a PUT request handler
+                "PUT": Handler,
+                // Register a DELETE request handler
+                "DELETE": NoHandler,
+        })
 }
 
-// NoHandler is a custom Tarmac Handler function that will return a tarmac.ServerResponse JSON that denies
+// NoHandler is a custom Tarmac Handler function that will return an error that denies
 // the client request.
 func NoHandler(payload []byte) ([]byte, error) {
-	return []byte(`{"status":{"code":503,"status":"Not Implemented"}}`), nil
+        return []byte(""), fmt.Errorf("Not Implemented")
 }
 
-// Handler is the custom Tarmac Handler function that will receive a tarmac.ServerRequest JSON payload and
-// must return a tarmac.ServerResponse JSON payload along with a nil error.
+// Handler is the custom Tarmac Handler function that will receive a payload and
+// must return a payload along with a nil error.
 func Handler(payload []byte) ([]byte, error) {
-	// Parse the JSON request
-	rq, err := fastjson.ParseBytes(payload)
-	if err != nil {
-		return []byte(fmt.Sprintf(`{"status":{"code":500,"status":"Failed to call parse json - %s"}}`, err)), nil
-	}
+        // Perform a host callback to log the incoming request
+        _, err := wapc.HostCall("tarmac", "logger", "trace", []byte(fmt.Sprintf("Reversing Payload: %s", payload)))
+        if err != nil {
+                return []byte(""), fmt.Errorf("Unable to call callback - %s", err)
+        }
 
-	// Decode the payload
-	s, err := base64.StdEncoding.DecodeString(string(rq.GetStringBytes("payload")))
-	if err != nil {
-		return []byte(fmt.Sprintf(`{"status":{"code":500,"status":"Failed to perform base64 decode - %s"}}`, err)), nil
-	}
-	b := []byte(s)
+        // Flip it and reverse
+        if len(payload) > 0 {
+                for i, n := 0, len(payload)-1; i < n; i, n = i+1, n-1 {
+                        payload[i], payload[n] = payload[n], payload[i]
+                }
+        }
 
-	// Perform a host callback to log the incoming request
-	_, err = wapc.HostCall("tarmac", "logger", "trace", []byte(fmt.Sprintf("Reversing Payload: %s", s)))
-	if err != nil {
-		return []byte(fmt.Sprintf(`{"status":{"code":500,"status":"Failed to call host callback - %s"}}`, err)), nil
-	}
-
-	// Flip it and reverse
-	if len(b) > 0 {
-		for i, n := 0, len(b)-1; i < n; i, n = i+1, n-1 {
-			b[i], b[n] = b[n], b[i]
-		}
-	}
-
-	// Return the payload via a ServerResponse JSON
-	return []byte(fmt.Sprintf(`{"payload":"%s","status":{"code":200,"status":"Success"}}`, base64.StdEncoding.EncodeToString(b))), nil
+        // Return the payload via a ServerResponse JSON
+        return payload, nil
 }
 ```
 

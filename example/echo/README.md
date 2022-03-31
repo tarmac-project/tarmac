@@ -4,7 +4,7 @@ This project is an example of building a WASM-based microservice using Tarmac. T
 that takes the user-provided HTTP Payload and returns that payload to the user.
 
 ```console
-$ curl --data "Tarmac Example" -v http://localhost 
+$ curl --data "Tarmac Example" -v http://localhost
 *   Trying ::1...
 * TCP_NODELAY set
 * Connected to localhost (::1) port 80 (#0)
@@ -17,8 +17,7 @@ $ curl --data "Tarmac Example" -v http://localhost
 > 
 * upload completely sent off: 14 out of 14 bytes
 < HTTP/1.1 200 OK
-< Server: tarmac
-< Date: Sun, 04 Jul 2021 22:03:02 GMT
+< Date: Mon, 05 Jul 2021 01:53:13 GMT
 < Content-Length: 14
 < Content-Type: text/plain; charset=utf-8
 < 
