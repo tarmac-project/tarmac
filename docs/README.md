@@ -33,7 +33,7 @@ As part of the WASM Function, users must register their handlers using the pre-d
 
 To understand this better, look at one of our simple examples \(found in [example/](https://github.com/madflojo/tarmac/blob/main/example/tac/README.md)\).
 
-```golang
+```go
 // Tac is a small, simple Go program that is an example WASM module for Tarmac. This program will accept a Tarmac
 // server request, log it, and echo back the payload in reverse.
 package main
