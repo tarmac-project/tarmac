@@ -58,8 +58,8 @@ package main
 
 import (
         // Import Tarmac Callbacks Router and Desired Callback Capabilities
-        "github.com/madflojo/tarmac/callbacks"
-        "github.com/madflojo/tarmac/callbacks/logging"
+        "github.com/madflojo/tarmac/pkg/callbacks"
+        "github.com/madflojo/tarmac/pkg/callbacks/logging"
         // Import Tarmac WASM Engine
         "github.com/madflojo/tarmac/wasm"
         "github.com/sirupsen/logrus"
@@ -120,6 +120,6 @@ func main() {
 
 The example creates the Callback router before loading the WASM engine, and desired functions must also be loaded and registered before starting the WASM engine.
 
-Each Callback capability is unique in its configuration; however, documentation is available via [package documentation](https://pkg.go.dev/github.com/madflojo/tarmac/callbacks).
+Each Callback capability is unique in its configuration; however, documentation is available via [package documentation](https://pkg.go.dev/github.com/madflojo/tarmac/pkg/callbacks).
 
 We have a fully working WASM host that can run WASM guests and extend host callback capabilities with the above. For more complex examples, check out the [examples repository](https://github.com/madflojo/tarmac/tree/master/example).
