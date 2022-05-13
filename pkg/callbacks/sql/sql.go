@@ -3,8 +3,8 @@ Package database is part of the Tarmac suite of Host Callback packages. This pac
 provide WASM functions with a host callback interface that provides SQL database capabilities.
 
 	import (
-		"github.com/madflojo/tarmac/callbacks"
-		"github.com/madflojo/tarmac/callbacks/sql"
+		"github.com/madflojo/tarmac/pkg/callbacks"
+		"github.com/madflojo/tarmac/pkg/callbacks/sql"
 	)
 
 	func main() {

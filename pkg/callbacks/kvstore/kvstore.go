@@ -3,8 +3,8 @@ Package kvstore is part of the Tarmac suite of Host Callback packages. This pack
 provide WASM functions with a host callback interface that provides key:value storage capabilities.
 
 	import (
-		"github.com/madflojo/tarmac/callbacks"
-		"github.com/madflojo/tarmac/callbacks/kvstore"
+		"github.com/madflojo/tarmac/pkg/callbacks"
+		"github.com/madflojo/tarmac/pkg/callbacks/kvstore"
 	)
 
 	func main() {
