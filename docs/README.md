@@ -2,7 +2,7 @@
 
 ![](tarmac-logo.png)
 
-Framework for building distributed services with Web Assembly
+Framework for building distributed services with WebAssembly
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/madflojo/tarmac)](https://pkg.go.dev/github.com/madflojo/tarmac)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://tarmac.gitbook.io/tarmac/)
@@ -13,7 +13,7 @@ Framework for building distributed services with Web Assembly
 
 Tarmac is a unique framework designed for the next generation of distributed systems. At its core, like many other microservice frameworks, Tarmac is focused on abstracting the complexities of building cloud-native services allowing users to focus more on business logic and less on boilerplate code.
 
-What makes Tarmac unique is that, unlike most microservice frameworks, Tarmac is language agnostic. Using Web Assembly \(WASM\), Tarmac users can write their business logic in many different languages such as Rust, Go, Javascript, or even Swift; and run it all using the same core framework.
+What makes Tarmac unique is that, unlike most microservice frameworks, Tarmac is language agnostic. Using WebAssembly \(WASM\), Tarmac users can write their business logic in many different languages such as Rust, Go, Javascript, or even Swift; and run it all using the same core framework.
 
 ## Tarmac vs. Serverless Functions
 
@@ -21,7 +21,7 @@ Tarmac shares many traits with Serverless Functions and Functions as a Service \
 
 But Tarmac takes Serverless Functions further. In general, FaaS platforms provide a simple runtime for user code. If a function requires any dependency \(i.e., a Database\), the developer-provided function code must maintain the database connectivity and query calls.
 
-Using the power of Web Assembly, Tarmac not only provides functions a secure sandboxed runtime environment, but it also provides abstractions that developers can use to interact with platform capabilities such as Databases, Caching, Metrics, and even Dynamic Configuration.
+Using the power of WebAssembly, Tarmac not only provides functions a secure sandboxed runtime environment, but it also provides abstractions that developers can use to interact with platform capabilities such as Databases, Caching, Metrics, and even Dynamic Configuration.
 
 In many ways, Tarmac is more akin to a microservices framework with the developer experience of a FaaS platform.
 
