@@ -92,6 +92,7 @@ func (s *Server) Shutdown() {
 	s.RLock()
 	defer s.RUnlock()
 	for _, m := range s.modules {
+    defer m.cancel()
 		defer m.module.Close(m.ctx)
 		defer m.pool.Close(m.ctx)
 	}
