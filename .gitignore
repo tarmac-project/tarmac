@@ -34,3 +34,6 @@ functions/
 
 # Mac stuff
 .DS_Store
+
+# Ignore .wasm files
+*.wasm
