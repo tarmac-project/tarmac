@@ -22,6 +22,7 @@ import (
 	"github.com/madflojo/tarmac/pkg/callbacks/logging"
 	"github.com/madflojo/tarmac/pkg/callbacks/metrics"
 	sqlstore "github.com/madflojo/tarmac/pkg/callbacks/sql"
+	"github.com/madflojo/tarmac/pkg/telemetry"
 	"github.com/madflojo/tarmac/pkg/wasm"
 	"github.com/madflojo/tasks"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -68,7 +69,7 @@ var log *logrus.Logger
 var scheduler *tasks.Scheduler
 
 // stats is used across the app package to manage and access system metrics.
-var stats = newTelemetry()
+var stats = telemetry.New()
 
 // Run starts the primary application. It handles starting background services,
 // populating package globals & structures, and clean up tasks.
@@ -261,7 +262,7 @@ func Run(c *viper.Viper) error {
 		},
 		PostFunc: func(r callbacks.CallbackResult) {
 			// Measure Callback Execution time and counts
-			stats.callbacks.WithLabelValues(fmt.Sprintf("%s:%s", r.Namespace, r.Operation)).Observe(r.EndTime.Sub(r.StartTime).Seconds())
+			stats.Callbacks.WithLabelValues(fmt.Sprintf("%s:%s", r.Namespace, r.Operation)).Observe(r.EndTime.Sub(r.StartTime).Seconds())
 
 			// Log Callback failures as warnings
 			if r.Err != nil {
@@ -378,10 +379,10 @@ func Run(c *viper.Viper) error {
 				_, err := runWASM("scheduler-"+name, "scheduler:RUN", []byte(""))
 				if err != nil {
 					log.WithFields(logrus.Fields{"task-name": name}).Debugf("Error executing task - %s", err)
-					stats.tasks.WithLabelValues(name).Observe(time.Since(now).Seconds())
+					stats.Tasks.WithLabelValues(name).Observe(time.Since(now).Seconds())
 					return err
 				}
-				stats.tasks.WithLabelValues(name).Observe(time.Since(now).Seconds())
+				stats.Tasks.WithLabelValues(name).Observe(time.Since(now).Seconds())
 				return nil
 			},
 		})

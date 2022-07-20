@@ -1,30 +1,30 @@
-package app
+package telemetry
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
-// telemetry provides the capability to manage and hold system internal metrics.
-type telemetry struct {
-	// tasks is a summary metric of user scheduled task executions.
-	tasks *prometheus.SummaryVec
+// Telemetry provides the capability to manage and hold system internal metrics.
+type Telemetry struct {
+	// Tasks is a summary metric of user scheduled task executions.
+	Tasks *prometheus.SummaryVec
 
-	// srv is a summary metric of the HTTP server request processing.
-	srv *prometheus.SummaryVec
+	// Srv is a summary metric of the HTTP server request processing.
+	Srv *prometheus.SummaryVec
 
-	// callbacks is a summary metric of the WASM callbacks guests make.
-	callbacks *prometheus.SummaryVec
+	// Callbacks is a summary metric of the WASM callbacks guests make.
+	Callbacks *prometheus.SummaryVec
 
-	// wasm is a summary metric of the WASM guest module executions.
-	wasm *prometheus.SummaryVec
+	// Wasm is a summary metric of the WASM guest module executions.
+	Wasm *prometheus.SummaryVec
 }
 
-// newTelemetry will return an initialized systems metrics instance.
-func newTelemetry() *telemetry {
-	m := &telemetry{}
+// New will return an initialized systems metrics instance.
+func New() *Telemetry {
+	m := &Telemetry{}
 
-	m.srv = promauto.NewSummaryVec(prometheus.SummaryOpts{
+	m.Srv = promauto.NewSummaryVec(prometheus.SummaryOpts{
 		Name:       "http_server",
 		Help:       "Summary of HTTP Server requests",
 		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
@@ -32,7 +32,7 @@ func newTelemetry() *telemetry {
 		[]string{"path"},
 	)
 
-	m.tasks = promauto.NewSummaryVec(prometheus.SummaryOpts{
+	m.Tasks = promauto.NewSummaryVec(prometheus.SummaryOpts{
 		Name:       "scheduled_tasks",
 		Help:       "Summary of user defined scheduled task WASM function executions",
 		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
@@ -40,7 +40,7 @@ func newTelemetry() *telemetry {
 		[]string{"tasks"},
 	)
 
-	m.callbacks = promauto.NewSummaryVec(prometheus.SummaryOpts{
+	m.Callbacks = promauto.NewSummaryVec(prometheus.SummaryOpts{
 		Name:       "wasm_callbacks",
 		Help:       "Summary of server callbacks from WASM function executions",
 		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
@@ -48,7 +48,7 @@ func newTelemetry() *telemetry {
 		[]string{"callback"},
 	)
 
-	m.wasm = promauto.NewSummaryVec(prometheus.SummaryOpts{
+	m.Wasm = promauto.NewSummaryVec(prometheus.SummaryOpts{
 		Name:       "wasm_functions",
 		Help:       "Summary of wasm function executions",
 		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
