@@ -71,13 +71,13 @@ func (s *server) middleware(n httprouter.Handle) httprouter.Handle {
 			}).Debugf("Request to PProf Address failed, PProf disabled")
 			w.WriteHeader(http.StatusForbidden)
 
-			stats.srv.WithLabelValues(r.URL.Path).Observe(time.Since(now).Seconds())
+			stats.Srv.WithLabelValues(r.URL.Path).Observe(time.Since(now).Seconds())
 			return
 		}
 
 		// Call registered handler
 		n(w, r, ps)
-		stats.srv.WithLabelValues(r.URL.Path).Observe(time.Since(now).Seconds())
+		stats.Srv.WithLabelValues(r.URL.Path).Observe(time.Since(now).Seconds())
 	}
 }
 
@@ -135,18 +135,18 @@ func runWASM(module, handler string, rq []byte) ([]byte, error) {
 	// Fetch Module and run with payload
 	m, err := engine.Module(module)
 	if err != nil {
-		stats.wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
+		stats.Wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
 		return []byte(""), fmt.Errorf("unable to load wasi environment - %s", err)
 	}
 
 	// Execute the WASM Handler
 	rsp, err := m.Run(handler, rq)
 	if err != nil {
-		stats.wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
+		stats.Wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
 		return rsp, fmt.Errorf("failed to execute wasm module - %s", err)
 	}
 
 	// Return results
-	stats.wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
+	stats.Wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
 	return rsp, nil
 }
