@@ -2,15 +2,31 @@
 Package tlsconfig is a helper package used to create TLS configuration that adheres to best practices.
 
 This package aims to write less repetitive code when creating TLS configurations. Opening certs, bundling certificate
- authorities, configuring ciphers, etc. Just use this package to save yourself some headaches.
+authorities, configuring ciphers, etc. Just use this package to save yourself some headaches.
+
+	// Create an instance of config
+	cfg := tlsconfig.New()
+
+	// Load Certificates
+	err := cfg.CertsFromFile(cert, key)
+	if err != nil {
+		// do something
+	}
+
+	// Disable Host Validation
+	cfg.IgnoreHostValidation()
+
+	// Use the Config
+	h := &http.Server{TLSConfig: cfg.Generate()}
+
 */
 package tlsconfig
 
 import (
 	"crypto/tls"
-  "crypto/x509"
-  "fmt"
-  "io/ioutil"
+	"crypto/x509"
+	"fmt"
+	"io/ioutil"
 )
 
 // Config is used to create an instance of the configuration helper. It holds the basic TLS configuration for
@@ -39,8 +55,8 @@ func New() Config {
 	return c
 }
 
-// CertsFromFile will read the certificate and key file and create an X509 KeyPair loaded as 
-// Certificates. The files must contain PEM encoded data. The certificate file may contain 
+// CertsFromFile will read the certificate and key file and create an X509 KeyPair loaded as
+// Certificates. The files must contain PEM encoded data. The certificate file may contain
 // intermediate certificates following the leaf certificate to form a certificate chain.
 func (c *Config) CertsFromFile(cert, key string) error {
 	if cert == "" || key == "" {
@@ -56,16 +72,16 @@ func (c *Config) CertsFromFile(cert, key string) error {
 	return nil
 }
 
-// CAFromFile will read the PEM encoded certificate authority file and register the 
-// certificate as an authority for Client Authentication. This function is for m-TLS 
-// configuration at the server level. By default, this function sets Client 
+// CAFromFile will read the PEM encoded certificate authority file and register the
+// certificate as an authority for Client Authentication. This function is for m-TLS
+// configuration at the server level. By default, this function sets Client
 // Authentication to Require and Verify the Certificate.
 func (c *Config) CAFromFile(ca string) error {
 	c.config.ClientAuth = tls.RequireAndVerifyClientCert
 
-  if ca == "" {
-    return fmt.Errorf("ca cannot be empty")
-  }
+	if ca == "" {
+		return fmt.Errorf("ca cannot be empty")
+	}
 
 	b, err := ioutil.ReadFile(ca)
 	if err != nil {
@@ -81,21 +97,21 @@ func (c *Config) CAFromFile(ca string) error {
 	return nil
 }
 
-// IgnoreClientCert will set client certificate authentication to verify the certificate 
+// IgnoreClientCert will set client certificate authentication to verify the certificate
 // only if provided. Otherwise, if no certificate is provided, the client will still be allowed.
 func (c *Config) IgnoreClientCert() {
 	c.config.ClientAuth = tls.VerifyClientCertIfGiven
 	return
 }
 
-// IgnoreHostValidation will turn off the hostname validation of certificates. This 
+// IgnoreHostValidation will turn off the hostname validation of certificates. This
 // setting is dangerous and should only be used in testing.
 func (c *Config) IgnoreHostValidation() {
 	c.config.InsecureSkipVerify = true
 	return
 }
 
-// Generate will create a TLS configuration type based on the defaults and settings called. 
+// Generate will create a TLS configuration type based on the defaults and settings called.
 // Users can run this multiple times to produce the same configuration.
 func (c *Config) Generate() *tls.Config {
 	return c.config.Clone()
