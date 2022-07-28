@@ -11,7 +11,7 @@ The below table outlines languages that are fully supported.
 | Language | waPC Guest Library | Caveats |
 | :--- | :--- | :--- |
 | AssemblyScript | [https://github.com/wapc/as-guest](https://github.com/wapc/as-guest) |  |
-| Go | [https://github.com/wapc/wapc-guest-tinygo](https://github.com/wapc/wapc-guest-tinygo) | Currently only supports TinyGo versions pre-0.18.0 |
+| Go | [https://github.com/wapc/wapc-guest-tinygo](https://github.com/wapc/wapc-guest-tinygo) | |
 | Rust | [https://github.com/wapc/wapc-guest-rust](https://github.com/wapc/wapc-guest-rust) |  |
 | Swift | [https://github.com/wapc/wapc-guest-swift](https://github.com/wapc/wapc-guest-swift) |  |
 | Zig | [https://github.com/wapc/wapc-guest-zig](https://github.com/wapc/wapc-guest-zig) |  |

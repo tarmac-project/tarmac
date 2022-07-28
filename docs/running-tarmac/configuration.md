@@ -22,6 +22,8 @@ When using Environment Variables, all configurations are prefixed with `APP_`. T
 | `APP_DISABLE_LOGGING` | `disable_logging` | `bool` | Disable all logging |
 | `APP_CERT_FILE` | `cert_file` | `string` | Certificate File Path \(i.e. `/some/path/cert.crt`\) |
 | `APP_KEY_FILE` | `key_file` | `string` | Key File Path \(i.e. `/some/path/cert.key`\) |
+| `APP_CA_FILE` | `ca_file` | `string` | Certificate Authority Bundle File Path \(i.e `/some/path/ca.pem`\). When defined, enables mutual-TLS authentication |
+| `APP_IGNORE_CLIENT_CERT` | `ignore_client_cert` | `string` | When defined will disable Client Cert validation for m-TLS authentication |
 | `APP_WASM_FUNCTION` | `wasm_function` | `string` | Path and Filename of the WASM Function to execute \(Default: `/functions/tarmac.wasm`\) |
 | `APP_ENABLE_PPROF` | `enable_pprof` | `bool` | Enable PProf Collection HTTP end-points |
 | `APP_ENABLE_KVSTORE` | `enable_kvstore` | `bool` | Enable the KV Store |
@@ -56,7 +58,6 @@ The below options are used to configure scheduled tasks.
 | :--- | :--- | :--- |
 | `interval` | `int` | Interval (in seconds) task execution should run (recurring) |
 | `wasm_function` | `string` | Path and Filename of the WASM Function to execute |
-| `headers` | `map[string]string` | Custom headers applied to the ServerRequest provided to WASM functions during execution |
 
 ## Consul Format
 

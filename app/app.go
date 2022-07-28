@@ -5,7 +5,6 @@ package app
 
 import (
 	"context"
-	"crypto/tls"
 	"database/sql"
 	"fmt"
 	// MySQL Database Driver
@@ -23,6 +22,7 @@ import (
 	"github.com/madflojo/tarmac/pkg/callbacks/metrics"
 	sqlstore "github.com/madflojo/tarmac/pkg/callbacks/sql"
 	"github.com/madflojo/tarmac/pkg/telemetry"
+	"github.com/madflojo/tarmac/pkg/tlsconfig"
 	"github.com/madflojo/tarmac/pkg/wasm"
 	"github.com/madflojo/tasks"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -223,13 +223,29 @@ func Run(c *viper.Viper) error {
 
 	// Setup TLS Configuration
 	if cfg.GetBool("enable_tls") {
-		srv.httpServer.TLSConfig = &tls.Config{
-			MinVersion: tls.VersionTLS12,
-			CipherSuites: []uint16{
-				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-			},
+		tlsCfg := tlsconfig.New()
+
+		// Load Certs from file
+		err := tlsCfg.CertsFromFile(cfg.GetString("cert_file"), cfg.GetString("key_file"))
+		if err != nil {
+			return fmt.Errorf("unable to configure HTTPS server with certificate and key - %s", err)
 		}
+
+		// Load CA enabling m-TLS
+		if cfg.GetString("ca_file") != "" {
+			err := tlsCfg.CAFromFile(cfg.GetString("ca_file"))
+			if err != nil {
+				return fmt.Errorf("unable to configure HTTPS server with provided client certificate authority - %s", err)
+			}
+
+			// Set to ask but ignore client certs
+			if cfg.GetBool("ignore_client_cert") {
+				tlsCfg.IgnoreClientCert()
+			}
+		}
+
+		// Generate TLS config and assign to HTTP Server
+		srv.httpServer.TLSConfig = tlsCfg.Generate()
 	}
 
 	// Kick off Graceful Shutdown Go Routine
@@ -418,9 +434,8 @@ func Run(c *viper.Viper) error {
 	srv.httpRouter.HEAD("/", srv.middleware(srv.WASMHandler))
 
 	// Start HTTP Listener
-	log.Infof("Starting Listener on %s", cfg.GetString("listen_addr"))
+	log.Infof("Starting HTTP Listener on %s", cfg.GetString("listen_addr"))
 	if cfg.GetBool("enable_tls") {
-		log.Infof("Using Certificate: %s Key: %s", cfg.GetString("cert_file"), cfg.GetString("key_file"))
 		err := srv.httpServer.ListenAndServeTLS(cfg.GetString("cert_file"), cfg.GetString("key_file"))
 		if err != nil {
 			if err == http.ErrServerClosed {

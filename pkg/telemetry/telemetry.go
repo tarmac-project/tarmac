@@ -1,3 +1,6 @@
+/*
+Telemetry is an internal Tarmac package used to initialize system metrics.
+*/
 package telemetry
 
 import (
