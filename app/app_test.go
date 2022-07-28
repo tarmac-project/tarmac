@@ -510,6 +510,7 @@ func TestRunningFailMTLSServer(t *testing.T) {
 	t.Run("Check Health HTTP Handler", func(t *testing.T) {
 		r, err := http.Get("https://localhost:9000/health")
 		if err == nil {
+			defer r.Body.Close()
 			t.Errorf("Unexpected success when requesting health status")
 			t.FailNow()
 		}

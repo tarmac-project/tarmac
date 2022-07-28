@@ -36,7 +36,7 @@ type Config struct {
 }
 
 // New will create a new config instance with basic TLS best practices pre-defined.
-func New() Config {
+func New() *Config {
 	c := Config{
 		config: tls.Config{
 			// Restrict to use TLS 1.2 as the minimum TLS versions
@@ -52,7 +52,7 @@ func New() Config {
 			},
 		},
 	}
-	return c
+	return &c
 }
 
 // CertsFromFile will read the certificate and key file and create an X509 KeyPair loaded as
@@ -101,14 +101,12 @@ func (c *Config) CAFromFile(ca string) error {
 // only if provided. Otherwise, if no certificate is provided, the client will still be allowed.
 func (c *Config) IgnoreClientCert() {
 	c.config.ClientAuth = tls.VerifyClientCertIfGiven
-	return
 }
 
 // IgnoreHostValidation will turn off the hostname validation of certificates. This
 // setting is dangerous and should only be used in testing.
 func (c *Config) IgnoreHostValidation() {
 	c.config.InsecureSkipVerify = true
-	return
 }
 
 // Generate will create a TLS configuration type based on the defaults and settings called.
