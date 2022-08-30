@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"github.com/wapc/wapc-go"
 	"github.com/wapc/wapc-go/engines/wazero"
-	"io/ioutil"
+	"os"
 	"sync"
 	"time"
 )
@@ -119,21 +119,23 @@ func (s *Server) LoadModule(cfg ModuleConfig) error {
 	}
 
 	// Read the WASM module file
-	bytes, err := ioutil.ReadFile(cfg.Filepath)
+	guest, err := os.ReadFile(cfg.Filepath)
 	if err != nil {
 		return fmt.Errorf("unable to read wasm module file - %s", err)
 	}
 
-	// Initiate wapc Engine
+	// Initiate waPC Engine
 	engine := wazero.Engine()
 
 	// Create a new Module from file contents
-	m.module, err = engine.New(m.ctx, bytes, s.callback)
+	m.module, err = engine.New(m.ctx, s.callback, guest, &wapc.ModuleConfig{
+		Logger: wapc.PrintlnLogger,
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+	})
 	if err != nil {
 		return fmt.Errorf("unable to load module with wasm file %s - %s", cfg.Filepath, err)
 	}
-	m.module.SetLogger(wapc.Println)
-	m.module.SetWriter(wapc.Print)
 
 	// Create pool for module
 	m.pool, err = wapc.NewPool(m.ctx, m.module, m.poolSize)

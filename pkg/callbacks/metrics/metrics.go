@@ -15,8 +15,6 @@ to provide WASM functions with a host callback interface that provides metrics t
 		router := callbacks.New()
 		router.RegisterCallback("metrics", "Counter", metrics.Counter)
 	}
-
-
 */
 package metrics
 

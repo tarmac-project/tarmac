@@ -3,7 +3,7 @@ package app
 import (
 	"bytes"
 	"github.com/spf13/viper"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 	"time"
@@ -52,7 +52,7 @@ func TestHandlers(t *testing.T) {
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when making HTTP request %d", r.StatusCode)
 		}
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			t.Errorf("Unexpected error reading http response - %s", err)
 		}
@@ -81,7 +81,7 @@ func TestHandlers(t *testing.T) {
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when making HTTP request %d", r.StatusCode)
 		}
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			t.Errorf("Unexpected error reading http response - %s", err)
 		}

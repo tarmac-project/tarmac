@@ -12,15 +12,13 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v3
       with:
-        go-version: '1.16'
-    - name: Install cover
-      run: go get golang.org/x/tools/cmd/cover
+        go-version: '1.18'
     - name: Install goveralls
-      run: go get -u github.com/mattn/goveralls
+      run: go install github.com/mattn/goveralls@latest
     - name: Execute Tests
       run: make tests
     - name: Update Coveralls

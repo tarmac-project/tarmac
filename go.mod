@@ -1,6 +1,6 @@
 module github.com/madflojo/tarmac
 
-go 1.17
+go 1.18
 
 require (
 	github.com/go-sql-driver/mysql v1.6.0
@@ -13,7 +13,7 @@ require (
 	github.com/prometheus/client_golang v1.11.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.9.0
-	github.com/wapc/wapc-go v0.4.3
+	github.com/wapc/wapc-go v0.5.2
 )
 
 require (
@@ -63,7 +63,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
-	github.com/tetratelabs/wazero v0.0.0-20220529032218-029a79476b4f // indirect
+	github.com/tetratelabs/wazero v1.0.0-pre.1 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.0 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.0 // indirect
 	go.etcd.io/etcd/client/v2 v2.305.0 // indirect

@@ -5,16 +5,15 @@ With this package, users can register Callback functions with the specified name
 
 When the waPC server calls the callback function, the provided namespace and function name will be used as a lookup to execute the pre-defined host callback.
 
-  router := callbacks.New()
-  router.RegisterCallback("database:kv", "Get", myFunc)
-  router.RegisterCallback("database:kv", "Set", myFunc2)
-  router.RegisterCallback("database:kv", "Delete", myFunc3)
+	router := callbacks.New()
+	router.RegisterCallback("database:kv", "Get", myFunc)
+	router.RegisterCallback("database:kv", "Set", myFunc2)
+	router.RegisterCallback("database:kv", "Delete", myFunc3)
 
-  module, err := wapc.New(someCode, router.Callback)
-  if err != nil {
-    // do stuff
-  }
-
+	module, err := wapc.New(someCode, router.Callback)
+	if err != nil {
+	  // do stuff
+	}
 */
 package callbacks
 
