@@ -1,5 +1,5 @@
 module github.com/madflojo/tarmac/example/toolkit/wasm
 
-go 1.17
+go 1.18
 
-require github.com/wapc/wapc-guest-tinygo v0.3.1
+require github.com/wapc/wapc-guest-tinygo v0.3.3

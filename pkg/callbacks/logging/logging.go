@@ -17,7 +17,6 @@ to provide WASM functions with a host callback interface that provides logging c
 		router := callbacks.New()
 		router.RegisterCallback("logging", "Info", logger.Info)
 	}
-
 */
 package logging
 

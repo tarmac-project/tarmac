@@ -18,7 +18,6 @@ authorities, configuring ciphers, etc. Just use this package to save yourself so
 
 	// Use the Config
 	h := &http.Server{TLSConfig: cfg.Generate()}
-
 */
 package tlsconfig
 
@@ -26,7 +25,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
+	"os"
 )
 
 // Config is used to create an instance of the configuration helper. It holds the basic TLS configuration for
@@ -83,7 +82,7 @@ func (c *Config) CAFromFile(ca string) error {
 		return fmt.Errorf("ca cannot be empty")
 	}
 
-	b, err := ioutil.ReadFile(ca)
+	b, err := os.ReadFile(ca)
 	if err != nil {
 		return fmt.Errorf("unable to read ca file - %s", err)
 	}

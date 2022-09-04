@@ -17,7 +17,6 @@ provide WASM functions with a host callback interface that provides key:value st
 		router.RegisterCallback("kvstore", "set", kvStore.Set)
 		router.RegisterCallback("kvstore", "delete", kvStore.Delete)
 	}
-
 */
 package kvstore
 

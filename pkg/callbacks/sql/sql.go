@@ -15,7 +15,6 @@ provide WASM functions with a host callback interface that provides SQL database
 		router := callbacks.New()
 		router.RegisterCallback("sql", "query", dBase.Query)
 	}
-
 */
 package sql
 

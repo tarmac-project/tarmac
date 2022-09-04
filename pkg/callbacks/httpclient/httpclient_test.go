@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/madflojo/tarmac"
 	"github.com/pquerna/ffjson/ffjson"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -41,7 +41,7 @@ func Test(t *testing.T) {
 		// Process methods with and without payloads
 		switch r.Method {
 		case "POST", "PUT", "PATCH":
-			body, err := ioutil.ReadAll(r.Body)
+			body, err := io.ReadAll(r.Body)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				return

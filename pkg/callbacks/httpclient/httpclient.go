@@ -15,7 +15,6 @@ ability to provide WASM functions with a host callback interface that provides H
 		router := callbacks.New()
 		router.RegisterCallback("httpclient", "Call", httpclient.Call)
 	}
-
 */
 package httpclient
 
@@ -26,7 +25,7 @@ import (
 	"fmt"
 	"github.com/madflojo/tarmac"
 	"github.com/pquerna/ffjson/ffjson"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 )
@@ -112,7 +111,7 @@ func (hc *HTTPClient) Call(b []byte) ([]byte, error) {
 			for k := range response.Header {
 				r.Headers[strings.ToLower(k)] = response.Header.Get(k)
 			}
-			body, err := ioutil.ReadAll(response.Body)
+			body, err := io.ReadAll(response.Body)
 			if err != nil {
 				r.Status.Code = 500
 				r.Status.Status = fmt.Sprintf("Unexpected error reading HTTP response body - %s", err)

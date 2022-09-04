@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"github.com/sirupsen/logrus"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"regexp"
 	"time"
@@ -95,7 +95,7 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 	var payload []byte
 	var err error
 	if r.Method == "POST" || r.Method == "PUT" {
-		payload, err = ioutil.ReadAll(r.Body)
+		payload, err = io.ReadAll(r.Body)
 		if err != nil {
 			log.WithFields(logrus.Fields{
 				"method":         r.Method,

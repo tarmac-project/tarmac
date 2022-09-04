@@ -4,7 +4,6 @@ Package tarmac is a client package for WASM functions running within a Tarmac se
 This package provides user-friendly functions that wrap the Web Assembly Procedure Call (waPC) based functions of
 Tarmac. Guest WASM functions running inside Tarmac can use this library to call back the Tarmac host and perform
 host-level actions such as storing data within the database, logging specific data, or looking up configurations.
-
 */
 package tarmac
 
