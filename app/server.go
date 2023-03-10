@@ -110,7 +110,7 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	// Execute WASM Module
-	rsp, err := runWASM("default", r.Method, payload)
+	rsp, err := runWASM("default", "handler", payload)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"method":         r.Method,

@@ -2,7 +2,7 @@
 
 ![](tarmac-logo.png)
 
-Framework for building distributed services with WebAssembly
+Tarmac: Building Serverless Applications with WebAssembly, Simplified
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/madflojo/tarmac)](https://pkg.go.dev/github.com/madflojo/tarmac)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://tarmac.gitbook.io/tarmac/)
@@ -10,10 +10,13 @@ Framework for building distributed services with WebAssembly
 [![Go Report Card](https://goreportcard.com/badge/github.com/madflojo/tarmac)](https://goreportcard.com/report/github.com/madflojo/tarmac)
 [![Coverage Status](https://coveralls.io/repos/github/madflojo/tarmac/badge.svg?branch=master)](https://coveralls.io/github/madflojo/tarmac?branch=master)
 
+Tarmac is an open-source platform for building serverless applications using WebAssembly and WASI. Unlike traditional serverless platforms, Tarmac eliminates cold start times by loading functions at startup, providing near-instantaneous response times for function invocations.
 
-Tarmac is a unique framework designed for the next generation of distributed systems. At its core, like many other microservice frameworks, Tarmac is focused on abstracting the complexities of building cloud-native services allowing users to focus more on business logic and less on boilerplate code.
+Tarmac also offers a unique approach to interacting with external systems, using host callbacks to provide access to key-value stores, databases, and HTTP APIs. This makes it easy to build complex, distributed applications that can scale to meet demand.
 
-What makes Tarmac unique is that, unlike most microservice frameworks, Tarmac is language agnostic. Using WebAssembly \(WASM\), Tarmac users can write their business logic in many different languages such as Rust, Go, Javascript, or even Swift; and run it all using the same core framework.
+By leveraging the security and portability of WebAssembly and WASI, Tarmac provides a lightweight and secure runtime environment for serverless functions. This enables developers to build and deploy applications quickly and easily, without worrying about the infrastructure or server maintenance.
+
+Overall, Tarmac offers a new and innovative approach to building serverless applications, with unique features and benefits that set it apart from traditional serverless platforms.
 
 ## Tarmac vs. Serverless Functions
 
@@ -21,17 +24,15 @@ Tarmac shares many traits with Serverless Functions and Functions as a Service \
 
 But Tarmac takes Serverless Functions further. In general, FaaS platforms provide a simple runtime for user code. If a function requires any dependency \(i.e., a Database\), the developer-provided function code must maintain the database connectivity and query calls.
 
-Using the power of WebAssembly, Tarmac not only provides functions a secure sandboxed runtime environment, but it also provides abstractions that developers can use to interact with platform capabilities such as Databases, Caching, Metrics, and even Dynamic Configuration.
+Using the power of WebAssembly, Tarmac not only provides functions a secure sandboxed runtime environment, but it also provides abstractions that developers can use to interact with platform capabilities such as Databases, Caching, and even Metrics.
 
 In many ways, Tarmac is more akin to a microservices framework with the developer experience of a FaaS platform.
 
 ## Quick Start
 
-At the moment, Tramac is executing WASM functions by executing a defined set of function signatures. When Tarmac receives an HTTP GET request, it will call the function's registered under the `GET` signature.
+To start executing WASM functions with Tarmac, we must define a single "Handler" function. This function will accept a byte slice as its input. The contents of this byte slice will be the HTTP payload sent to the service.
 
-As part of the WASM Function, users must register their handlers using the pre-defined function signatures.
-
-To understand this better, look at one of our simple examples \(found in [example/](https://github.com/madflojo/tarmac/blob/main/example/tac/README.md)\).
+To see more examples look at one of our simple examples \(found in [example/](https://github.com/madflojo/tarmac/blob/main/example/tac/README.md)\).
 
 ```go
 // Tac is a small, simple Go program that is an example WASM module for Tarmac. This program will accept a Tarmac
@@ -44,24 +45,10 @@ import (
 )
 
 func main() {
-        // Tarmac uses waPC to facilitate WASM module execution. Modules must register their custom handlers under the
-        // appropriate method as shown below.
+        // Tarmac uses waPC to facilitate WASM module execution. Modules must register their custom handlers
         wapc.RegisterFunctions(wapc.Functions{
-                // Register a GET request handler
-                "GET": NoHandler,
-                // Register a POST request handler
-                "POST": Handler,
-                // Register a PUT request handler
-                "PUT": Handler,
-                // Register a DELETE request handler
-                "DELETE": NoHandler,
+                "handler": Handler,
         })
-}
-
-// NoHandler is a custom Tarmac Handler function that will return an error that denies
-// the client request.
-func NoHandler(payload []byte) ([]byte, error) {
-        return []byte(""), fmt.Errorf("Not Implemented")
 }
 
 // Handler is the custom Tarmac Handler function that will receive a payload and

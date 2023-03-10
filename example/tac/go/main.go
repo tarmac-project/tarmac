@@ -8,24 +8,11 @@ import (
 )
 
 func main() {
-	// Tarmac uses waPC to facilitate WASM module execution. Modules must register their custom handlers under the
-	// appropriate method as shown below.
+	// Tarmac uses waPC to facilitate WASM module execution. Modules must register their custom handlers 
 	wapc.RegisterFunctions(wapc.Functions{
-		// Register a GET request handler
-		"GET": NoHandler,
-		// Register a POST request handler
-		"POST": Handler,
-		// Register a PUT request handler
-		"PUT": Handler,
-		// Register a DELETE request handler
-		"DELETE": NoHandler,
+		// Register request handler
+		"handler": Handler,
 	})
-}
-
-// NoHandler is a custom Tarmac Handler function that will return an error that denies
-// the client request.
-func NoHandler(payload []byte) ([]byte, error) {
-	return []byte(""), fmt.Errorf("Not Implemented")
 }
 
 // Handler is the custom Tarmac Handler function that will receive a payload and

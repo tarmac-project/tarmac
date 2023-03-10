@@ -131,7 +131,7 @@ func TestWASMExecution(t *testing.T) {
 	}
 
 	go func() {
-		_, err = m.Run("POST", []byte(`hello`))
+		_, err = m.Run("handler", []byte(`hello`))
 		if err != nil {
 			t.Logf("Could not execute the wasm function - %s", err)
 		}

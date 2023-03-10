@@ -67,7 +67,7 @@ func TestHandlers(t *testing.T) {
 			t.Fatalf("Unexpected error when making HTTP request - %s", err)
 		}
 		defer r.Body.Close()
-		if r.StatusCode != 500 {
+		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
 		}
 	})
@@ -90,16 +90,6 @@ func TestHandlers(t *testing.T) {
 		}
 	})
 
-	t.Run("Invalid Head Request", func(t *testing.T) {
-		r, err := http.Head("http://localhost:9001/")
-		if err != nil {
-			t.Fatalf("Unexpected error when making HTTP request - %s", err)
-		}
-		defer r.Body.Close()
-		if r.StatusCode < 500 {
-			t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
-		}
-	})
 }
 
 func TestWASMRunner(t *testing.T) {
@@ -134,7 +124,7 @@ func TestWASMRunner(t *testing.T) {
 		err:     true,
 		pass:    false,
 		module:  "notfound",
-		handler: "GET",
+		handler: "handler",
 		request: []byte(""),
 	})
 
@@ -143,7 +133,7 @@ func TestWASMRunner(t *testing.T) {
 		err:     false,
 		pass:    false,
 		module:  "default",
-		handler: "POST",
+		handler: "handler",
 		request: []byte("ohmy"),
 	})
 
@@ -152,7 +142,7 @@ func TestWASMRunner(t *testing.T) {
 		err:     false,
 		pass:    true,
 		module:  "default",
-		handler: "POST",
+		handler: "handler",
 		request: []byte("howdie"),
 	})
 

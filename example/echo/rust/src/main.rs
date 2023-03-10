@@ -7,10 +7,8 @@ fn main() {}
 
 #[no_mangle]
 pub extern "C" fn wapc_init() {
-  // Add Handler for the POST request
-  register_function("POST", handler);
-  // Add Handler for the PUT request
-  register_function("PUT", handler);
+  // Register Handler for requests
+  register_function("handler", handler);
 }
 
 fn handler(msg: &[u8]) -> CallResult {
