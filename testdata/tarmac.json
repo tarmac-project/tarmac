@@ -43,7 +43,7 @@
         },
         {
           "type": "scheduled_task",
-          "frequency": "1s",
+          "frequency": 1,
           "function": "default"
         }
       ]

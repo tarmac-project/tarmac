@@ -21,6 +21,7 @@ import (
 	"github.com/madflojo/tarmac/pkg/callbacks/logging"
 	"github.com/madflojo/tarmac/pkg/callbacks/metrics"
 	sqlstore "github.com/madflojo/tarmac/pkg/callbacks/sql"
+	"github.com/madflojo/tarmac/pkg/config"
 	"github.com/madflojo/tarmac/pkg/telemetry"
 	"github.com/madflojo/tarmac/pkg/tlsconfig"
 	"github.com/madflojo/tarmac/pkg/wasm"
@@ -359,55 +360,85 @@ func Run(c *viper.Viper) error {
 		return err
 	}
 
-	// Preload Default WASM Function
-	if cfg.GetString("wasm_function") != "" {
+	// Look for Functions Config
+	funcCfg, err := config.Parse(cfg.GetString("wasm_function_config"))
+	if err != nil {
+		log.Infof("Could not load wasm_function_config (%s) starting with default function path - %s", cfg.GetString("wasm_function_config"), err)
+
+		// Load WASM Function using default path
 		err = engine.LoadModule(wasm.ModuleConfig{
 			Name:     "default",
 			Filepath: cfg.GetString("wasm_function"),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("could not load default function path for wasm_function (%s) - %s", cfg.GetString("wasm_function"), err)
 		}
+
+		// Register WASM Handler with default path
+		srv.httpRouter.GET("/", srv.middleware(srv.WASMHandler))
+		srv.httpRouter.POST("/", srv.middleware(srv.WASMHandler))
+		srv.httpRouter.PUT("/", srv.middleware(srv.WASMHandler))
+		srv.httpRouter.DELETE("/", srv.middleware(srv.WASMHandler))
+		srv.httpRouter.HEAD("/", srv.middleware(srv.WASMHandler))
 	}
 
-	// Setup Scheduler based tasks
-	for k := range cfg.GetStringMap("scheduled_tasks") {
-		name := k
-		log.Infof("Scheduling Task - %s", name)
+	// Load Functions from Config
+	if err == nil {
+		log.Infof("Loading Services from wasm_function_config %s", cfg.GetString("wasm_function_config"))
 
-		// Preload WASM Function
-		err = engine.LoadModule(wasm.ModuleConfig{
-			Name:     "scheduler-" + name,
-			Filepath: cfg.GetString("scheduled_tasks." + name + ".wasm_function"),
-		})
-		if err != nil {
-			log.Errorf("Error loading WASM module for scheduled task %s - %s", name, err)
-		}
-
-		// Create Scheduled Task
-		headers := cfg.GetStringMapString("scheduled_tasks." + name + ".headers")
-		headers["request_type"] = "scheduler"
-		id, err := scheduler.Add(&tasks.Task{
-			Interval: time.Duration(cfg.GetInt("scheduled_tasks."+name+".interval")) * time.Second,
-			TaskFunc: func() error {
-				now := time.Now()
-				log.WithFields(logrus.Fields{"task-name": name}).Tracef("Executing Scheduled task")
-				_, err := runWASM("scheduler-"+name, "scheduler:RUN", []byte(""))
+		for svcName, svcCfg := range funcCfg.Services {
+			// Load WASM Functions
+			log.Infof("Loading Functions from Service %s", svcName)
+			for fName, fCfg := range svcCfg.Functions {
+				err := engine.LoadModule(wasm.ModuleConfig{
+					Name:     fName,
+					Filepath: fCfg.Filepath,
+				})
 				if err != nil {
-					log.WithFields(logrus.Fields{"task-name": name}).Debugf("Error executing task - %s", err)
-					stats.Tasks.WithLabelValues(name).Observe(time.Since(now).Seconds())
-					return err
+					return fmt.Errorf("could not load function %s from path %s - %s", fName, fCfg.Filepath, err)
 				}
-				stats.Tasks.WithLabelValues(name).Observe(time.Since(now).Seconds())
-				return nil
-			},
-		})
-		if err != nil {
-			log.Errorf("Error scheduling scheduled task %s - %s", name, err)
+				log.Infof("Loaded Function %s for Service %s", fName, svcName)
+			}
+
+			// Register Routes
+			log.Infof("Registering Routes from Service %s", svcName)
+			funcRoutes := make(map[string]string)
+			for _, r := range svcCfg.Routes {
+				if r.Type == "http" {
+					for _, m := range r.Methods {
+						key := fmt.Sprintf("%s:%s:%s", r.Type, m, r.Path)
+						log.Infof("Registering Route %s for function %s", key, r.Function)
+						funcRoutes[key] = r.Function
+						srv.httpRouter.Handle(m, r.Path, srv.middleware(srv.WASMHandler))
+					}
+				}
+
+				if r.Type == "scheduled_task" {
+					id, err := scheduler.Add(&tasks.Task{
+						Interval: time.Duration(r.Frequency) * time.Second,
+						TaskFunc: func() error {
+							now := time.Now()
+							_, err := runWASM(r.Function, "handler", []byte(""))
+							if err != nil {
+								stats.Tasks.WithLabelValues(r.Function).Observe(time.Since(now).Seconds())
+								return err
+							}
+							stats.Tasks.WithLabelValues(r.Function).Observe(time.Since(now).Seconds())
+							return nil
+						},
+					})
+					if err != nil {
+						log.Errorf("Error scheduling scheduled task %s - %s", r.Function, err)
+					}
+
+					// Clean up Task on Shutdown
+					defer scheduler.Del(id)
+				}
+
+			}
+			srv.funcRoutes = funcRoutes
 		}
 
-		// Clean up Task on Shutdown
-		defer scheduler.Del(id)
 	}
 
 	// Register Metrics Handler
@@ -425,13 +456,6 @@ func Run(c *viper.Viper) error {
 	srv.httpRouter.GET("/debug/pprof/heap", srv.handlerWrapper(pprof.Handler("heap")))
 	srv.httpRouter.GET("/debug/pprof/threadcreate", srv.handlerWrapper(pprof.Handler("threadcreate")))
 	srv.httpRouter.GET("/debug/pprof/block", srv.handlerWrapper(pprof.Handler("block")))
-
-	// Register WASM Handler
-	srv.httpRouter.GET("/", srv.middleware(srv.WASMHandler))
-	srv.httpRouter.POST("/", srv.middleware(srv.WASMHandler))
-	srv.httpRouter.PUT("/", srv.middleware(srv.WASMHandler))
-	srv.httpRouter.DELETE("/", srv.middleware(srv.WASMHandler))
-	srv.httpRouter.HEAD("/", srv.middleware(srv.WASMHandler))
 
 	// Start HTTP Listener
 	log.Infof("Starting HTTP Listener on %s", cfg.GetString("listen_addr"))

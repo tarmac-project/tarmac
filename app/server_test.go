@@ -97,7 +97,7 @@ func TestFullService(t *testing.T) {
 	cfg.Set("sql_type", "mysql")
 	cfg.Set("sql_dsn", "root:example@tcp(mysql:3306)/example")
 	cfg.Set("config_watch_interval", 5)
-	cfg.Set("wasm_function_config", "/testdata/tarmac-service.json")
+	cfg.Set("wasm_function_config", "/testdata/tarmac.json")
 	cfg.Set("wasm_function", "/testdata/doesnotexist/tarmac.wasm")
 	go func() {
 		err := Run(cfg)

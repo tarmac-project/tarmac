@@ -52,15 +52,17 @@ type Route struct {
 	// Function defines the Function to execute when this route is called.
 	Function string `json:"function"`
 
-	// Frequency is used to define the frequency of scheduled_task routes. Example frequencies are `1s`, `2m`, `3h`,
-	// and `4d`.
-	Frequency string `json:"frequency,omitempty"`
+	// Frequency is used to define the frequency of scheduled_task routes in seconds.
+	Frequency int `json:"frequency,omitempty"`
 }
 
 // Parse function reads the file specified and attempts to parse the contents into a Config instance.
 func Parse(filepath string) (Config, error) {
 	// Read the file contents
 	b, err := os.ReadFile(filepath)
+	if err == os.ErrNotExist {
+		return Config{}, os.ErrNotExist
+	}
 	if err != nil {
 		return Config{}, fmt.Errorf("could not read service configuration: %w", err)
 	}

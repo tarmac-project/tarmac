@@ -116,6 +116,7 @@ func TestRunningServer(t *testing.T) {
 	cfg.Set("use_consul", false)
 	cfg.Set("debug", true)
 	cfg.Set("trace", true)
+	cfg.Set("wasm_function", "/testdata/default/tarmac.wasm")
 	go func() {
 		err := Run(cfg)
 		if err != nil && err != ErrShutdown {
@@ -161,6 +162,7 @@ func TestPProfServerEnabled(t *testing.T) {
 	cfg.Set("debug", true)
 	cfg.Set("trace", true)
 	cfg.Set("enable_pprof", true)
+	cfg.Set("wasm_function", "/testdata/default/tarmac.wasm")
 	go func() {
 		err := Run(cfg)
 		if err != nil && err != ErrShutdown {
@@ -207,6 +209,7 @@ func TestPProfServerDisabled(t *testing.T) {
 	cfg.Set("use_consul", false)
 	cfg.Set("debug", true)
 	cfg.Set("trace", true)
+	cfg.Set("wasm_function", "/testdata/default/tarmac.wasm")
 	go func() {
 		err := Run(cfg)
 		if err != nil && err != ErrShutdown {
@@ -276,6 +279,7 @@ func TestRunningTLSServer(t *testing.T) {
 	cfg.Set("enable_sql", true)
 	cfg.Set("sql_type", "mysql")
 	cfg.Set("sql_dsn", "root:example@tcp(mysql:3306)/example")
+	cfg.Set("wasm_function", "/testdata/default/tarmac.wasm")
 	err = cfg.AddRemoteProvider("consul", "consul:8500", "tarmac/config")
 	if err != nil {
 		t.Fatalf("Failed to create Consul config provider - %s", err)
@@ -384,6 +388,7 @@ func TestRunningMTLSServer(t *testing.T) {
 	cfg.Set("enable_sql", true)
 	cfg.Set("sql_type", "mysql")
 	cfg.Set("sql_dsn", "root:example@tcp(mysql:3306)/example")
+	cfg.Set("wasm_function", "/testdata/default/tarmac.wasm")
 	err = cfg.AddRemoteProvider("consul", "consul:8500", "tarmac/config")
 	if err != nil {
 		t.Fatalf("Failed to create Consul config provider - %s", err)
@@ -487,6 +492,7 @@ func TestRunningFailMTLSServer(t *testing.T) {
 	cfg.Set("enable_sql", true)
 	cfg.Set("sql_type", "mysql")
 	cfg.Set("sql_dsn", "root:example@tcp(mysql:3306)/example")
+	cfg.Set("wasm_function", "/testdata/default/tarmac.wasm")
 	err = cfg.AddRemoteProvider("consul", "consul:8500", "tarmac/config")
 	if err != nil {
 		t.Fatalf("Failed to create Consul config provider - %s", err)
