@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   tarmac-example:
-    image: madflojo/tarmac:unstable
+    image: madflojo/tarmac
     ports:
       - 80:8080
     environment:
@@ -9,4 +9,4 @@ services:
       - "APP_LISTEN_ADDR=0.0.0.0:8080"
       - "APP_DEBUG=true"
     volumes:
-      - "./functions:/functions"
+      - "./:/functions"

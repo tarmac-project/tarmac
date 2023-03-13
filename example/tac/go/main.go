@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	// Tarmac uses waPC to facilitate WASM module execution. Modules must register their custom handlers 
+	// Tarmac uses waPC to facilitate WASM module execution. Modules must register their custom handlers
 	wapc.RegisterFunctions(wapc.Functions{
 		// Register request handler
 		"handler": Handler,
