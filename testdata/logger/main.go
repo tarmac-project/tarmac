@@ -21,5 +21,5 @@ func Handler(payload []byte) ([]byte, error) {
 	}
 
 	// Return a happy message
-	return []byte("Howdie"), nil
+	return payload, nil
 }
