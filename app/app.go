@@ -414,10 +414,12 @@ func Run(c *viper.Viper) error {
 				}
 
 				if r.Type == "scheduled_task" {
+					log.Infof("Scheduling custom task for function %s with interval of %d", r.Function, r.Frequency)
 					id, err := scheduler.Add(&tasks.Task{
 						Interval: time.Duration(r.Frequency) * time.Second,
 						TaskFunc: func() error {
 							now := time.Now()
+							log.Tracef("Executing Scheduled Function %s", r.Function)
 							_, err := runWASM(r.Function, "handler", []byte(""))
 							if err != nil {
 								stats.Tasks.WithLabelValues(r.Function).Observe(time.Since(now).Seconds())
