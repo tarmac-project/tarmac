@@ -25,6 +25,7 @@ When using Environment Variables, all configurations are prefixed with `APP_`. T
 | `APP_CA_FILE` | `ca_file` | `string` | Certificate Authority Bundle File Path \(i.e `/some/path/ca.pem`\). When defined, enables mutual-TLS authentication |
 | `APP_IGNORE_CLIENT_CERT` | `ignore_client_cert` | `string` | When defined will disable Client Cert validation for m-TLS authentication |
 | `APP_WASM_FUNCTION` | `wasm_function` | `string` | Path and Filename of the WASM Function to execute \(Default: `/functions/tarmac.wasm`\) |
+| `APP_WASM_FUNCTION_CONFIG` | `wasm_function_config` | `string` | Path to Service configuration for multi-function services \(Default: `/functions/tarmac.json`\) |
 | `APP_ENABLE_PPROF` | `enable_pprof` | `bool` | Enable PProf Collection HTTP end-points |
 | `APP_ENABLE_KVSTORE` | `enable_kvstore` | `bool` | Enable the KV Store |
 | `APP_KVSTORE_TYPE` | `kvstore_type` | `string` | Select KV Store to use (Options: `redis`, `cassandra`)|
@@ -48,16 +49,6 @@ When using Environment Variables, all configurations are prefixed with `APP_`. T
 | `APP_CASSANDRA_USER` | `cassandra_user` | `string` | Username to authenticate with |
 | `APP_CASSANDRA_PASSWORD` | `cassandra_password` | `string` | Password to authenticate with |
 | `APP_CASSANDRA_HOSTNAME_VERIFY` | `cassandra_hostname_verify` | `bool` | Enable/Disable hostname verification for TLS |
-| | `scheduled_tasks` | `map[string]ScheduledTask` | Configured Scheduled WASM Function executions |
-
-### Scheduled Task Definition
-
-The below options are used to configure scheduled tasks.
-
-| JSON | Type | Description |
-| :--- | :--- | :--- |
-| `interval` | `int` | Interval (in seconds) task execution should run (recurring) |
-| `wasm_function` | `string` | Path and Filename of the WASM Function to execute |
 
 ## Consul Format
 
