@@ -10,18 +10,18 @@
 * [Go](wasm-functions/go.md)
 * [Rust](wasm-functions/rust.md)
 
-### Capabilities
+## Capabilities
 * [Callbacks](callback-functions/callbacks.md)
 
-#### Observability
+### Observability
 * [Logger](callback-functions/logger.md)
 * [Metrics](callback-functions/metrics.md)
 
-#### Storage
+### Storage
 * [Key:Value Datastore](callback-functions/key-value-store.md)
 * [SQL Datastore](callback-functions/sql.md)
 
-#### Communications
+### Communications
 * [HTTP Client](callback-functions/http-call.md)
 
 ## Running Tarmac
