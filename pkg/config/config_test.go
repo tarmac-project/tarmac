@@ -62,8 +62,7 @@ func TestMissingFile(t *testing.T) {
 // This is a unit test function for the Parse function
 func TestConfigParser(t *testing.T) {
 	// Define an array of test cases
-	var tt []TestCase
-	tt = []TestCase{
+	tt := []TestCase{
 		{
 			name:  "Empty JSON",
 			data:  []byte(``),
