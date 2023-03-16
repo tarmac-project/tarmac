@@ -28,3 +28,7 @@ clean:
 tarmac:
 	@echo "Starting Application"
 	docker-compose -f dev-compose.yml up --build tarmac
+
+tarmac-performance: build
+	@echo "Starting Application"
+	docker-compose -f dev-compose.yml up -d tarmac-performance
