@@ -18,10 +18,7 @@ jobs:
     - name: Configure Test
       run: |
         cat << EOF > loadtest-config.yml
-          - url: http://localhost:8080
-          - numRequests: 10000
-          - qps: 1000
-          - connections: 10
+          url: http://localhost:8080
           SLOs:
             http/error-rate: 0
             http/latency-p99.9: 5
