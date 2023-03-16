@@ -23,4 +23,4 @@ jobs:
     - uses: iter8-tools/iter8-action@v1
       with:
         chart: load-test-http
-        valuesFile: loadtest-config.yaml 
+        valuesFile: loadtest-config.yml 
