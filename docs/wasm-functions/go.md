@@ -25,20 +25,17 @@ import (
 )
 ```
 
-Once the waPC package is imported, we will create a `main()` function; this function will be our primary entry point for Tarmac execution. Within this function, we will register other handler functions for Tarmac to execute using the `wapc.RegisterFunctions` function.
+Once the waPC package is imported, we will create a `main()` function; this function will be our primary entry point for Tarmac execution. Within this function, we will register our handler function for Tarmac to execute using the `wapc.RegisterFunctions` function.
 
 ```go
 func main() {
 	wapc.RegisterFunctions(wapc.Functions{
-		// Register a POST request handler
-		"POST": Handler,
-		// Register a PUT request handler
-		"PUT": Handler,
+		"handler": Handler,
 	})
 }
 ```
 
-In the example above, we have registered the `Handler` function under two Tarmac routes; `POST` and `PUT`. When Tarmac receives an HTTP POST request for this WASM Function, it will execute the handler function as defined. If we wanted this function also to be used for HTTP GET requests, we could add another line registering it under `GET`.
+In the example above, we have registered the `Handler` function. When Tarmac receives an HTTP POST request for this WASM Function, it will execute the handler function as defined.
 
 With our handler function registered, we must create a basic function.
 
@@ -110,21 +107,8 @@ func main() {
         // Tarmac uses waPC to facilitate WASM module execution. Modules must register their custom handlers under the
         // appropriate method as shown below.
         wapc.RegisterFunctions(wapc.Functions{
-                // Register a GET request handler
-                "GET": NoHandler,
-                // Register a POST request handler
-                "POST": Handler,
-                // Register a PUT request handler
-                "PUT": Handler,
-                // Register a DELETE request handler
-                "DELETE": NoHandler,
+                "handler": Handler,
         })
-}
-
-// NoHandler is a custom Tarmac Handler function that will return an error that denies
-// the client request.
-func NoHandler(payload []byte) ([]byte, error) {
-        return []byte(""), fmt.Errorf("Not Implemented")
 }
 
 // Handler is the custom Tarmac Handler function that will receive a payload and

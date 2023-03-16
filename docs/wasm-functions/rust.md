@@ -28,19 +28,16 @@ fn main() {}
 pub extern "C" fn wapc_init() {}
 ```
 
-Along with the waPC imports, you should also see a `wapc_init()` function created. This function is the primary entry point for Tarmac execution. We will register other handler functions for Tarmac to execute using the `register_function()` function within this function.
+Along with the waPC imports, you should also see a `wapc_init()` function created. This function is the primary entry point for Tarmac execution. We will register our handler function for Tarmac to execute using the `register_function()` function within this function.
 
 ```rust
 #[no_mangle]
 pub extern "C" fn wapc_init() {
-  // Add Handler for the POST request
-  register_function("POST", handler);
-  // Add Handler for the PUT request
-  register_function("PUT", handler);
+  register_function("handler", handler);
 }
 ```
 
-In the example above, we have registered the `handler()` function under two Tarmac routes; `POST` and `PUT`. When Tarmac receives an HTTP POST request for this WASM function, it will execute the handler function as defined. If we wanted this function to be used for HTTP GET requests, we could add another line registering it under `GET`.
+In the example above, we have registered the `handler()` function. When Tarmac receives an HTTP POST request for this WASM function, it will execute the handler function as defined.
 
 With our handler function now registered, we must create a basic version of this handler for Tarmac to call.
 
@@ -89,10 +86,7 @@ fn main() {}
 
 #[no_mangle]
 pub extern "C" fn wapc_init() {
-  // Add Handler for the POST request
-  register_function("POST", handler);
-  // Add Handler for the PUT request
-  register_function("PUT", handler);
+  register_function("handler", handler);
 }
 
 fn handler(msg: &[u8]) -> CallResult {

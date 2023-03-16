@@ -37,7 +37,7 @@ func TestWASMModuleCreation(t *testing.T) {
 		ModuleConf: ModuleConfig{
 			Name:     "A Module",
 			PoolSize: 99,
-			Filepath: "/testdata/tarmac.wasm",
+			Filepath: "/testdata/logger/tarmac.wasm",
 		},
 	})
 
@@ -47,7 +47,7 @@ func TestWASMModuleCreation(t *testing.T) {
 		Pass: false,
 		ModuleConf: ModuleConfig{
 			PoolSize: 99,
-			Filepath: "/testdata/tarmac.wasm",
+			Filepath: "/testdata/logger/tarmac.wasm",
 		},
 	})
 
@@ -57,7 +57,7 @@ func TestWASMModuleCreation(t *testing.T) {
 		Pass: true,
 		ModuleConf: ModuleConfig{
 			Name:     "A Module",
-			Filepath: "/testdata/tarmac.wasm",
+			Filepath: "/testdata/logger/tarmac.wasm",
 		},
 	})
 
@@ -78,7 +78,7 @@ func TestWASMModuleCreation(t *testing.T) {
 		ModuleConf: ModuleConfig{
 			Name:     "A Module",
 			PoolSize: 99,
-			Filepath: "/doesntexist/testdata/tarmac.wasm",
+			Filepath: "/doesntexist/testdata/logger/tarmac.wasm",
 		},
 	})
 
@@ -119,7 +119,7 @@ func TestWASMExecution(t *testing.T) {
 
 	err = s.LoadModule(ModuleConfig{
 		Name:     "AModule",
-		Filepath: "/testdata/tarmac.wasm",
+		Filepath: "/testdata/logger/tarmac.wasm",
 	})
 	if err != nil {
 		t.Fatalf("Failed to load module - %s", err)
@@ -131,7 +131,7 @@ func TestWASMExecution(t *testing.T) {
 	}
 
 	go func() {
-		_, err = m.Run("POST", []byte(`hello`))
+		_, err = m.Run("handler", []byte(`hello`))
 		if err != nil {
 			t.Logf("Could not execute the wasm function - %s", err)
 		}

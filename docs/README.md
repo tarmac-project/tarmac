@@ -2,7 +2,7 @@
 
 ![](tarmac-logo.png)
 
-Framework for building distributed services with WebAssembly
+Tarmac: Building Serverless Applications with WebAssembly, Simplified
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/madflojo/tarmac)](https://pkg.go.dev/github.com/madflojo/tarmac)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://tarmac.gitbook.io/tarmac/)
@@ -10,28 +10,13 @@ Framework for building distributed services with WebAssembly
 [![Go Report Card](https://goreportcard.com/badge/github.com/madflojo/tarmac)](https://goreportcard.com/report/github.com/madflojo/tarmac)
 [![Coverage Status](https://coveralls.io/repos/github/madflojo/tarmac/badge.svg?branch=master)](https://coveralls.io/github/madflojo/tarmac?branch=master)
 
+Tarmac is a lightweight, open-source application server that simplifies building microservices using WebAssembly (WASM) functions. With Tarmac, you can quickly write and deploy a single function as a standalone microservice. Or you can use Tarmac's ability to run multi-function services to create a purpose-built serverless platform.
 
-Tarmac is a unique framework designed for the next generation of distributed systems. At its core, like many other microservice frameworks, Tarmac is focused on abstracting the complexities of building cloud-native services allowing users to focus more on business logic and less on boilerplate code.
-
-What makes Tarmac unique is that, unlike most microservice frameworks, Tarmac is language agnostic. Using WebAssembly \(WASM\), Tarmac users can write their business logic in many different languages such as Rust, Go, Javascript, or even Swift; and run it all using the same core framework.
-
-## Tarmac vs. Serverless Functions
-
-Tarmac shares many traits with Serverless Functions and Functions as a Service \(FaaS\) platforms. Tarmac makes it easy for developers to deploy functions and microservices without writing repetitive boilerplate code. As a developer, you can create a production-ready service in less than 100 lines of code.
-
-But Tarmac takes Serverless Functions further. In general, FaaS platforms provide a simple runtime for user code. If a function requires any dependency \(i.e., a Database\), the developer-provided function code must maintain the database connectivity and query calls.
-
-Using the power of WebAssembly, Tarmac not only provides functions a secure sandboxed runtime environment, but it also provides abstractions that developers can use to interact with platform capabilities such as Databases, Caching, Metrics, and even Dynamic Configuration.
-
-In many ways, Tarmac is more akin to a microservices framework with the developer experience of a FaaS platform.
+Tarmac delivers more than just a lightweight application server for WebAssembly functions. It offers built-in support for key-value stores like Redis and Cassandra, traditional SQL databases like MySQL and Postgres, and fundamental capabilities like mutual TLS authentication and observability. With Tarmac, you can easily focus on writing your functions while benefiting from a robust suite of integrations for building modern distributed services.
 
 ## Quick Start
 
-At the moment, Tramac is executing WASM functions by executing a defined set of function signatures. When Tarmac receives an HTTP GET request, it will call the function's registered under the `GET` signature.
-
-As part of the WASM Function, users must register their handlers using the pre-defined function signatures.
-
-To understand this better, look at one of our simple examples \(found in [example/](https://github.com/madflojo/tarmac/blob/main/example/tac/README.md)\).
+Getting started with Tarmac is easy. The below function (written in Go) is one example that reverses text payloads.
 
 ```go
 // Tac is a small, simple Go program that is an example WASM module for Tarmac. This program will accept a Tarmac
@@ -44,35 +29,16 @@ import (
 )
 
 func main() {
-        // Tarmac uses waPC to facilitate WASM module execution. Modules must register their custom handlers under the
-        // appropriate method as shown below.
+        // Tarmac uses waPC to facilitate WASM module execution. Modules must register their custom handlers
         wapc.RegisterFunctions(wapc.Functions{
-                // Register a GET request handler
-                "GET": NoHandler,
-                // Register a POST request handler
-                "POST": Handler,
-                // Register a PUT request handler
-                "PUT": Handler,
-                // Register a DELETE request handler
-                "DELETE": NoHandler,
+                // Register request handler
+                "handler": Handler,
         })
-}
-
-// NoHandler is a custom Tarmac Handler function that will return an error that denies
-// the client request.
-func NoHandler(payload []byte) ([]byte, error) {
-        return []byte(""), fmt.Errorf("Not Implemented")
 }
 
 // Handler is the custom Tarmac Handler function that will receive a payload and
 // must return a payload along with a nil error.
 func Handler(payload []byte) ([]byte, error) {
-        // Perform a host callback to log the incoming request
-        _, err := wapc.HostCall("tarmac", "logger", "trace", []byte(fmt.Sprintf("Reversing Payload: %s", payload)))
-        if err != nil {
-                return []byte(""), fmt.Errorf("Unable to call callback - %s", err)
-        }
-
         // Flip it and reverse
         if len(payload) > 0 {
                 for i, n := 0, len(payload)-1; i < n; i, n = i+1, n-1 {
@@ -80,21 +46,19 @@ func Handler(payload []byte) ([]byte, error) {
                 }
         }
 
-        // Return the payload via a ServerResponse JSON
+        // Return the payload
         return payload, nil
 }
 ```
 
-Tarmac passes the HTTP Payload to the WASM function untouched.
-
-To compile the example above, run:
+To start running this function, navigate to our examples directory and run the `make build` command. The `make build` command compiles the code and generates a WebAssembly module.
 
 ```text
 $ cd example/tac/go
 $ make build
 ```
 
-Once compiled, users can run Tarmac via Docker using the following command:
+Once compiled, you can run this function as a standalone microservice using the following Docker command.
 
 ```text
 $ docker run -p 8080:8080 \
@@ -108,3 +72,64 @@ With Tarmac now running, we can access our WASM function using any HTTP Client s
 $ curl -v --data "Tarmac Example" http://localhost:8080
 ```
 
+That's it! You can write and deploy functions in Go, Rust, AssemblyScript, Swift, or Zig with Tarmac. For more advanced functions, check out our [developer guides](https://tarmac.gitbook.io/tarmac/wasm-functions/go).
+
+## Multi-Function Services
+
+While users of Tarmac can build standalone microservices with a single function quickly, it shines with multi-function services. Tarmac's ability to run multiple functions means you can create purpose-built serverless platforms or full-featured distributed services with the developer experience of serverless functions.
+
+To get started with multi-function services, you must provide a `tarmac.json` configuration file (via the `WASM_FUNCTION_CONFIG` configuration parameter) that lists the Functions to load and the various protocols and routes to expose as endpoints. Below is a sample `tarmac.json` configuration file.
+
+```json
+{
+  "services": {
+    "my-service": {
+      "name": "my-service",
+      "functions": {
+        "function1": {
+          "filepath": "/path/to/function1.wasm"
+        },
+        "function2": {
+          "filepath": "/path/to/function2.wasm"
+        }
+      },
+      "routes": [
+        {
+          "type": "http",
+          "path": "/function1",
+          "methods": ["GET"],
+          "function": "function1"
+        },
+        {
+          "type": "http",
+          "path": "/function2",
+          "methods": ["POST"],
+          "function": "function2"
+        }
+      ]
+    }
+  }
+}
+```
+
+Each function has its own code base but shares the same service namespace and configurations in a multi-function service configuration.
+
+In the example above, we have a service named `my-service` with `function1` and `function2` functions. Each function has a `.wasm` file at `/path/to/function1.wasm` and `/path/to/function2.wasm`.
+
+To define the routes for each function, add a route object to the routes array with the type set to `http` and the `function` set to the function's name.
+
+In addition to the `http` route type, Tarmac also supports `scheduled_task` routes that execute a function at a specific interval. The frequency parameter specifies the interval (in seconds).
+
+```json
+{
+  "type": "scheduled_task",
+  "function": "function1",
+  "frequency": 10
+}
+```
+
+With Tarmac's support for multiple functions, you can quickly build complex, distributed services by dividing your service into smaller, more manageable pieces.
+
+## Contributing
+
+We are thrilled that you are interested in contributing to Tarmac and helping to make it even better! To get started, please check out our contributing guide for information on how to submit bug reports, feature requests, and code contributions.

@@ -1,0 +1,52 @@
+{
+  "services": {
+    "test-service": {
+      "name": "test-service",
+      "functions": {
+        "default": {
+          "filepath": "/testdata/default/tarmac.wasm"
+        },
+        "kv": {
+          "filepath": "/testdata/kv/tarmac.wasm"
+        },
+        "logger": {
+          "filepath": "/testdata/logger/tarmac.wasm"
+        },
+        "sql": {
+          "filepath": "/testdata/sql/tarmac.wasm"
+        }
+      },
+      "routes": [
+        {
+          "type": "http",
+          "path": "/",
+          "methods": ["GET", "POST", "PUT"],
+          "function": "default"
+        },
+        {
+          "type": "http",
+          "path": "/kv",
+          "methods": ["GET"],
+          "function": "kv"
+        },
+        {
+          "type": "http",
+          "path": "/logger",
+          "methods": ["GET", "POST"],
+          "function": "logger"
+        },
+        {
+          "type": "http",
+          "path": "/sql",
+          "methods": ["GET"],
+          "function": "sql"
+        },
+        {
+          "type": "scheduled_task",
+          "frequency": 15,
+          "function": "default"
+        }
+      ]
+    }
+  }
+}

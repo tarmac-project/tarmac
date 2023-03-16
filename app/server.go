@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"github.com/julienschmidt/httprouter"
+	"github.com/madflojo/tarmac/pkg/config"
 	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
@@ -20,6 +21,9 @@ type server struct {
 
 	// httpRouter is used to store and access the HTTP Request Router.
 	httpRouter *httprouter.Router
+
+	// funcCfg is used to store and access multi-function service configurations
+	funcCfg *config.Config
 }
 
 // Health is used to handle HTTP Health requests to this service. Use this for liveness
@@ -91,9 +95,14 @@ func (s *server) handlerWrapper(h http.Handler) httprouter.Handle {
 // WASMHandler is the primary HTTP handler for WASM Module traffic. This handler will load the
 // specified module and create an execution environment for that module.
 func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Find Function
+	function, err := s.funcCfg.RouteLookup(fmt.Sprintf("http:%s:%s", r.Method, r.URL.Path))
+	if err == config.ErrRouteNotFound {
+		function = "default"
+	}
+
 	// Read the HTTP Payload
 	var payload []byte
-	var err error
 	if r.Method == "POST" || r.Method == "PUT" {
 		payload, err = io.ReadAll(r.Body)
 		if err != nil {
@@ -110,7 +119,7 @@ func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	// Execute WASM Module
-	rsp, err := runWASM("default", r.Method, payload)
+	rsp, err := runWASM(function, "handler", payload)
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"method":         r.Method,
