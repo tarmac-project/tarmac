@@ -19,6 +19,11 @@ jobs:
       run: |
         cat << EOF > loadtest-config.yml
           url: http://localhost:8080
+          numRequests: 50000
+          connections: 50
+          SLOs:
+            http/error-rate: 0
+            http/latency-p99.9: 5
         EOF
     - uses: iter8-tools/iter8-action@v1
       with:
