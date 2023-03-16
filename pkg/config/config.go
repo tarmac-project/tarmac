@@ -7,11 +7,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sync"
 )
 
 // Config is a struct that represents the parsed configuration file. It contains a map of Tarmac Services, where each
 // Service is identified by a unique string key.
 type Config struct {
+	sync.RWMutex
+
+	// routes is an internal mapping of routes and functions.
+	routes map[string]string
+
 	// Services maps the names of Tarmac services to their configurations, which include the set of functions they provide
 	// and the routes by which they can be invoked.
 	Services map[string]Service `json:"services"`
@@ -56,23 +62,53 @@ type Route struct {
 	Frequency int `json:"frequency,omitempty"`
 }
 
+// ErrRouteNotFound is returned when a requested route is not found in the
+// service's route configuration.
+var ErrRouteNotFound = fmt.Errorf("route not found")
+
 // Parse function reads the file specified and attempts to parse the contents into a Config instance.
-func Parse(filepath string) (Config, error) {
+func Parse(filepath string) (*Config, error) {
 	// Read the file contents
 	b, err := os.ReadFile(filepath)
 	if err == os.ErrNotExist {
-		return Config{}, os.ErrNotExist
+		return &Config{}, os.ErrNotExist
 	}
 	if err != nil {
-		return Config{}, fmt.Errorf("could not read service configuration: %w", err)
+		return &Config{}, fmt.Errorf("could not read service configuration: %w", err)
 	}
 
 	// Unmarshal the JSON contents into a Config struct
-	var cfg Config
+	cfg := &Config{}
 	err = json.Unmarshal(b, &cfg)
 	if err != nil {
-		return Config{}, fmt.Errorf("could not parse service configuration file: %w", err)
+		return &Config{}, fmt.Errorf("could not parse service configuration file: %w", err)
+	}
+
+	// Populate the internal routes map
+	cfg.routes = make(map[string]string)
+	for _, svcCfg := range cfg.Services {
+		for _, r := range svcCfg.Routes {
+			if r.Type == "http" {
+				for _, m := range r.Methods {
+					key := fmt.Sprintf("%s:%s:%s", r.Type, m, r.Path)
+					cfg.routes[key] = r.Function
+				}
+			}
+		}
 	}
 
 	return cfg, nil
+}
+
+// RouteLookup searches the routes map for a given key and returns the corresponding function name if the key is found,
+//
+//	or an empty string and an error if it is not found.
+func (cfg *Config) RouteLookup(key string) (string, error) {
+	cfg.RLock()
+	defer cfg.RUnlock()
+	v, ok := cfg.routes[key]
+	if !ok {
+		return "", ErrRouteNotFound
+	}
+	return v, nil
 }

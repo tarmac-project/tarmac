@@ -45,11 +45,26 @@ func TestParserFile(t *testing.T) {
 	}
 
 	// Parse the temporary file
-	_, err = Parse(fn)
+	cfg, err := Parse(fn)
 	if err != nil {
 		// If there is an error parsing the file, fail the test with the error message
 		t.Errorf("could not parse file: %s", err)
 	}
+
+	// Validate RouteLookup
+	t.Run("Validate RouteLookup with Valid Route", func(t *testing.T) {
+		_, err := cfg.RouteLookup("http:GET:/example")
+		if err != nil {
+			t.Errorf("Unexpected failure looking up route")
+		}
+	})
+
+	t.Run("Validate RouteLookup with Invalid Route", func(t *testing.T) {
+		_, err := cfg.RouteLookup("http:DELETE:/example")
+		if err == nil {
+			t.Errorf("Unexpected success looking up routei - %s", err)
+		}
+	})
 }
 
 func TestMissingFile(t *testing.T) {

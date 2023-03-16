@@ -361,7 +361,7 @@ func Run(c *viper.Viper) error {
 	}
 
 	// Look for Functions Config
-	funcCfg, err := config.Parse(cfg.GetString("wasm_function_config"))
+	srv.funcCfg, err = config.Parse(cfg.GetString("wasm_function_config"))
 	if err != nil {
 		log.Infof("Could not load wasm_function_config (%s) starting with default function path - %s", cfg.GetString("wasm_function_config"), err)
 
@@ -386,7 +386,7 @@ func Run(c *viper.Viper) error {
 	if err == nil {
 		log.Infof("Loading Services from wasm_function_config %s", cfg.GetString("wasm_function_config"))
 
-		for svcName, svcCfg := range funcCfg.Services {
+		for svcName, svcCfg := range srv.funcCfg.Services {
 			// Load WASM Functions
 			log.Infof("Loading Functions from Service %s", svcName)
 			for fName, fCfg := range svcCfg.Functions {
@@ -438,7 +438,6 @@ func Run(c *viper.Viper) error {
 				}
 
 			}
-			srv.funcRoutes = funcRoutes
 		}
 
 	}

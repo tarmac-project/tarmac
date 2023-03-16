@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"github.com/julienschmidt/httprouter"
+	"github.com/madflojo/tarmac/pkg/config"
 	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
@@ -21,8 +22,8 @@ type server struct {
 	// httpRouter is used to store and access the HTTP Request Router.
 	httpRouter *httprouter.Router
 
-	// funcRoutes is used to map functions with routes.
-	funcRoutes map[string]string
+	// funcCfg is used to store and access multi-function service configurations
+	funcCfg *config.Config
 }
 
 // Health is used to handle HTTP Health requests to this service. Use this for liveness
@@ -95,15 +96,13 @@ func (s *server) handlerWrapper(h http.Handler) httprouter.Handle {
 // specified module and create an execution environment for that module.
 func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Find Function
-	function := "default"
-	v, ok := s.funcRoutes[fmt.Sprintf("http:%s:%s", r.Method, r.URL.Path)]
-	if ok {
-		function = v
+	function, err := s.funcCfg.RouteLookup(fmt.Sprintf("http:%s:%s", r.Method, r.URL.Path))
+	if err == config.ErrRouteNotFound {
+		function = "default"
 	}
 
 	// Read the HTTP Payload
 	var payload []byte
-	var err error
 	if r.Method == "POST" || r.Method == "PUT" {
 		payload, err = io.ReadAll(r.Body)
 		if err != nil {
