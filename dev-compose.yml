@@ -1,5 +1,14 @@
 version: '2'
 services:
+  tarmac-performance:
+    build: .
+    ports:
+      - 443:8443
+      - 80:8080
+    environment:
+      - "APP_ENABLE_TLS=false"
+      - "APP_LISTEN_ADDR=0.0.0.0:8080"
+      - "APP_WASM_FUNCTION=testdata/default/tarmac.wasm"
   tarmac:
     build: .
     ports:
