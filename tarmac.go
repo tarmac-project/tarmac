@@ -8,7 +8,7 @@ host-level actions such as storing data within the database, logging specific da
 package tarmac
 
 import (
-  "fmt"
+	"fmt"
 	wapc "github.com/wapc/wapc-guest-tinygo"
 )
 
@@ -173,6 +173,9 @@ type Tarmac struct {
 
 	// Logger provides an interface to the standard logger
 	Logger *Logger
+
+	// KV provides an interface to the KVStores within Tarmac
+	KV *KV
 }
 
 // Config provides users with the ability to specify namespaces, function handlers and other key information required to execute the
@@ -196,21 +199,24 @@ func New(cfg Config) (*Tarmac, error) {
 		t.namespace = cfg.Namespace
 	}
 
-  // Validate Handler is not empty
+	// Validate Handler is not empty
 	if cfg.Handler == nil {
 		return t, fmt.Errorf("function handler cannot be nil")
 	}
 
-  // Register provided handler
+	// Register provided handler
 	wapc.RegisterFunctions(wapc.Functions{
 		"handler": cfg.Handler,
 	})
 
-  // Set hostCall function for internal callbacks
+	// Set hostCall function for internal callbacks
 	cfg.hostCall = wapc.HostCall
 
 	// Initialize a Logger
-	t.Logger = NewLogger(cfg)
+	t.Logger = newLogger(cfg)
+
+	// Initialize a KVStore
+	t.KV = newKVStore(cfg)
 
 	return t, nil
 }

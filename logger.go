@@ -6,8 +6,8 @@ type Logger struct {
 	hostCall  func(string, string, string, []byte) ([]byte, error)
 }
 
-// NewLogger creates a new Logger with the provided configuration.
-func NewLogger(cfg Config) *Logger {
+// newLogger creates a new Logger with the provided configuration.
+func newLogger(cfg Config) *Logger {
 	return &Logger{namespace: cfg.Namespace, hostCall: cfg.hostCall}
 }
 

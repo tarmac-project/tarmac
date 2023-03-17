@@ -45,7 +45,7 @@ func TestLogger(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Initialize logger with mock hostCall
 			logs := make(map[string]string)
-			logger := NewLogger(Config{Namespace: "default", hostCall: func(namespace string, capability string, function string, input []byte) ([]byte, error) {
+			logger := newLogger(Config{Namespace: "default", hostCall: func(namespace string, capability string, function string, input []byte) ([]byte, error) {
 				if namespace != "default" || capability != "logger" || function != tc.level {
 					t.Errorf("hostcall signature invalid %s, %s, %s", namespace, capability, function)
 				}
