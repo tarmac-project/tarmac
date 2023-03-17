@@ -7,6 +7,11 @@ host-level actions such as storing data within the database, logging specific da
 */
 package tarmac
 
+import (
+  "fmt"
+	wapc "github.com/wapc/wapc-guest-tinygo"
+)
+
 // Status is used within Response messages from Tarmac, it indicates either failure or success for both Host Callbacks,
 // and request handler calls. Status codes used should follow HTTP status code conventions, even if the call is non-HTTP,
 // following a common return code will enable cross platform execution.
@@ -154,4 +159,58 @@ type SQLQueryResponse struct {
 
 	// Data is a base64 encoded JSON represented the returned rows. Each row will contain a column name based map to access data.
 	Data string `json:"data"`
+}
+
+// Tarmac provides an interface to users which wraps and simplifies the interfaces for WASM Functions execute by Tarmac. This interface
+// provides access to Loggers, Metrics, KVStores, and SQL Databases.
+type Tarmac struct {
+	// Namespace controls the function namespace to use for host callbacks. The default value is "default" which is the global namespace.
+	// Users can provide an alternative namespace by specifying this field.
+	namespace string
+
+	// Handler registers the user function to execute as part of the Tarmac Function.
+	handler func([]byte) ([]byte, error)
+
+	// Logger provides an interface to the standard logger
+	Logger *Logger
+}
+
+// Config provides users with the ability to specify namespaces, function handlers and other key information required to execute the
+// function.
+type Config struct {
+	// Namespace controls the function namespace to use for host callbacks. The default value is "default" which is the global namespace.
+	// Users can provide an alternative namespace by specifying this field.
+	Namespace string
+
+	// Handler registers the user function to execute as part of the Tarmac Function.
+	Handler func([]byte) ([]byte, error)
+
+	// hostCall is used internally for host callbacks. This is mainly here for testing.
+	hostCall func(string, string, string, []byte) ([]byte, error)
+}
+
+// New creates a new Tarmac instance with the specified configuration.
+func New(cfg Config) (*Tarmac, error) {
+	t := &Tarmac{namespace: "default"}
+	if cfg.Namespace != "" {
+		t.namespace = cfg.Namespace
+	}
+
+  // Validate Handler is not empty
+	if cfg.Handler == nil {
+		return t, fmt.Errorf("function handler cannot be nil")
+	}
+
+  // Register provided handler
+	wapc.RegisterFunctions(wapc.Functions{
+		"handler": cfg.Handler,
+	})
+
+  // Set hostCall function for internal callbacks
+	cfg.hostCall = wapc.HostCall
+
+	// Initialize a Logger
+	t.Logger = NewLogger(cfg)
+
+	return t, nil
 }
