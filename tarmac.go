@@ -7,10 +7,6 @@ host-level actions such as storing data within the database, logging specific da
 */
 package tarmac
 
-import (
-	"fmt"
-)
-
 // Status is used within Response messages from Tarmac, it indicates either failure or success for both Host Callbacks,
 // and request handler calls. Status codes used should follow HTTP status code conventions, even if the call is non-HTTP,
 // following a common return code will enable cross platform execution.
