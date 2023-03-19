@@ -1,4 +1,4 @@
-package tarmac
+package sdk
 
 import (
 	"encoding/base64"

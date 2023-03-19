@@ -1,4 +1,4 @@
-package tarmac
+package sdk
 
 import (
 	"github.com/pquerna/ffjson/ffjson"

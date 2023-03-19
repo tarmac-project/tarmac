@@ -1,4 +1,4 @@
-package tarmac
+package sdk
 
 // Logger provides a simple interface for Tarmac Functions to send messages via the standard logger.
 type Logger struct {
