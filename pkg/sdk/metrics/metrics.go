@@ -1,16 +1,37 @@
-package sdk
+package metrics
 
 import "fmt"
 
-// Metrics provides an interface to the host metrics
+// Metrics provides an interface to the host metrics.
 type Metrics struct {
 	namespace string
 	hostCall  func(string, string, string, []byte) ([]byte, error)
 }
 
-// newMetrics creates a metrics interface for creating Counters, Histograms, and Gauges.
-func newMetrics(cfg Config) *Metrics {
-	return &Metrics{namespace: cfg.Namespace, hostCall: cfg.hostCall}
+// Config provides users with the ability to specify namespaces, function handlers and other key information required to execute the
+// function.
+type Config struct {
+	// Namespace controls the function namespace to use for host callbacks. The default value is "default" which is the global namespace.
+	// Users can provide an alternative namespace by specifying this field.
+	Namespace string
+
+	// HostCall is used internally for host callbacks. This is mainly here for testing.
+	HostCall func(string, string, string, []byte) ([]byte, error)
+}
+
+// NewMetrics creates a metrics interface for creating Counters, Histograms, and Gauges.
+func NewMetrics(cfg Config) (*Metrics, error) {
+	// Set default namespace
+	if cfg.Namespace == "" {
+		cfg.Namespace = "default"
+	}
+
+	// Verify HostCall is set
+	if cfg.HostCall == nil {
+		return &Metrics{}, fmt.Errorf("HostCall cannot be nil")
+	}
+
+	return &Metrics{namespace: cfg.Namespace, hostCall: cfg.HostCall}, nil
 }
 
 // Counter provides an Counter metric which can be incremented.
@@ -20,8 +41,8 @@ type Counter struct {
 	hostCall  func(string, string, string, []byte) ([]byte, error)
 }
 
-// newCounter creates a new Counter metric with the given name.
-func (m *Metrics) newCounter(name string) (*Counter, error) {
+// NewCounter creates a new Counter metric with the given name.
+func (m *Metrics) NewCounter(name string) (*Counter, error) {
 	if name == "" {
 		return &Counter{}, fmt.Errorf("name cannot be empty")
 	}
@@ -42,8 +63,8 @@ type Histogram struct {
 	hostCall  func(string, string, string, []byte) ([]byte, error)
 }
 
-// newHistogram creates a new Histogram metric with the given name.
-func (m *Metrics) newHistogram(name string) (*Histogram, error) {
+// NewHistogram creates a new Histogram metric with the given name.
+func (m *Metrics) NewHistogram(name string) (*Histogram, error) {
 	if name == "" {
 		return &Histogram{}, fmt.Errorf("name cannot be empty")
 	}
@@ -64,8 +85,8 @@ type Gauge struct {
 	hostCall  func(string, string, string, []byte) ([]byte, error)
 }
 
-// newGauge creates a new Gauge metric with the given name.
-func (m *Metrics) newGauge(name string) (*Gauge, error) {
+// NewGauge creates a new Gauge metric with the given name.
+func (m *Metrics) NewGauge(name string) (*Gauge, error) {
 	if name == "" {
 		return &Gauge{}, fmt.Errorf("name cannot be empty")
 	}

@@ -1,4 +1,4 @@
-package sdk
+package metrics
 
 import (
 	"github.com/pquerna/ffjson/ffjson"
@@ -39,10 +39,13 @@ func TestMetricsCounters(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.caseName, func(t *testing.T) {
 			// Create new metrics instance using table inputs
-			m := newMetrics(Config{hostCall: tc.hostCall, Namespace: "default"})
+			m, err := NewMetrics(Config{HostCall: tc.hostCall, Namespace: "default"})
+      if err != nil {
+        t.Errorf("unexpected error creating metric instance - %s", err)
+      }
 
 			// Create new counter using table inputs
-			counter, err := m.newCounter(tc.name)
+			counter, err := m.NewCounter(tc.name)
 			if err != nil && tc.nameErr {
 				return
 			}
@@ -123,10 +126,13 @@ func TestMetricsGauges(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.caseName, func(t *testing.T) {
 			// Create new metrics instance using table inputs
-			m := newMetrics(Config{hostCall: tc.hostCall, Namespace: "default"})
+			m, err := NewMetrics(Config{HostCall: tc.hostCall, Namespace: "default"})
+      if err != nil {
+        t.Errorf("unexpected error creating metric instance - %s", err)
+      }
 
 			// Create new gauge using table inputs
-			gauge, err := m.newGauge(tc.name)
+			gauge, err := m.NewGauge(tc.name)
 			if err != nil && tc.nameErr {
 				return
 			}
@@ -198,10 +204,13 @@ func TestMetricsHistogram(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.caseName, func(t *testing.T) {
 			// Create new metrics instance using table inputs
-			m := newMetrics(Config{hostCall: tc.hostCall, Namespace: "default"})
+			m, err := NewMetrics(Config{HostCall: tc.hostCall, Namespace: "default"})
+      if err != nil {
+        t.Errorf("unexpected error creating metric instance - %s", err)
+      }
 
 			// Create new histogram using table inputs
-			histogram, err := m.newHistogram(tc.name)
+			histogram, err := m.NewHistogram(tc.name)
 			if err != nil && tc.nameErr {
 				return
 			}
