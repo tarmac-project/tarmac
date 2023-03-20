@@ -2,7 +2,7 @@
 
 ![](tarmac-logo.png)
 
-Tarmac: Building Serverless Applications with WebAssembly, Simplified
+Write, Deploy and Scale Microservices with WebAssembly Functions
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/madflojo/tarmac)](https://pkg.go.dev/github.com/madflojo/tarmac)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://tarmac.gitbook.io/tarmac/)
