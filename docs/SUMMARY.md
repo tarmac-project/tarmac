@@ -12,16 +12,10 @@
 
 ## Capabilities
 * [Callbacks](callback-functions/callbacks.md)
-
-### Observability
 * [Logger](callback-functions/logger.md)
 * [Metrics](callback-functions/metrics.md)
-
-### Storage
 * [Key:Value Datastore](callback-functions/key-value-store.md)
 * [SQL Datastore](callback-functions/sql.md)
-
-### Communications
 * [HTTP Client](callback-functions/http-call.md)
 
 ## Running Tarmac
@@ -38,6 +32,7 @@
 
 ## WebAssembly Developer Resources
 
+* [Go SDK](https://pkg.go.dev/github.com/madflojo/tarmac@v0.4.0/pkg/sdk)
 * [Toolkit](developers/toolkit.md)
 * [GitHub](https://github.com/madflojo/tarmac)
 
