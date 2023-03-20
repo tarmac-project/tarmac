@@ -128,10 +128,10 @@ type HTTPClient struct {
 // HTTPClientResponse is a structure supplied as a response message to a remote HTTP call callback function.
 type HTTPClientResponse struct {
 	// Status is the human readible error message or success message for function execution.
-	Status Status
+	Status Status `json:"status"`
 
 	// Code is the HTTP Status Code returned from the target server.
-	Code int `json:"status"`
+	Code int `json:"code"`
 
 	// Headers are the HTTP headers returned from the HTTP request.
 	Headers map[string]string `json:"headers"`

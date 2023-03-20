@@ -96,16 +96,16 @@ func (l *Logger) Warn(b []byte) ([]byte, error) {
 type NoOpLog struct{}
 
 // Info does nothing
-func (log NoOpLog) Info(args ...interface{}) {}
+func (log NoOpLog) Info(...interface{}) {}
 
 // Warn does nothing
-func (log NoOpLog) Warn(args ...interface{}) {}
+func (log NoOpLog) Warn(...interface{}) {}
 
 // Error does nothing
-func (log NoOpLog) Error(args ...interface{}) {}
+func (log NoOpLog) Error(...interface{}) {}
 
 // Debug does nothing
-func (log NoOpLog) Debug(args ...interface{}) {}
+func (log NoOpLog) Debug(...interface{}) {}
 
 // Trace does nothing
-func (log NoOpLog) Trace(args ...interface{}) {}
+func (log NoOpLog) Trace(...interface{}) {}

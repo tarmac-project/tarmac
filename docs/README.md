@@ -63,7 +63,7 @@ Once compiled, you can run this function as a standalone microservice using the 
 ```text
 $ docker run -p 8080:8080 \
   -e "APP_ENABLE_TLS=false" -e "APP_LISTEN_ADDR=0.0.0.0:8080" \
-  -v ./functions:/functions madflojo/tarmac
+  -v `pwd`/functions:/functions madflojo/tarmac
 ```
 
 With Tarmac now running, we can access our WASM function using any HTTP Client such as `curl`.

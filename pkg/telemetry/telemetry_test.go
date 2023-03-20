@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func NewTelemetry(t *testing.T) {
+func NewTelemetry(_ *testing.T) {
 	m := New()
 	m.Srv.Reset()
 }

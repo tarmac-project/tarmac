@@ -41,7 +41,7 @@ type Config struct{}
 
 // New will create and return a new HTTPClient instance that users can register as a Tarmac Host Callback function.
 // Users can provide any custom HTTP Client configurations using the configuration options supplied.
-func New(cfg Config) (*HTTPClient, error) {
+func New(_ Config) (*HTTPClient, error) {
 	hc := &HTTPClient{}
 	return hc, nil
 }
