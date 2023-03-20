@@ -3,21 +3,27 @@ package main
 
 import (
 	"fmt"
-	wapc "github.com/wapc/wapc-guest-tinygo"
+	"github.com/madflojo/tarmac/pkg/sdk"
 )
 
+var tarmac *sdk.Tarmac
+
 func main() {
-	// Tarmac uses waPC to facilitate WASM module execution. Modules must register their custom handlers
-	wapc.RegisterFunctions(wapc.Functions{
-		"handler": Handler,
-	})
+	var err error
+
+	// Initialize the Tarmac SDK
+	tarmac, err = sdk.New(sdk.Config{Namespace: "test-service", Handler: Handler})
+	if err != nil {
+		return
+	}
 }
 
 func Handler(payload []byte) ([]byte, error) {
 	// SQL Query
-	_, err := wapc.HostCall("tarmac", "sql", "query", []byte(`{"query":"Q1JFQVRFIFRBQkxFIElGIE5PVCBFWElTVFMgd2FzbWd1ZXN0ICggaWQgaW50IE5PVCBOVUxMLCBuYW1lIHZhcmNoYXIoMjU1KSwgUFJJTUFSWSBLRVkgKGlkKSApOw=="}`))
+	_, err := tarmac.SQL.Query(`CREATE TABLE IF NOT EXISTS wasmguest ( id int NOT NULL, name varchar(255), PRIMARY KEY (id) );`)
 	if err != nil {
-		return []byte(""), fmt.Errorf(`Failed to call host callback - %s`, err)
+		tarmac.Logger.Error(fmt.Sprintf("Unable to execute SQL query - %s", err))
+		return []byte(""), fmt.Errorf(`Failed to SQL callback - %s`, err)
 	}
 
 	// Return a happy message
