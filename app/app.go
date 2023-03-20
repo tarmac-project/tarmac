@@ -271,15 +271,24 @@ func Run(c *viper.Viper) error {
 	// Create WASM Callback Router
 	router := callbacks.New(callbacks.Config{
 		PreFunc: func(namespace, op string, data []byte) ([]byte, error) {
+			// Trace logging of callback
 			log.WithFields(logrus.Fields{
 				"namespace": namespace,
 				"function":  op,
-			}).Debugf("CallbackRouter called with payload %s", data)
+			}).Tracef("CallbackRouter called with payload %s", data)
 			return []byte(""), nil
 		},
 		PostFunc: func(r callbacks.CallbackResult) {
 			// Measure Callback Execution time and counts
 			stats.Callbacks.WithLabelValues(fmt.Sprintf("%s:%s", r.Namespace, r.Operation)).Observe(r.EndTime.Sub(r.StartTime).Seconds())
+
+			// Trace logging of callback results
+			log.WithFields(logrus.Fields{
+				"namespace": r.Namespace,
+				"function":  r.Operation,
+				"input":     r.Input,
+				"error":     r.Err,
+			}).Tracef("Callback returned result after %f seconds with output - %s", r.EndTime.Sub(r.StartTime).Seconds(), r.Output)
 
 			// Log Callback failures as warnings
 			if r.Err != nil {

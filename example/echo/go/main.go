@@ -4,25 +4,27 @@ package main
 
 import (
 	"fmt"
-  "github.com/madflojo/tarmac/pkg/sdk"
+	"github.com/madflojo/tarmac/pkg/sdk"
 )
 
 // tarmac provides an interface for executing host capabilities such as Logging, KVStore, etc.
 var tarmac *sdk.Tarmac
 
 func main() {
-  // Initialize SDK
-  _, err := sdk.New(sdk.Config{Handler: Handler})
-  if err != nil {
-    return
-  }
+	var err error
+
+	// Initialize SDK
+	tarmac, err = sdk.New(sdk.Config{Handler: Handler})
+	if err != nil {
+		return
+	}
 }
 
 // Handler is the custom Tarmac Handler function that will receive a payload and
 // must return a payload along with a nil error.
 func Handler(payload []byte) ([]byte, error) {
-  // Log It
-  tarmac.Logger.Trace(fmt.Sprintf("Echoing Payload: %s", payload))
+	// Log It
+	tarmac.Logger.Trace(fmt.Sprintf("Echoing Payload: %s", payload))
 
 	// Return the payload
 	return payload, nil

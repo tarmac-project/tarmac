@@ -4,33 +4,49 @@ package main
 
 import (
 	"fmt"
-	wapc "github.com/wapc/wapc-guest-tinygo"
+	"github.com/madflojo/tarmac/pkg/sdk"
 )
 
+var tarmac *sdk.Tarmac
+
 func main() {
-	// Tarmac uses waPC to facilitate WASM module execution. Modules must register their custom handlers
-	wapc.RegisterFunctions(wapc.Functions{
-		// Register request handler
-		"handler": Handler,
-	})
+	var err error
+
+	// Initialize the Tarmac SDK
+	tarmac, err = sdk.New(sdk.Config{Handler: Handler})
+	if err != nil {
+		return
+	}
 }
 
 // Handler is the custom Tarmac Handler function that will receive a payload and
 // must return a payload along with a nil error.
 func Handler(payload []byte) ([]byte, error) {
-	// Perform a host callback to log the incoming request
-	_, err := wapc.HostCall("tarmac", "logger", "trace", []byte(fmt.Sprintf("Reversing Payload: %s", payload)))
-	if err != nil {
-		return []byte(""), fmt.Errorf("Unable to call callback - %s", err)
-	}
+	var rsp []byte
+	var err error
 
-	// Flip it and reverse
-	if len(payload) > 0 {
-		for i, n := 0, len(payload)-1; i < n; i, n = i+1, n-1 {
-			payload[i], payload[n] = payload[n], payload[i]
+	// Log it
+	tarmac.Logger.Trace(fmt.Sprintf("Reversing Payload: %s", payload))
+
+	// Check Cache
+	rsp, err = tarmac.KV.Get(string(payload))
+	if err != nil || len(rsp) < 1 {
+		// Flip it and reverse
+		rsp = payload
+		if len(rsp) > 0 {
+			for i, n := 0, len(rsp)-1; i < n; i, n = i+1, n-1 {
+				rsp[i], rsp[n] = rsp[n], rsp[i]
+			}
+		}
+
+		// Store in Cache
+		err = tarmac.KV.Set(string(payload), rsp)
+		if err != nil {
+			tarmac.Logger.Error(fmt.Sprintf("Unable to cache reversed payload: %s", err))
+			return rsp, nil
 		}
 	}
 
-	// Return the payload via a ServerResponse JSON
-	return payload, nil
+	// Return the rsp
+	return rsp, nil
 }

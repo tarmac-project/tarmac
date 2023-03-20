@@ -26,9 +26,15 @@ func Handler(payload []byte) ([]byte, error) {
 	}
 
 	// Fetch data from KV datastore
-	_, err = tarmac.KV.Get("test-data")
+	data, err := tarmac.KV.Get("test-data")
 	if err != nil {
 		return []byte(""), fmt.Errorf(`Failed to fetch data via KVStore - %s`, err)
+	}
+
+	tarmac.Logger.Info(fmt.Sprintf("Fetched %s from datastore", data))
+
+	if len(data) != len([]byte("i am a little teapot")) {
+		return []byte(""), fmt.Errorf("not able to fetch data from KVStore")
 	}
 
 	// Return a happy message
