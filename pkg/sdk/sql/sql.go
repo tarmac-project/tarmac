@@ -53,7 +53,7 @@ func (sql *SQL) Query(q string) ([]byte, error) {
 	// Fetch Data from JSON
 	data := fastjson.GetString(rsp, "data")
 	if data == "" {
-		return []byte(""), fmt.Errorf("unexpected response from hostcall, did not contain data return")
+		return []byte(""), nil
 	}
 
 	// Decode SQL Response

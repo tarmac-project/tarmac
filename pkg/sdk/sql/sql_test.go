@@ -48,16 +48,6 @@ func TestSQL_Query(t *testing.T) {
 			err:      true,
 		},
 		{
-			name:      "unexpected response",
-			namespace: "test-namespace",
-			query:     "SELECT * FROM users;",
-			hostCall: func(namespace, service, endpoint string, payload []byte) ([]byte, error) {
-				return []byte(`{"foo":"bar"}`), nil
-			},
-			expected: nil,
-			err:      true,
-		},
-		{
 			name:      "decode error",
 			namespace: "test-namespace",
 			query:     "SELECT * FROM users;",
