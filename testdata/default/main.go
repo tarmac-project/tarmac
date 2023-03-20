@@ -2,14 +2,15 @@
 package main
 
 import (
-	wapc "github.com/wapc/wapc-guest-tinygo"
+	"github.com/madflojo/tarmac/pkg/sdk"
 )
 
 func main() {
-	// Tarmac uses waPC to facilitate WASM module execution. Modules must register their custom handlers
-	wapc.RegisterFunctions(wapc.Functions{
-		"handler": Handler,
-	})
+	// Initialize the Tarmac SDK
+	_, err := sdk.New(sdk.Config{Namespace: "test-service", Handler: Handler})
+	if err != nil {
+		return
+	}
 }
 
 func Handler(payload []byte) ([]byte, error) {

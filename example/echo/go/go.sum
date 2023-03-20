@@ -1,2 +1,7 @@
+github.com/madflojo/tarmac/pkg/sdk v0.0.0-20230320024901-c3f68771b2e5 h1:nwpm0ANWxQfX0/sjf2XxfcNHohXY84srAMXfAeQn6v0=
+github.com/madflojo/tarmac/pkg/sdk v0.0.0-20230320024901-c3f68771b2e5/go.mod h1:mUxc4sw0vpBVcJFyCXpSqeWr6MwpvnZS33bgqOCI1N8=
+github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7 h1:xoIK0ctDddBMnc74udxJYBqlo9Ylnsp1waqjLsnef20=
+github.com/valyala/fastjson v1.6.4 h1:uAUNq9Z6ymTgGhcm0UynUAB6tlbakBrz6CQFax3BXVQ=
+github.com/valyala/fastjson v1.6.4/go.mod h1:CLCAqky6SMuOcxStkYQvblddUtoRxhYMGLrsQns1aXY=
 github.com/wapc/wapc-guest-tinygo v0.3.3 h1:jLebiwjVSHLGnS+BRabQ6+XOV7oihVWAc05Hf1SbeR0=
 github.com/wapc/wapc-guest-tinygo v0.3.3/go.mod h1:mzM3CnsdSYktfPkaBdZ8v88ZlfUDEy5Jh5XBOV3fYcw=

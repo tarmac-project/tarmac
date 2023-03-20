@@ -3,22 +3,24 @@ package main
 
 import (
 	"fmt"
-	wapc "github.com/wapc/wapc-guest-tinygo"
+	"github.com/madflojo/tarmac/pkg/sdk"
 )
 
+var tarmac *sdk.Tarmac
+
 func main() {
-	// Tarmac uses waPC to facilitate WASM module execution. Modules must register their custom handlers
-	wapc.RegisterFunctions(wapc.Functions{
-		"handler": Handler,
-	})
+	var err error
+
+	// Initialize the Tarmac SDK
+	tarmac, err = sdk.New(sdk.Config{Namespace: "test-service", Handler: Handler})
+	if err != nil {
+		return
+	}
 }
 
 func Handler(payload []byte) ([]byte, error) {
 	// Log the payload
-	_, err := wapc.HostCall("tarmac", "logger", "info", []byte(`Testdata Function Starting Execution`))
-	if err != nil {
-		return []byte(""), fmt.Errorf("Unable to call host callback - %s", err)
-	}
+	tarmac.Logger.Info(fmt.Sprintf("Testdata function - %s", payload))
 
 	// Return a happy message
 	return payload, nil

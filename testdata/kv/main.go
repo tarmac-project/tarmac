@@ -3,26 +3,38 @@ package main
 
 import (
 	"fmt"
-	wapc "github.com/wapc/wapc-guest-tinygo"
+	"github.com/madflojo/tarmac/pkg/sdk"
 )
 
+var tarmac *sdk.Tarmac
+
 func main() {
-	// Tarmac uses waPC to facilitate WASM module execution. Modules must register their custom handlers
-	wapc.RegisterFunctions(wapc.Functions{
-		"handler": Handler,
-	})
+	var err error
+
+	// Initialize the Tarmac SDK
+	tarmac, err = sdk.New(sdk.Config{Namespace: "test-service", Handler: Handler})
+	if err != nil {
+		return
+	}
 }
 
 func Handler(payload []byte) ([]byte, error) {
-	// KVStore
-	_, err := wapc.HostCall("tarmac", "kvstore", "set", []byte(`{"key":"test-data","data":"aSBhbSBhIGxpdHRsZSB0ZWFwb3Q="}`))
+	// Store data within KV datastore
+	err := tarmac.KV.Set("test-data", []byte("i am a little teapot"))
 	if err != nil {
-		return []byte(""), fmt.Errorf(`Failed to call host callback - %s`, err)
+		return []byte(""), fmt.Errorf(`Failed to store data via KVStore - %s`, err)
 	}
 
-	_, err = wapc.HostCall("tarmac", "kvstore", "get", []byte(`{"key":"test-data"}`))
+	// Fetch data from KV datastore
+	data, err := tarmac.KV.Get("test-data")
 	if err != nil {
-		return []byte(""), fmt.Errorf(`Failed to call host callback - %s`, err)
+		return []byte(""), fmt.Errorf(`Failed to fetch data via KVStore - %s`, err)
+	}
+
+	tarmac.Logger.Info(fmt.Sprintf("Fetched %s from datastore", data))
+
+	if len(data) != len([]byte("i am a little teapot")) {
+		return []byte(""), fmt.Errorf("not able to fetch data from KVStore")
 	}
 
 	// Return a happy message
