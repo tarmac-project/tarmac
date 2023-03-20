@@ -25,8 +25,8 @@ type Config struct {
 	HostCall func(string, string, string, []byte) ([]byte, error)
 }
 
-// NewLogger creates a new Logger with the provided configuration.
-func NewLogger(cfg Config) (*Logger, error) {
+// New creates a new Logger with the provided configuration.
+func New(cfg Config) (*Logger, error) {
 	// Set default namespace
 	if cfg.Namespace == "" {
 		cfg.Namespace = "default"

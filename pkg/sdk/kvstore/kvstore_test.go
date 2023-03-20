@@ -1,4 +1,4 @@
-package sdk
+package kvstore
 
 import (
 	"bytes"
@@ -59,8 +59,12 @@ func TestKVStore(t *testing.T) {
 
 	for _, c := range tc {
 		t.Run(c.name, func(t *testing.T) {
-			kv := newKVStore(Config{Namespace: "default", hostCall: c.hostCall})
-			err := kv.Set(c.key, c.data)
+			kv, err := New(Config{Namespace: "default", HostCall: c.hostCall})
+			if err != nil {
+				t.Errorf("Unexpected error initializing kvstore - %s", err)
+			}
+
+			err = kv.Set(c.key, c.data)
 			if err != nil && !c.err {
 				t.Errorf("Unexpected error executing test case - %s", err)
 				return
@@ -121,7 +125,11 @@ func TestKVStore_Get(t *testing.T) {
 
 	for _, c := range tc {
 		t.Run(c.name, func(t *testing.T) {
-			kv := newKVStore(Config{Namespace: "default", hostCall: c.hostCall})
+			kv, err := New(Config{Namespace: "default", HostCall: c.hostCall})
+			if err != nil {
+				t.Errorf("Unexpected error initializing kvstore - %s", err)
+			}
+
 			data, err := kv.Get(c.key)
 			if err != nil && !c.err {
 				t.Errorf("Unexpected error executing test case - %s", err)
@@ -141,7 +149,11 @@ func TestKVStore_Keys(t *testing.T) {
 	hostCall := func(string, string, string, []byte) ([]byte, error) {
 		return []byte(`{"keys":["key1", "key2"]}`), nil
 	}
-	kv := newKVStore(Config{Namespace: "default", hostCall: hostCall})
+	kv, err := New(Config{Namespace: "default", HostCall: hostCall})
+	if err != nil {
+		t.Errorf("Unexpected error initializing kvstore - %s", err)
+	}
+
 	keys, err := kv.Keys()
 	if err != nil {
 		t.Errorf("Unexpected error executing kv.Keys() - %s", err)
@@ -209,8 +221,12 @@ func TestKVStore_Delete(t *testing.T) {
 
 	for _, c := range tc {
 		t.Run(c.name, func(t *testing.T) {
-			kv := newKVStore(Config{Namespace: "default", hostCall: c.hostCall})
-			err := kv.Delete(c.key)
+			kv, err := New(Config{Namespace: "default", HostCall: c.hostCall})
+			if err != nil {
+				t.Errorf("Unexpected error initializing kvstore - %s", err)
+			}
+
+			err = kv.Delete(c.key)
 			if err != nil && !c.err {
 				t.Errorf("Unexpected error executing test case - %s", err)
 				return

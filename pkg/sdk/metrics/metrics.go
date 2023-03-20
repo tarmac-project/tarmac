@@ -19,8 +19,8 @@ type Config struct {
 	HostCall func(string, string, string, []byte) ([]byte, error)
 }
 
-// NewMetrics creates a metrics interface for creating Counters, Histograms, and Gauges.
-func NewMetrics(cfg Config) (*Metrics, error) {
+// New creates a metrics interface for creating Counters, Histograms, and Gauges.
+func New(cfg Config) (*Metrics, error) {
 	// Set default namespace
 	if cfg.Namespace == "" {
 		cfg.Namespace = "default"

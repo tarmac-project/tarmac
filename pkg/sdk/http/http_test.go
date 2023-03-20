@@ -1,4 +1,4 @@
-package sdk
+package http
 
 import (
 	"fmt"
@@ -273,7 +273,10 @@ func TestHTTPDo(t *testing.T) {
 	for _, c := range tt {
 		t.Run(c.name, func(t *testing.T) {
 			// Create new client
-			client := newHTTPClient(Config{Namespace: "default", hostCall: c.hostCall})
+			client, err := New(Config{Namespace: "default", HostCall: c.hostCall})
+			if err != nil {
+				t.Errorf("unexpected error initiating HTTP client - %s", err)
+			}
 
 			// Execute Do
 			rsp, err := client.Do(c.method, c.headers, c.url, c.insecure, c.payload)
@@ -311,9 +314,12 @@ func TestHTTPDo(t *testing.T) {
 }
 
 func TestHTTPClientGet(t *testing.T) {
-	hc := newHTTPClient(Config{Namespace: "default", hostCall: func(string, string, string, []byte) ([]byte, error) {
+	hc, err := New(Config{Namespace: "default", HostCall: func(string, string, string, []byte) ([]byte, error) {
 		return []byte(`{"code": 200,"headers":{},"body":"dGVzdA==","status":{"code":200,"status":"OK"}}`), nil
 	}})
+	if err != nil {
+		t.Errorf("unexpected error initiating HTTP client - %s", err)
+	}
 
 	// Test successful GET request
 	response, err := hc.Get("http://example.com/get")
@@ -332,9 +338,12 @@ func TestHTTPClientGet(t *testing.T) {
 }
 
 func TestHTTPClientDelete(t *testing.T) {
-	hc := newHTTPClient(Config{Namespace: "default", hostCall: func(string, string, string, []byte) ([]byte, error) {
+	hc, err := New(Config{Namespace: "default", HostCall: func(string, string, string, []byte) ([]byte, error) {
 		return []byte(`{"code": 200,"headers":{},"body":"dGVzdA==","status":{"code":200,"status":"OK"}}`), nil
 	}})
+	if err != nil {
+		t.Errorf("unexpected error initiating HTTP client - %s", err)
+	}
 
 	// Test successful DELETE request
 	response, err := hc.Delete("http://example.com/delete")
@@ -353,9 +362,12 @@ func TestHTTPClientDelete(t *testing.T) {
 }
 
 func TestHTTPClientPost(t *testing.T) {
-	hc := newHTTPClient(Config{Namespace: "default", hostCall: func(string, string, string, []byte) ([]byte, error) {
+	hc, err := New(Config{Namespace: "default", HostCall: func(string, string, string, []byte) ([]byte, error) {
 		return []byte(`{"code": 200,"headers":{},"body":"dGVzdA==","status":{"code":200,"status":"OK"}}`), nil
 	}})
+	if err != nil {
+		t.Errorf("unexpected error initiating HTTP client - %s", err)
+	}
 
 	// Test successful POST request
 	response, err := hc.Post("http://example.com/post", []byte(`{"data": "example"}`))
@@ -374,9 +386,12 @@ func TestHTTPClientPost(t *testing.T) {
 }
 
 func TestHTTPClientPut(t *testing.T) {
-	hc := newHTTPClient(Config{Namespace: "default", hostCall: func(string, string, string, []byte) ([]byte, error) {
+	hc, err := New(Config{Namespace: "default", HostCall: func(string, string, string, []byte) ([]byte, error) {
 		return []byte(`{"code": 200,"headers":{},"body":"dGVzdA==","status":{"code":200,"status":"OK"}}`), nil
 	}})
+	if err != nil {
+		t.Errorf("unexpected error initiating HTTP client - %s", err)
+	}
 
 	// Test successful PUT request
 	response, err := hc.Put("http://example.com", []byte(`{"data": "example"}`))

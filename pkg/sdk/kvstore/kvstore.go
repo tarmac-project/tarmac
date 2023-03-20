@@ -1,4 +1,4 @@
-package sdk
+package kvstore
 
 import (
 	"encoding/base64"
@@ -6,15 +6,39 @@ import (
 	"github.com/valyala/fastjson"
 )
 
+// KV provides a simple interface for Tarmac Functions to store key:value data using supported KV datastores.
 type KV struct {
 	namespace string
 	hostCall  func(string, string, string, []byte) ([]byte, error)
 }
 
-func newKVStore(cfg Config) *KV {
-	return &KV{namespace: cfg.Namespace, hostCall: cfg.hostCall}
+// Config provides users with the ability to specify namespaces, function handlers and other key information required to execute the
+// function.
+type Config struct {
+	// Namespace controls the function namespace to use for host callbacks. The default value is "default" which is the global namespace.
+	// Users can provide an alternative namespace by specifying this field.
+	Namespace string
+
+	// HostCall is used internally for host callbacks. This is mainly here for testing.
+	HostCall func(string, string, string, []byte) ([]byte, error)
 }
 
+// New creates a new KV with the provided configuration.
+func New(cfg Config) (*KV, error) {
+	// Set default namespace
+	if cfg.Namespace == "" {
+		cfg.Namespace = "default"
+	}
+
+	// Verify HostCall is set
+	if cfg.HostCall == nil {
+		return &KV{}, fmt.Errorf("HostCall cannot be nil")
+	}
+
+	return &KV{namespace: cfg.Namespace, hostCall: cfg.HostCall}, nil
+}
+
+// Set will store the supplied data under the provided key.
 func (kv *KV) Set(key string, data []byte) error {
 	if key == "" {
 		return fmt.Errorf("key cannot be empty")
@@ -35,6 +59,7 @@ func (kv *KV) Set(key string, data []byte) error {
 	return nil
 }
 
+// Get will fetch the data stored under the supplied key.
 func (kv *KV) Get(key string) ([]byte, error) {
 	if key == "" {
 		return []byte(""), fmt.Errorf("key cannot be empty")
@@ -53,6 +78,7 @@ func (kv *KV) Get(key string) ([]byte, error) {
 	return d, nil
 }
 
+// Delete will delete the data and key defined at key.
 func (kv *KV) Delete(key string) error {
 	if key == "" {
 		return fmt.Errorf("key cannot be empty")
@@ -66,6 +92,7 @@ func (kv *KV) Delete(key string) error {
 	return nil
 }
 
+// Keys will return a list of keys available within the KV datastore.
 func (kv *KV) Keys() ([]string, error) {
 	var keys []string
 

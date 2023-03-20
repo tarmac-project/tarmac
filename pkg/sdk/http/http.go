@@ -1,4 +1,4 @@
-package sdk
+package http
 
 import (
 	"encoding/base64"
@@ -7,15 +7,36 @@ import (
 	"strings"
 )
 
-// HTTPClient provides an interface to make outbound HTTP calls.
-type HTTPClient struct {
+// Client provides an interface to make outbound HTTP calls.
+type Client struct {
 	namespace string
 	hostCall  func(string, string, string, []byte) ([]byte, error)
 }
 
-// newHTTPClient returns an HTTPClient for making outbound HTTP calls.
-func newHTTPClient(cfg Config) *HTTPClient {
-	return &HTTPClient{namespace: cfg.Namespace, hostCall: cfg.hostCall}
+// Config provides users with the ability to specify namespaces, function handlers and other key information required to execute the
+// function.
+type Config struct {
+	// Namespace controls the function namespace to use for host callbacks. The default value is "default" which is the global namespace.
+	// Users can provide an alternative namespace by specifying this field.
+	Namespace string
+
+	// HostCall is used internally for host callbacks. This is mainly here for testing.
+	HostCall func(string, string, string, []byte) ([]byte, error)
+}
+
+// New creates a new Client with the provided configuration.
+func New(cfg Config) (*Client, error) {
+	// Set default namespace
+	if cfg.Namespace == "" {
+		cfg.Namespace = "default"
+	}
+
+	// Verify HostCall is set
+	if cfg.HostCall == nil {
+		return &Client{}, fmt.Errorf("HostCall cannot be nil")
+	}
+
+	return &Client{namespace: cfg.Namespace, hostCall: cfg.HostCall}, nil
 }
 
 // HTTPResponse is returned from successful client calls.
@@ -31,28 +52,28 @@ type HTTPResponse struct {
 }
 
 // Get will perform a GET request using the URL specified.
-func (h *HTTPClient) Get(url string) (HTTPResponse, error) {
+func (h *Client) Get(url string) (HTTPResponse, error) {
 	return h.Do("GET", nil, url, false, nil)
 }
 
 // Delete will perform a DELETE request using the URL specified.
-func (h *HTTPClient) Delete(url string) (HTTPResponse, error) {
+func (h *Client) Delete(url string) (HTTPResponse, error) {
 	return h.Do("DELETE", nil, url, false, nil)
 }
 
 // Post will perform a POST request using the URL and Payload specified.
-func (h *HTTPClient) Post(url string, payload []byte) (HTTPResponse, error) {
+func (h *Client) Post(url string, payload []byte) (HTTPResponse, error) {
 	return h.Do("POST", nil, url, false, payload)
 }
 
 // Put will perform a PUT request using the URL and Payload specified.
-func (h *HTTPClient) Put(url string, payload []byte) (HTTPResponse, error) {
+func (h *Client) Put(url string, payload []byte) (HTTPResponse, error) {
 	return h.Do("PUT", nil, url, false, payload)
 }
 
 // Do will perform HTTP requests using the specified parameters.
 // Valid Methods are GET, POST, PUT, and DELETE.
-func (h *HTTPClient) Do(method string, headers map[string]string, url string, insecure bool, payload []byte) (HTTPResponse, error) {
+func (h *Client) Do(method string, headers map[string]string, url string, insecure bool, payload []byte) (HTTPResponse, error) {
 	// Validate user provided method
 	if method != "GET" && method != "POST" && method != "DELETE" && method != "PUT" {
 		return HTTPResponse{}, fmt.Errorf("invalid method specified")
@@ -81,13 +102,13 @@ func (h *HTTPClient) Do(method string, headers map[string]string, url string, in
 	// Perform Host Callback
 	b, err := h.hostCall(h.namespace, "httpclient", "call", []byte(r))
 	if err != nil {
-		return HTTPResponse{}, fmt.Errorf("unable to call HTTPClient - %s", err)
+		return HTTPResponse{}, fmt.Errorf("unable to call Client - %s", err)
 	}
 
 	// Parse response JSON
 	v, err := fastjson.ParseBytes(b)
 	if err != nil {
-		return HTTPResponse{}, fmt.Errorf("unable to parse HTTPClient resposne - %s", err)
+		return HTTPResponse{}, fmt.Errorf("unable to parse Client resposne - %s", err)
 	}
 
 	rsp := HTTPResponse{}
@@ -107,7 +128,7 @@ func (h *HTTPClient) Do(method string, headers map[string]string, url string, in
 	// Extract and Decode Payload
 	rsp.Body, err = base64.StdEncoding.DecodeString(string(v.GetStringBytes("body")))
 	if err != nil {
-		return rsp, fmt.Errorf("unable to decode HTTPClient response - %s", err)
+		return rsp, fmt.Errorf("unable to decode Client response - %s", err)
 	}
 
 	return rsp, nil

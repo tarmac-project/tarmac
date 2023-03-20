@@ -39,10 +39,10 @@ func TestMetricsCounters(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.caseName, func(t *testing.T) {
 			// Create new metrics instance using table inputs
-			m, err := NewMetrics(Config{HostCall: tc.hostCall, Namespace: "default"})
-      if err != nil {
-        t.Errorf("unexpected error creating metric instance - %s", err)
-      }
+			m, err := New(Config{HostCall: tc.hostCall, Namespace: "default"})
+			if err != nil {
+				t.Errorf("unexpected error creating metric instance - %s", err)
+			}
 
 			// Create new counter using table inputs
 			counter, err := m.NewCounter(tc.name)
@@ -126,10 +126,10 @@ func TestMetricsGauges(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.caseName, func(t *testing.T) {
 			// Create new metrics instance using table inputs
-			m, err := NewMetrics(Config{HostCall: tc.hostCall, Namespace: "default"})
-      if err != nil {
-        t.Errorf("unexpected error creating metric instance - %s", err)
-      }
+			m, err := New(Config{HostCall: tc.hostCall, Namespace: "default"})
+			if err != nil {
+				t.Errorf("unexpected error creating metric instance - %s", err)
+			}
 
 			// Create new gauge using table inputs
 			gauge, err := m.NewGauge(tc.name)
@@ -204,10 +204,10 @@ func TestMetricsHistogram(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.caseName, func(t *testing.T) {
 			// Create new metrics instance using table inputs
-			m, err := NewMetrics(Config{HostCall: tc.hostCall, Namespace: "default"})
-      if err != nil {
-        t.Errorf("unexpected error creating metric instance - %s", err)
-      }
+			m, err := New(Config{HostCall: tc.hostCall, Namespace: "default"})
+			if err != nil {
+				t.Errorf("unexpected error creating metric instance - %s", err)
+			}
 
 			// Create new histogram using table inputs
 			histogram, err := m.NewHistogram(tc.name)

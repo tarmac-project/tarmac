@@ -1,4 +1,4 @@
-package sdk
+package sql
 
 import (
 	"encoding/base64"
@@ -12,9 +12,30 @@ type SQL struct {
 	hostCall  func(string, string, string, []byte) ([]byte, error)
 }
 
-// newSQL returns a new instance of SQL initalized with Config.
-func newSQL(cfg Config) *SQL {
-	return &SQL{namespace: cfg.Namespace, hostCall: cfg.hostCall}
+// Config provides users with the ability to specify namespaces, function handlers and other key information required to execute the
+// function.
+type Config struct {
+	// Namespace controls the function namespace to use for host callbacks. The default value is "default" which is the global namespace.
+	// Users can provide an alternative namespace by specifying this field.
+	Namespace string
+
+	// HostCall is used internally for host callbacks. This is mainly here for testing.
+	HostCall func(string, string, string, []byte) ([]byte, error)
+}
+
+// New returns a new instance of SQL initalized with Config.
+func New(cfg Config) (*SQL, error) {
+	// Set default namespace
+	if cfg.Namespace == "" {
+		cfg.Namespace = "default"
+	}
+
+	// Verify HostCall is set
+	if cfg.HostCall == nil {
+		return &SQL{}, fmt.Errorf("HostCall cannot be nil")
+	}
+
+	return &SQL{namespace: cfg.Namespace, hostCall: cfg.HostCall}, nil
 }
 
 // Query will execute the specified SQL query and return a byte array
