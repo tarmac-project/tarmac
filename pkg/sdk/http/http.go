@@ -39,8 +39,8 @@ func New(cfg Config) (*Client, error) {
 	return &Client{namespace: cfg.Namespace, hostCall: cfg.HostCall}, nil
 }
 
-// HTTPResponse is returned from successful client calls.
-type HTTPResponse struct {
+// Response is returned from successful client calls.
+type Response struct {
 	// StatusCode is the HTTP status code returned by the Client.
 	StatusCode int
 
@@ -52,36 +52,36 @@ type HTTPResponse struct {
 }
 
 // Get will perform a GET request using the URL specified.
-func (h *Client) Get(url string) (HTTPResponse, error) {
+func (h *Client) Get(url string) (Response, error) {
 	return h.Do("GET", nil, url, false, nil)
 }
 
 // Delete will perform a DELETE request using the URL specified.
-func (h *Client) Delete(url string) (HTTPResponse, error) {
+func (h *Client) Delete(url string) (Response, error) {
 	return h.Do("DELETE", nil, url, false, nil)
 }
 
 // Post will perform a POST request using the URL and Payload specified.
-func (h *Client) Post(url string, payload []byte) (HTTPResponse, error) {
+func (h *Client) Post(url string, payload []byte) (Response, error) {
 	return h.Do("POST", nil, url, false, payload)
 }
 
 // Put will perform a PUT request using the URL and Payload specified.
-func (h *Client) Put(url string, payload []byte) (HTTPResponse, error) {
+func (h *Client) Put(url string, payload []byte) (Response, error) {
 	return h.Do("PUT", nil, url, false, payload)
 }
 
 // Do will perform HTTP requests using the specified parameters.
 // Valid Methods are GET, POST, PUT, and DELETE.
-func (h *Client) Do(method string, headers map[string]string, url string, insecure bool, payload []byte) (HTTPResponse, error) {
+func (h *Client) Do(method string, headers map[string]string, url string, insecure bool, payload []byte) (Response, error) {
 	// Validate user provided method
 	if method != "GET" && method != "POST" && method != "DELETE" && method != "PUT" {
-		return HTTPResponse{}, fmt.Errorf("invalid method specified")
+		return Response{}, fmt.Errorf("invalid method specified")
 	}
 
 	// Validate URL is not empty
 	if url == "" {
-		return HTTPResponse{}, fmt.Errorf("url cannot be empty")
+		return Response{}, fmt.Errorf("url cannot be empty")
 	}
 
 	// Build headers string
@@ -102,16 +102,16 @@ func (h *Client) Do(method string, headers map[string]string, url string, insecu
 	// Perform Host Callback
 	b, err := h.hostCall(h.namespace, "httpclient", "call", []byte(r))
 	if err != nil {
-		return HTTPResponse{}, fmt.Errorf("unable to call Client - %s", err)
+		return Response{}, fmt.Errorf("unable to call Client - %s", err)
 	}
 
 	// Parse response JSON
 	v, err := fastjson.ParseBytes(b)
 	if err != nil {
-		return HTTPResponse{}, fmt.Errorf("unable to parse Client resposne - %s", err)
+		return Response{}, fmt.Errorf("unable to parse Client resposne - %s", err)
 	}
 
-	rsp := HTTPResponse{}
+	rsp := Response{}
 
 	// Extract Status Code
 	rsp.StatusCode = v.GetInt("code")

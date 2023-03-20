@@ -84,10 +84,11 @@ func New(cfg Config) (*Tarmac, error) {
 	if cfg.Handler == nil {
 		return t, fmt.Errorf("function handler cannot be nil")
 	}
+	t.handler = cfg.Handler
 
 	// Register provided handler
 	wapc.RegisterFunctions(wapc.Functions{
-		"handler": cfg.Handler,
+		"handler": t.handler,
 	})
 
 	// Set hostCall function for internal callbacks

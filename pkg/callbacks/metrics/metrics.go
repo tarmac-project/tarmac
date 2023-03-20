@@ -58,7 +58,7 @@ type Config struct{}
 
 // New will create a new instance of metrics enabling users to
 // collect custom metrics.
-func New(cfg Config) (*Metrics, error) {
+func New(_ Config) (*Metrics, error) {
 	m := &Metrics{}
 	m.all = make(map[string]string)
 	m.counters = make(map[string]prometheus.Counter)

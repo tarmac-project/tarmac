@@ -23,7 +23,7 @@ type Config struct {
 	HostCall func(string, string, string, []byte) ([]byte, error)
 }
 
-// New returns a new instance of SQL initalized with Config.
+// New returns a new instance of SQL initialized with Config.
 func New(cfg Config) (*SQL, error) {
 	// Set default namespace
 	if cfg.Namespace == "" {

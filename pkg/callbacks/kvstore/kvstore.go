@@ -184,7 +184,7 @@ func (k *KVStore) Delete(b []byte) ([]byte, error) {
 
 // Keys will return a list of all keys stored within the key:value datastore. Logging and error handling are
 // all handled via this callback function. Note, this function will return a KVStoreKeysResponse JSON.
-func (k *KVStore) Keys(b []byte) ([]byte, error) {
+func (k *KVStore) Keys([]byte) ([]byte, error) {
 	// Start Response Message assuming everything is good
 	r := tarmac.KVStoreKeysResponse{}
 	r.Status.Code = 200

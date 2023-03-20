@@ -28,13 +28,13 @@ type server struct {
 
 // Health is used to handle HTTP Health requests to this service. Use this for liveness
 // probes or any other checks which only validate if the services is running.
-func (s *server) Health(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *server) Health(w http.ResponseWriter, _ *http.Request, ps httprouter.Params) {
 	w.WriteHeader(http.StatusOK)
 }
 
 // Ready is used to handle HTTP Ready requests to this service. Use this for readiness
 // probes or any checks that validate the service is ready to accept traffic.
-func (s *server) Ready(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *server) Ready(w http.ResponseWriter, _ *http.Request, ps httprouter.Params) {
 	// Check other stuff here like KV connectivity, health of dependent services, etc.
 	if cfg.GetBool("enable_kvstore") {
 		err := kv.HealthCheck()
@@ -94,7 +94,7 @@ func (s *server) handlerWrapper(h http.Handler) httprouter.Handle {
 
 // WASMHandler is the primary HTTP handler for WASM Module traffic. This handler will load the
 // specified module and create an execution environment for that module.
-func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *server) WASMHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Find Function
 	function, err := s.funcCfg.RouteLookup(fmt.Sprintf("http:%s:%s", r.Method, r.URL.Path))
 	if err == config.ErrRouteNotFound {

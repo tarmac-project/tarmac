@@ -121,7 +121,7 @@ func (r *Router) Lookup(key string) (*Callback, error) {
 // Callback is the public callback method, users can register this method as part of a waPC-go module, and when called,
 // it will determine if the received host call has a registered callback or not. If yes, this method will execute the
 // registered Callback; if not, it will return an error indicating the callback method not found.
-func (r *Router) Callback(ctx context.Context, binding, namespace, op string, data []byte) ([]byte, error) {
+func (r *Router) Callback(ctx context.Context, _, namespace, op string, data []byte) ([]byte, error) {
 	if namespace == "" || op == "" {
 		return []byte(""), fmt.Errorf("namespace and op cannot be nil")
 	}
