@@ -28,13 +28,13 @@ type server struct {
 
 // Health is used to handle HTTP Health requests to this service. Use this for liveness
 // probes or any other checks which only validate if the services is running.
-func (s *server) Health(w http.ResponseWriter, _ *http.Request, ps httprouter.Params) {
+func (s *server) Health(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 	w.WriteHeader(http.StatusOK)
 }
 
 // Ready is used to handle HTTP Ready requests to this service. Use this for readiness
 // probes or any checks that validate the service is ready to accept traffic.
-func (s *server) Ready(w http.ResponseWriter, _ *http.Request, ps httprouter.Params) {
+func (s *server) Ready(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 	// Check other stuff here like KV connectivity, health of dependent services, etc.
 	if cfg.GetBool("enable_kvstore") {
 		err := kv.HealthCheck()
