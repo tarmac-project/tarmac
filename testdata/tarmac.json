@@ -14,6 +14,9 @@
         },
         "sql": {
           "filepath": "/testdata/sql/tarmac.wasm"
+        },
+        "func": {
+          "filepath": "/testdata/function/tarmac.wasm"
         }
       },
       "routes": [
@@ -42,9 +45,19 @@
           "function": "sql"
         },
         {
+          "type": "http",
+          "path": "/func",
+          "methods": ["GET"],
+          "function": "func"
+        },
+        {
           "type": "scheduled_task",
           "frequency": 15,
           "function": "default"
+        },
+        {
+          "type": "function",
+          "function": "logger"
         }
       ]
     }

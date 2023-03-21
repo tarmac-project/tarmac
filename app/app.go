@@ -446,6 +446,12 @@ func Run(c *viper.Viper) error {
 					defer scheduler.Del(id)
 				}
 
+				if r.Type == "function" {
+					log.Infof("Registering Function to Function callback for %s", r.Function)
+					router.RegisterCallback("function", r.Function, func(b []byte) ([]byte, error) {
+						return runWASM(r.Function, "handler", b)
+					})
+				}
 			}
 		}
 

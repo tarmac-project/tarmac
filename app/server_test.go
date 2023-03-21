@@ -152,6 +152,17 @@ func TestFullService(t *testing.T) {
 			t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
 		}
 	})
+
+	t.Run("Do a Get on /func", func(t *testing.T) {
+		r, err := http.Get("http://localhost:9001/func")
+		if err != nil {
+			t.Fatalf("Unexpected error when making HTTP request - %s", err)
+		}
+		defer r.Body.Close()
+		if r.StatusCode != 200 {
+			t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
+		}
+	})
 }
 
 func TestWASMRunner(t *testing.T) {
