@@ -25,12 +25,12 @@ package sdk
 
 import (
 	"fmt"
+	"github.com/madflojo/tarmac/pkg/sdk/function"
 	"github.com/madflojo/tarmac/pkg/sdk/http"
 	"github.com/madflojo/tarmac/pkg/sdk/kvstore"
 	"github.com/madflojo/tarmac/pkg/sdk/logger"
 	"github.com/madflojo/tarmac/pkg/sdk/metrics"
 	"github.com/madflojo/tarmac/pkg/sdk/sql"
-	"github.com/madflojo/tarmac/pkg/sdk/function"
 	wapc "github.com/wapc/wapc-guest-tinygo"
 )
 

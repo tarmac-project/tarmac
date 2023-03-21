@@ -116,3 +116,20 @@ Here is an example of a route object that defines a scheduled task that executes
 ```
 
 You can define multiple scheduled tasks in the routes array.
+
+##### Functions
+
+Tarmac supports the ability for Functions to call other Functions using the Function to Function route. 
+
+You can define a function route by adding a route object with the following properties to the route array.
+
+- `function` (required): The function to call when executed.
+
+Here is an example of a route object that defines the "function1" function.
+
+```json
+{
+  "type": "function",
+  "function": "function1"
+}
+```
