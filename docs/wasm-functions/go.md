@@ -154,7 +154,7 @@ We are now ready to run our WASM function via Tarmac. To make this process easie
 ```text
 $ docker run -p 8080:8080 \
   -e "APP_ENABLE_TLS=false" -e "APP_LISTEN_ADDR=0.0.0.0:8080" \
-  -v ./functions:/functions madflojo/tarmac
+  -v `pwd`./functions:/functions madflojo/tarmac
 ```
 
 In the above command, we are passing two environment variables to the container using the `-e` flag. These environment variables will tell Tarmac to use HTTP rather than HTTPS, which is the default. For additional configuration options, check out the [Configuration](../running-tarmac/configuration.md) documentation.
