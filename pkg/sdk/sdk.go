@@ -30,6 +30,7 @@ import (
 	"github.com/madflojo/tarmac/pkg/sdk/logger"
 	"github.com/madflojo/tarmac/pkg/sdk/metrics"
 	"github.com/madflojo/tarmac/pkg/sdk/sql"
+	"github.com/madflojo/tarmac/pkg/sdk/function"
 	wapc "github.com/wapc/wapc-guest-tinygo"
 )
 
@@ -51,6 +52,9 @@ type Tarmac struct {
 
 	// SQL provides an interface to the underlying SQL datastores within Tarmac.
 	SQL *sql.SQL
+
+	// Function provides an interface to call other WASM functions registered within Tarmac.
+	Function *function.Function
 
 	// Logger provides an interface to the Tarmac structured logger, enabling users to create log messages from functions.
 	Logger *logger.Logger
@@ -124,6 +128,12 @@ func New(cfg Config) (*Tarmac, error) {
 	t.SQL, err = sql.New(sql.Config{Namespace: cfg.Namespace, HostCall: cfg.hostCall})
 	if err != nil {
 		return t, fmt.Errorf("error while initializing SQL - %s", err)
+	}
+
+	// Initialize a Function instance
+	t.Function, err = function.New(sql.Config{Namespace: cfg.Namespace, HostCall: cfg.hostCall})
+	if err != nil {
+		return t, fmt.Errorf("error while initializing Function - %s", err)
 	}
 
 	return t, nil
