@@ -8,6 +8,7 @@ build-testdata:
 	$(MAKE) -C testdata/kv build
 	$(MAKE) -C testdata/sql build
 	$(MAKE) -C testdata/logger build
+	$(MAKE) -C testdata/function build
 
 tests: build
 	@echo "Launching Tests in Docker Compose"
