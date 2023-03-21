@@ -131,7 +131,7 @@ func New(cfg Config) (*Tarmac, error) {
 	}
 
 	// Initialize a Function instance
-	t.Function, err = function.New(sql.Config{Namespace: cfg.Namespace, HostCall: cfg.hostCall})
+	t.Function, err = function.New(function.Config{Namespace: cfg.Namespace, HostCall: cfg.hostCall})
 	if err != nil {
 		return t, fmt.Errorf("error while initializing Function - %s", err)
 	}
