@@ -12,6 +12,7 @@
 
 ## Capabilities
 * [Callbacks](callback-functions/callbacks.md)
+* [Functions](callback-functions/functions.md)
 * [Logger](callback-functions/logger.md)
 * [Metrics](callback-functions/metrics.md)
 * [Key:Value Datastore](callback-functions/key-value-store.md)

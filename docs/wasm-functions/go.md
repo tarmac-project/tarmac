@@ -4,131 +4,44 @@ description: Creating a WASM Function in Go.
 
 # Go
 
-At the time of this writing, Web Assembly support in Go is officially listed as Experimental. However, the basics of Web Assembly do work in Go. In fact, Tarmac is written in Go and using a Go-based WASM Host Runtime.
+Tarmac leverages the Web Assembly System Interface (WASI), which is currently only supported by [TinyGo](https://tinygo.org/). While TinyGo has many features, there are some limitations to its support.
 
-To create a WASM Function for Tarmac, users will need to use [TinyGo](https://tinygo.org/) to compile the WASM Function into a `.wasm` file. There are some limitations on which version of TinyGo to use, and it is advised to reference the [Supported Languages](supported-languages.md) page before continuing.
+However, thanks to the Go SDK, writing Tarmac functions is quick and easy. This guide will walk users through creating a simple function using Go.
 
-### Basic WASM Function structure
+## Basic WASM function
 
-We will need to begin with a new project folder, creating a `main.go` file within it. This file will hold all of our application logic.
+We will first need to begin with a new project folder creating a `main.go` file within it. This file will hold all of our application logic.
+
+Within our `main.go` file; we will need first to import the Tarmac Go SDK.
 
 ```go
 package main
-```
 
-Tarmac internally uses a Web Assembly Procedure Calls \(waPC\) runtime, which means all WASM Functions running in Tarmac must import and use a waPC compliant library.
-
-```go
 import (
-	"fmt"
-	wapc "github.com/wapc/wapc-guest-tinygo"
+	"github.com/madflojo/tarmac/pkg/sdk"
 )
 ```
 
-Once the waPC package is imported, we will create a `main()` function; this function will be our primary entry point for Tarmac execution. Within this function, we will register our handler function for Tarmac to execute using the `wapc.RegisterFunctions` function.
+Once we've imported the SDK, we will need to both create our Function and register it with the SDK. We will start by initializing the SDK and registering our Function, `Handler()`.
 
 ```go
 func main() {
-	wapc.RegisterFunctions(wapc.Functions{
-		"handler": Handler,
-	})
-}
-```
-
-In the example above, we have registered the `Handler` function. When Tarmac receives an HTTP POST request for this WASM Function, it will execute the handler function as defined.
-
-With our handler function registered, we must create a basic function.
-
-```go
-func Handler(payload []byte) ([]byte, error) {
-	return []byte(`Success`), nil
-}
-
-```
-
-As we can see from the example above, the handler has a byte slice input and return value. The HTTP payload is sent as the input untouched.
-
-### Adding Logic
-
-Now that we have the basic structure of our WASM function created, we can start adding logic to the function and process our request.
-
-In order to avoid conflicts with the Server Request JSON, the original HTTP payload is base64 encoded. To access the original contents, we must decode them.
-
-#### Host Callbacks
-
-One of the unique benefits of Tarmac is the ability for WASM functions to perform host callbacks to the Tarmac service itself. These Host Callbacks give users the ability to execute common framework code provided to the WASM function by Tarmac. These common framework functions can include storing data within a database, calling a remote API, or logging data. 
-
-For our example, we will use the Host Callbacks to create a Trace log entry.
-
-```go
-	// Perform a host callback to log the incoming request
-	_, err = wapc.HostCall("tarmac", "logger", "trace", []byte(fmt.Sprintf("Reversing Payload: %s", s)))
+	// Initialize the Tarmac SDK
+	_, err := sdk.New(sdk.Config{Namespace: "test-service", Handler: Handler})
 	if err != nil {
-		return []byte(fmt.Sprintf("Failed to call host callback - %s", err)), nil
+		return
 	}
-```
-
-For a full list of Host Callbacks checkout the [Callbacks](../callback-functions/callbacks.md) documentation.
-
-#### Do Work and Return a Response
-
-We can add our logic to the example, which in this case will be a payload reverser.
-
-```go
-	// Flip it and reverse
-	if len(payload) > 0 {
-		for i, n := 0, len(payload)-1; i < n; i, n = i+1, n-1 {
-			payload[i], payload[n] = payload[n], payload[i]
-		}
-	}
-```
-
-Now with our WASM function complete, we must return a response.
-
-```go
-	return payload, nil
-```
-
-### Full WASM function
-
-For quick reference, below is the full WASM function from this example.
-
-```go
-// Tac is a small, simple Go program that is an example WASM module for Tarmac. This program will accept a Tarmac
-// server request, log it, and echo back the payload in reverse.
-package main
-
-import (
-        "fmt"
-        wapc "github.com/wapc/wapc-guest-tinygo"
-)
-
-func main() {
-        // Tarmac uses waPC to facilitate WASM module execution. Modules must register their custom handlers under the
-        // appropriate method as shown below.
-        wapc.RegisterFunctions(wapc.Functions{
-                "handler": Handler,
-        })
 }
+```
 
-// Handler is the custom Tarmac Handler function that will receive a payload and
-// must return a payload along with a nil error.
+As Tarmac receives requests such as an HTTP POST request, the `Handler()` function will be called with the HTTP payload provided as the `payload` parameter.
+
+We can create our Function, which returns a simple "Howdie" message.
+
+```go
 func Handler(payload []byte) ([]byte, error) {
-        // Perform a host callback to log the incoming request
-        _, err := wapc.HostCall("tarmac", "logger", "trace", []byte(fmt.Sprintf("Reversing Payload: %s", payload)))
-        if err != nil {
-                return []byte(""), fmt.Errorf("Unable to call callback - %s", err)
-        }
-
-        // Flip it and reverse
-        if len(payload) > 0 {
-                for i, n := 0, len(payload)-1; i < n; i, n = i+1, n-1 {
-                        payload[i], payload[n] = payload[n], payload[i]
-                }
-        }
-
-        // Return the payload via a ServerResponse JSON
-        return payload, nil
+	// Return a happy message
+	return []byte("Howdie"), nil
 }
 ```
 
@@ -165,7 +78,70 @@ With Tarmac now running, we can access our WASM function using any HTTP Client s
 $ curl -v --data "Tarmac Example" http://localhost:8080
 ```
 
+## Expanding beyond Hello World
+
+While the above Hello World example provides an excellent introduction to creating Go functions, it does not showcase the power of Tarmac.
+
+Tarmac provides integrations with many of the capabilities required to build today's modern platforms. These capabilities include Key:Value datastores such as Redis or Cassandra. The ability to create metrics for observability and log messages via a structured logger. Or even the ability to call HTTP end-points with an HTTP Client.
+
+These integrations are simple to call with the Go SDK; the below Function showcases several capabilities, such as calling a key:value cache and logging.
+
+```go
+// Tac is a small, simple Go program that is an example WASM module for Tarmac. This program will accept a Tarmac
+// server request, log it, and echo back the payload in reverse.
+package main
+
+import (
+	"fmt"
+	"github.com/madflojo/tarmac/pkg/sdk"
+)
+
+var tarmac *sdk.Tarmac
+
+func main() {
+	var err error
+
+	// Initialize the Tarmac SDK
+	tarmac, err = sdk.New(sdk.Config{Handler: Handler})
+	if err != nil {
+		return
+	}
+}
+
+// Handler is the custom Tarmac Handler function that will receive a payload and
+// must return a payload along with a nil error.
+func Handler(payload []byte) ([]byte, error) {
+	var err error
+
+	// Log it
+	tarmac.Logger.Trace(fmt.Sprintf("Reversing Payload: %s", payload))
+
+	// Check Cache
+	key := string(payload)
+	rsp, err := tarmac.KV.Get(key)
+	if err != nil || len(payload) < 1 {
+		// Flip it and reverse
+		if len(payload) > 0 {
+			for i, n := 0, len(payload)-1; i < n; i, n = i+1, n-1 {
+				payload[i], payload[n] = payload[n], payload[i]
+			}
+		}
+		rsp = payload
+
+		// Store in Cache
+		err = tarmac.KV.Set(key, payload)
+		if err != nil {
+			tarmac.Logger.Error(fmt.Sprintf("Unable to cache reversed payload: %s", err))
+			return rsp, nil
+		}
+	}
+
+	// Return the payload
+	return rsp, nil
+}
+```
+
 ### Conclusion
 
-Developers can use this guide to get started with WASM functions and using Tarmac. Some of the information in this guide is subject to change as support for WASM in Go advances. However, the concepts of Tarmac and WASM functions should stay fairly consistent.
+Developers can use this guide to get started with WASM functions and using Tarmac. Some of the information in this guide is subject to change as support for WASM in Go advances.
 
