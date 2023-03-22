@@ -1,3 +1,8 @@
+/*
+Package http is a client package for WASM functions running within a Tarmac server.
+
+This package provides user-friendly HTTP client functions that can interact with external HTTP services. Guest WASM functions running inside Tarmac can import and call this HTTP client.
+*/
 package http
 
 import (

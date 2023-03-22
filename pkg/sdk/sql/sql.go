@@ -1,3 +1,8 @@
+/*
+Package sql is a client package for WASM functions running within a Tarmac server.
+
+This package provides a user-friendly SQL database interface with underlying databases configured within Tarmac. Guest WASM functions running inside Tarmac can import and call this SQL interface.
+*/
 package sql
 
 import (

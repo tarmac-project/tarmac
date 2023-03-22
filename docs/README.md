@@ -4,7 +4,7 @@
 
 Write, Deploy and Scale Microservices with WebAssembly Functions
 
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/madflojo/tarmac)](https://pkg.go.dev/github.com/madflojo/tarmac)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/madflojo/tarmac/pkg/sdk)](https://pkg.go.dev/github.com/madflojo/tarmac/pkg/sdk)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://tarmac.gitbook.io/tarmac/)
 [![Build Status](https://github.com/madflojo/tarmac/actions/workflows/build.yml/badge.svg)](https://github.com/madflojo/tarmac/actions/workflows/build.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/madflojo/tarmac)](https://goreportcard.com/report/github.com/madflojo/tarmac)
