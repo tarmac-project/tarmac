@@ -13,9 +13,7 @@ require (
 	github.com/prometheus/client_golang v1.11.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.9.0
-	github.com/valyala/fastjson v1.6.4
 	github.com/wapc/wapc-go v0.5.6
-	github.com/wapc/wapc-guest-tinygo v0.3.3
 )
 
 require (

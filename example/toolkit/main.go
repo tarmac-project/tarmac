@@ -9,7 +9,7 @@ import (
 	"github.com/madflojo/tarmac/pkg/callbacks"
 	"github.com/madflojo/tarmac/pkg/callbacks/logging"
 	// Import Tarmac WASM Engine
-	"github.com/madflojo/tarmac/wasm"
+	"github.com/madflojo/tarmac/pkg/wasm"
 	"github.com/sirupsen/logrus"
 )
 

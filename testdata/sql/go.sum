@@ -1,7 +1,5 @@
-github.com/madflojo/tarmac/pkg/sdk v0.0.0-20230320024901-c3f68771b2e5 h1:nwpm0ANWxQfX0/sjf2XxfcNHohXY84srAMXfAeQn6v0=
-github.com/madflojo/tarmac/pkg/sdk v0.0.0-20230320024901-c3f68771b2e5/go.mod h1:mUxc4sw0vpBVcJFyCXpSqeWr6MwpvnZS33bgqOCI1N8=
-github.com/madflojo/tarmac/pkg/sdk v0.0.0-20230320032409-15cea59e9e26 h1:yJN4X1HtQaDqKb49wrKLAYxR7EHs6DRdDQK6B6PPTmg=
-github.com/madflojo/tarmac/pkg/sdk v0.0.0-20230320032409-15cea59e9e26/go.mod h1:mUxc4sw0vpBVcJFyCXpSqeWr6MwpvnZS33bgqOCI1N8=
+github.com/madflojo/tarmac/pkg/sdk v0.4.0 h1:6wyCLYDs1srQGEO8Sew/VyvjpAJCdoqSengaz/JbmA0=
+github.com/madflojo/tarmac/pkg/sdk v0.4.0/go.mod h1:mUxc4sw0vpBVcJFyCXpSqeWr6MwpvnZS33bgqOCI1N8=
 github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7 h1:xoIK0ctDddBMnc74udxJYBqlo9Ylnsp1waqjLsnef20=
 github.com/valyala/fastjson v1.6.4 h1:uAUNq9Z6ymTgGhcm0UynUAB6tlbakBrz6CQFax3BXVQ=
 github.com/valyala/fastjson v1.6.4/go.mod h1:CLCAqky6SMuOcxStkYQvblddUtoRxhYMGLrsQns1aXY=

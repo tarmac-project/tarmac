@@ -37,3 +37,8 @@ functions/
 
 # Ignore .wasm files
 *.wasm
+
+dist/
+
+# Ignore vendor directories
+vendor/

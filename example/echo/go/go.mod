@@ -1,8 +1,8 @@
 module github.com/madflojo/tarmac/example/echo/go
 
-go 1.18
+go 1.20
 
-require github.com/madflojo/tarmac/pkg/sdk v0.0.0-20230320024901-c3f68771b2e5
+require github.com/madflojo/tarmac/pkg/sdk v0.4.0
 
 require (
 	github.com/valyala/fastjson v1.6.4 // indirect
