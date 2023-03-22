@@ -1,3 +1,8 @@
+/*
+Package metrics is a client package for WASM functions running within a Tarmac server.
+
+This package provides user-friendly Metrics functions that enable users to create custom metrics. Guest WASM functions running inside Tarmac can import and call this Metrics interface.
+*/
 package metrics
 
 import "fmt"

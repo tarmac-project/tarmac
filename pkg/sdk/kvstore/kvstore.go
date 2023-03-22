@@ -1,3 +1,8 @@
+/*
+Package kvstore is a client package for WASM functions running within a Tarmac server.
+
+This package provides a user-friendly Key:Value datastore interface that interacts with underlying datastores configured within Tarmac. Guest WASM functions running inside Tarmac can import and call this KV interface.
+*/
 package kvstore
 
 import (

@@ -1,7 +1,7 @@
 /*
 Package function is a client package for WASM functions running within a Tarmac server.
 
-This package provides user-friendly function to call other WASM functions.
+This package provides a user-friendly interface for interacting with other WASM functions. Users can use this package to call other loaded WASM functions. This capability enables users to create and call functions as if they are internal only.
 */
 package function
 
