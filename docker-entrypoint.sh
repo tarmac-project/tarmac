@@ -11,4 +11,4 @@ then
 fi
 
 ## Run the Application
-exec tarmac
+exec /app/tarmac/tarmac
