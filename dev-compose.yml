@@ -8,7 +8,9 @@ services:
     environment:
       - "APP_ENABLE_TLS=false"
       - "APP_LISTEN_ADDR=0.0.0.0:8080"
-      - "APP_WASM_FUNCTION=testdata/default/tarmac.wasm"
+      - "APP_WASM_FUNCTION=/testdata/default/tarmac.wasm"
+    volumes:
+      - "./testdata:/testdata"
   tarmac:
     build: .
     ports:
@@ -22,7 +24,7 @@ services:
       - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
       - "CONSUL_HTTP_ADDR=consul:8500"
       - "CONSUL_HTTP_SSL=false"
-      - "APP_WASM_FUNCTION_CONFIG=./testdata/tarmac.json"
+      - "APP_WASM_FUNCTION_CONFIG=/testdata/tarmac.json"
       - "ENABLE_SQL=true"
       - "ENABLE_KVSTORE=true"
       - "SQL_TYPE=mysql"
@@ -36,10 +38,11 @@ services:
       - consul
       - consulator
   tests:
-    build: .
+    image: golang:latest
     working_dir: /go/src/github.com/madflojo/tarmac
     entrypoint: go test -v -covermode=count -coverprofile=/tmp/coverage/coverage.out ./...
     volumes:
+      - "./:/go/src/github.com/madflojo/tarmac"
       - "./coverage:/tmp/coverage"
       - "./example:/example"
       - "./testdata:/testdata"
@@ -57,10 +60,11 @@ services:
       - consulator
       - mysql
   benchmarks:
-    build: .
+    image: golang:latest
     working_dir: /go/src/github.com/madflojo/tarmac
     entrypoint: go test -v -run=XXX -bench=. ./...
     volumes:
+      - "./:/go/src/github.com/madflojo/tarmac"
       - "./coverage:/tmp/coverage"
       - "./example:/example"
       - "./testdata:/testdata"
