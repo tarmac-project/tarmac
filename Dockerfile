@@ -9,8 +9,9 @@ WORKDIR /go/src/github.com/madflojo/tarmac/
 
 FROM ubuntu:latest
 RUN install -d -m 0755 -o 1000 -g 500 /app/tarmac
-COPY --chown=1000:500 --chmod=0755 --from=0 /go/bin/tarmac /app/tarmac/
-COPY --chown=1000:500 --chmod=0755 --from=0 /go/src/github.com/madflojo/tarmac/docker-entrypoint.sh /app/tarmac/
+COPY --chown=1000:500 --from=0 /go/bin/tarmac /app/tarmac/
+COPY --chown=1000:500 --from=0 /go/src/github.com/madflojo/tarmac/docker-entrypoint.sh /app/tarmac/
+RUN chmod 755 /app/tarmac/tarmac /app/tarmac/docker-entrypoint.sh
 USER 1000
 
 ENTRYPOINT ["/app/tarmac/docker-entrypoint.sh"]
