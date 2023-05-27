@@ -2,7 +2,7 @@
 
 ![](tarmac-logo.png)
 
-Write, Deploy and Scale Microservices with WebAssembly Functions
+Build Serverless Microservices with WebAssembly Functions
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/madflojo/tarmac/pkg/sdk)](https://pkg.go.dev/github.com/madflojo/tarmac/pkg/sdk)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://tarmac.gitbook.io/tarmac/)
@@ -151,6 +151,22 @@ In addition to the `http` route type, Tarmac also supports `scheduled_task` rout
 ```
 
 With Tarmac's support for multiple functions, you can quickly build complex, distributed services by dividing your service into smaller, more manageable pieces.
+
+## Architecture
+
+Tarmac is a serverless platform that enables users to define and execute WebAssembly Functions. When Tarmac receives requests, it forwards them to WebAssembly Functions, which act as request handlers. The communication between Tarmac and WebAssembly Functions is via WebAssembly Procedure Calls (waPC).
+
+By leveraging waPC, WebAssembly Functions can interact with Tarmac's core capabilities. Capabilities include performing callbacks to the Tarmac server to access key-value stores, interact with SQL databases, or make HTTP requests to downstream services.
+
+To provide a streamlined developer experience, Tarmac offers a Go SDK that simplifies the usage of waPC. The SDK abstracts away the complexity of using waPC, allowing developers to focus on writing their functions and leveraging Tarmac's features.
+
+With Tarmac, users can build a simple microservice (depicted below).
+
+![Tarmac Single Function Architecture](tarmac-single-function.png)
+
+Or, users can build complex Serverless platforms to enable multiple use cases.
+
+![Tarmac Architecture](tarmac-architecture.png)
 
 ## Contributing
 
