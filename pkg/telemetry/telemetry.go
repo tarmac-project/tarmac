@@ -11,16 +11,16 @@ import (
 // Telemetry provides the capability to manage and hold system internal metrics.
 type Telemetry struct {
 	// Tasks is a summary metric of user scheduled task executions.
-	Tasks     *prometheus.SummaryVec
+	Tasks *prometheus.SummaryVec
 
 	// Srv is a summary metric of the HTTP server request processing.
-	Srv       *prometheus.SummaryVec
+	Srv *prometheus.SummaryVec
 
 	// Callbacks is a summary metric of the WASM callbacks guests make.
 	Callbacks *prometheus.SummaryVec
 
 	// Wasm is a summary metric of the WASM guest module executions.
-	Wasm      *prometheus.SummaryVec
+	Wasm *prometheus.SummaryVec
 }
 
 // New creates and returns an initialized Telemetry instance with default metrics.

@@ -86,13 +86,6 @@ type Server struct {
 // It returns a pointer to the created Server instance.
 func New(cfg *viper.Viper) *Server {
 	srv := &Server{cfg: cfg}
-	return srv
-}
-
-// Run starts the primary application. It handles starting background services,
-// populating package globals & structures, and clean up tasks.
-func (srv *Server) Run() error {
-	var err error
 
 	// Create App Context
 	srv.runCtx, srv.runCancel = context.WithCancel(context.Background())
@@ -110,6 +103,14 @@ func (srv *Server) Run() error {
 	if srv.cfg.GetBool("disable_logging") {
 		srv.log.Level = logrus.FatalLevel
 	}
+
+	return srv
+}
+
+// Run starts the primary application. It handles starting background services,
+// populating package globals & structures, and clean up tasks.
+func (srv *Server) Run() error {
+	var err error
 
 	// Setup Stats
 	srv.stats = telemetry.New()
