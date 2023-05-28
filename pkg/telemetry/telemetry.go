@@ -1,5 +1,5 @@
 /*
-Telemetry is an internal Tarmac package used to initialize system metrics.
+Package telemetry provides the capability to manage and hold system internal metrics.
 */
 package telemetry
 
@@ -11,19 +11,19 @@ import (
 // Telemetry provides the capability to manage and hold system internal metrics.
 type Telemetry struct {
 	// Tasks is a summary metric of user scheduled task executions.
-	Tasks *prometheus.SummaryVec
+	Tasks     *prometheus.SummaryVec
 
 	// Srv is a summary metric of the HTTP server request processing.
-	Srv *prometheus.SummaryVec
+	Srv       *prometheus.SummaryVec
 
 	// Callbacks is a summary metric of the WASM callbacks guests make.
 	Callbacks *prometheus.SummaryVec
 
 	// Wasm is a summary metric of the WASM guest module executions.
-	Wasm *prometheus.SummaryVec
+	Wasm      *prometheus.SummaryVec
 }
 
-// New will return an initialized systems metrics instance.
+// New creates and returns an initialized Telemetry instance with default metrics.
 func New() *Telemetry {
 	m := &Telemetry{}
 
@@ -60,4 +60,12 @@ func New() *Telemetry {
 	)
 
 	return m
+}
+
+// Close unregisters the Telemetry metrics from the Prometheus registry.
+func (t *Telemetry) Close() {
+	_ = prometheus.Unregister(t.Tasks)
+	_ = prometheus.Unregister(t.Srv)
+	_ = prometheus.Unregister(t.Callbacks)
+	_ = prometheus.Unregister(t.Wasm)
 }
