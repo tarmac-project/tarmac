@@ -331,7 +331,7 @@ func TestRunningTLSServer(t *testing.T) {
 	// Kill the DB sessions for unhappy path testing
 	srv.kv.Close()
 
-	t.Run("Check Ready HTTP Handler with DB srv.Stop()ped", func(t *testing.T) {
+	t.Run("Check Ready HTTP Handler with DB Stopped", func(t *testing.T) {
 		r, err := http.Get("https://localhost:9000/ready")
 		if err != nil {
 			t.Errorf("Unexpected error when requesting ready status - %s", err)
@@ -440,7 +440,7 @@ func TestRunningMTLSServer(t *testing.T) {
 	// Kill the DB sessions for unhappy path testing
 	srv.kv.Close()
 
-	t.Run("Check Ready HTTP Handler with DB srv.Stop()ped", func(t *testing.T) {
+	t.Run("Check Ready HTTP Handler with DB Stopped", func(t *testing.T) {
 		r, err := http.Get("https://localhost:9000/ready")
 		if err != nil {
 			t.Errorf("Unexpected error when requesting ready status - %s", err)
