@@ -90,14 +90,15 @@ func TestBadConfigs(t *testing.T) {
 		t.Run("Testing "+k, func(t *testing.T) {
 			ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Duration(5)*time.Second))
 			defer cancel()
+			srv := New(v)
 			go func() {
 				<-ctx.Done()
 				err := ctx.Err()
 				if err == context.DeadlineExceeded {
-					Stop()
+					srv.Stop()
 				}
 			}()
-			err := Run(v)
+			err := srv.Run()
 			if err == nil || err == ErrShutdown {
 				t.Errorf("Expected error when starting server, got nil")
 			}
@@ -117,14 +118,15 @@ func TestRunningServer(t *testing.T) {
 	cfg.Set("debug", true)
 	cfg.Set("trace", true)
 	cfg.Set("wasm_function", "/testdata/default/tarmac.wasm")
+	srv := New(cfg)
 	go func() {
-		err := Run(cfg)
+		err := srv.Run()
 		if err != nil && err != ErrShutdown {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
 	}()
 	// Clean up
-	defer Stop()
+	defer srv.Stop()
 
 	// Wait for app to start
 	time.Sleep(10 * time.Second)
@@ -163,14 +165,15 @@ func TestPProfServerEnabled(t *testing.T) {
 	cfg.Set("trace", true)
 	cfg.Set("enable_pprof", true)
 	cfg.Set("wasm_function", "/testdata/default/tarmac.wasm")
+	srv := New(cfg)
 	go func() {
-		err := Run(cfg)
+		err := srv.Run()
 		if err != nil && err != ErrShutdown {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
 	}()
 	// Clean up
-	defer Stop()
+	defer srv.Stop()
 
 	// Wait for app to start
 	time.Sleep(10 * time.Second)
@@ -210,14 +213,15 @@ func TestPProfServerDisabled(t *testing.T) {
 	cfg.Set("debug", true)
 	cfg.Set("trace", true)
 	cfg.Set("wasm_function", "/testdata/default/tarmac.wasm")
+	srv := New(cfg)
 	go func() {
-		err := Run(cfg)
+		err := srv.Run()
 		if err != nil && err != ErrShutdown {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
 	}()
 	// Clean up
-	defer Stop()
+	defer srv.Stop()
 
 	// Wait for app to start
 	time.Sleep(10 * time.Second)
@@ -286,15 +290,16 @@ func TestRunningTLSServer(t *testing.T) {
 	cfg.SetConfigType("json")
 	_ = cfg.ReadRemoteConfig()
 
+	srv := New(cfg)
 	// Start Server in goroutine
 	go func() {
-		err := Run(cfg)
+		err := srv.Run()
 		if err != nil && err != ErrShutdown {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
 	}()
 	// Clean up
-	defer Stop()
+	defer srv.Stop()
 
 	// Wait for app to start
 	time.Sleep(15 * time.Second)
@@ -324,7 +329,7 @@ func TestRunningTLSServer(t *testing.T) {
 	})
 
 	// Kill the DB sessions for unhappy path testing
-	kv.Close()
+	srv.kv.Close()
 
 	t.Run("Check Ready HTTP Handler with DB Stopped", func(t *testing.T) {
 		r, err := http.Get("https://localhost:9000/ready")
@@ -394,15 +399,16 @@ func TestRunningMTLSServer(t *testing.T) {
 	cfg.SetConfigType("json")
 	_ = cfg.ReadRemoteConfig()
 
+	srv := New(cfg)
 	// Start Server in goroutine
 	go func() {
-		err := Run(cfg)
+		err := srv.Run()
 		if err != nil && err != ErrShutdown {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
 	}()
 	// Clean up
-	defer Stop()
+	defer srv.Stop()
 
 	// Wait for app to start
 	time.Sleep(15 * time.Second)
@@ -432,7 +438,7 @@ func TestRunningMTLSServer(t *testing.T) {
 	})
 
 	// Kill the DB sessions for unhappy path testing
-	kv.Close()
+	srv.kv.Close()
 
 	t.Run("Check Ready HTTP Handler with DB Stopped", func(t *testing.T) {
 		r, err := http.Get("https://localhost:9000/ready")
@@ -497,15 +503,16 @@ func TestRunningFailMTLSServer(t *testing.T) {
 	cfg.SetConfigType("json")
 	_ = cfg.ReadRemoteConfig()
 
+	srv := New(cfg)
 	// Start Server in goroutine
 	go func() {
-		err := Run(cfg)
+		err := srv.Run()
 		if err != nil && err != ErrShutdown {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
 	}()
 	// Clean up
-	defer Stop()
+	defer srv.Stop()
 
 	// Wait for app to start
 	time.Sleep(15 * time.Second)

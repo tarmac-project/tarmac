@@ -24,14 +24,16 @@ func TestBasicFunction(t *testing.T) {
 	cfg.Set("debug", true)
 	cfg.Set("listen_addr", "localhost:9001")
 	cfg.Set("wasm_function", "/testdata/default/tarmac.wasm")
+
+	srv := New(cfg)
 	go func() {
-		err := Run(cfg)
+		err := srv.Run()
 		if err != nil && err != ErrShutdown {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
 	}()
 	// Clean up
-	defer Stop()
+	defer srv.Stop()
 
 	// Wait for Server to start
 	time.Sleep(2 * time.Second)
@@ -99,14 +101,15 @@ func TestFullService(t *testing.T) {
 	cfg.Set("config_watch_interval", 5)
 	cfg.Set("wasm_function_config", "/testdata/tarmac.json")
 	cfg.Set("wasm_function", "/testdata/doesnotexist/tarmac.wasm")
+	srv := New(cfg)
 	go func() {
-		err := Run(cfg)
+		err := srv.Run()
 		if err != nil && err != ErrShutdown {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
 	}()
 	// Clean up
-	defer Stop()
+	defer srv.Stop()
 
 	// Wait for Server to start
 	time.Sleep(2 * time.Second)
@@ -171,14 +174,15 @@ func TestWASMRunner(t *testing.T) {
 	cfg.Set("debug", true)
 	cfg.Set("listen_addr", "localhost:9001")
 	cfg.Set("wasm_function", "/testdata/default/tarmac.wasm")
+	srv := New(cfg)
 	go func() {
-		err := Run(cfg)
+		err := srv.Run()
 		if err != nil && err != ErrShutdown {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
 	}()
 	// Clean up
-	defer Stop()
+	defer srv.Stop()
 
 	// Wait for Server to start
 	time.Sleep(2 * time.Second)
@@ -214,7 +218,7 @@ func TestWASMRunner(t *testing.T) {
 
 	for _, c := range tc {
 		t.Run(c.name, func(t *testing.T) {
-			_, err := runWASM(c.module, c.handler, c.request)
+			_, err := srv.runWASM(c.module, c.handler, c.request)
 			if err != nil && !c.err {
 				t.Errorf("Unexpected error executing module - %s", err)
 			}

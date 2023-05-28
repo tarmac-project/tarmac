@@ -42,205 +42,222 @@ var (
 	ErrShutdown = fmt.Errorf("application shutdown gracefully")
 )
 
-// srv is the global reference for the HTTP Server.
-var srv *server
+// Server represents the main server structure.
+type Server struct {
+	// cfg is used across the app package to contain configuration.
+	cfg *viper.Viper
 
-// engine is the global WASM Engine
-var engine *wasm.Server
+	// db is the global reference for the SQL DB.
+	db *sql.DB
 
-// kv is the global reference for the K/V Store.
-var kv hord.Database
+	// engine is the global WASM Engine.
+	engine *wasm.Server
 
-// db is the global reference for the SQL DB.
-var db *sql.DB
+	// funcCfg is used to store and access multi-function service configurations.
+	funcCfg *config.Config
 
-// runCtx is a global context used to control shutdown of the application.
-var runCtx context.Context
+	// httpRouter is used to store and access the HTTP Request Router.
+	httpRouter *httprouter.Router
 
-// runCancel is a global context cancelFunc used to trigger the shutdown of applications.
-var runCancel context.CancelFunc
+	// httpServer is the primary HTTP server.
+	httpServer *http.Server
 
-// cfg is used across the app package to contain configuration.
-var cfg *viper.Viper
+	// kv is the global reference for the K/V Store.
+	kv hord.Database
 
-// log is used across the app package for logging.
-var log *logrus.Logger
+	// log is used across the app package for logging.
+	log *logrus.Logger
 
-// scheduler is a internal task scheduler for recurring tasks
-var scheduler *tasks.Scheduler
+	// runCancel is a global context cancelFunc used to trigger the shutdown of applications.
+	runCancel context.CancelFunc
 
-// stats is used across the app package to manage and access system metrics.
-var stats = telemetry.New()
+	// runCtx is a global context used to control shutdown of the application.
+	runCtx context.Context
+
+	// scheduler is an internal task scheduler for recurring tasks.
+	scheduler *tasks.Scheduler
+
+	// stats is used across the app package to manage and access system metrics.
+	stats *telemetry.Telemetry
+}
+
+// New creates a new instance of the Server struct.
+// It takes a `cfg` parameter of type `*viper.Viper` for configuration.
+// It returns a pointer to the created Server instance.
+func New(cfg *viper.Viper) *Server {
+	srv := &Server{cfg: cfg}
+
+	// Create App Context
+	srv.runCtx, srv.runCancel = context.WithCancel(context.Background())
+
+	// Initiate a new logger
+	srv.log = logrus.New()
+	if srv.cfg.GetBool("debug") {
+		srv.log.Level = logrus.DebugLevel
+		srv.log.Debug("Enabling Debug Logging")
+	}
+	if srv.cfg.GetBool("trace") {
+		srv.log.Level = logrus.TraceLevel
+		srv.log.Debug("Enabling Trace Logging")
+	}
+	if srv.cfg.GetBool("disable_logging") {
+		srv.log.Level = logrus.FatalLevel
+	}
+
+	return srv
+}
 
 // Run starts the primary application. It handles starting background services,
 // populating package globals & structures, and clean up tasks.
-func Run(c *viper.Viper) error {
+func (srv *Server) Run() error {
 	var err error
 
-	// Create App Context
-	runCtx, runCancel = context.WithCancel(context.Background())
-
-	// Apply config provided by main to the package global
-	cfg = c
-
-	// Initiate a new logger
-	log = logrus.New()
-	if cfg.GetBool("debug") {
-		log.Level = logrus.DebugLevel
-		log.Debug("Enabling Debug Logging")
-	}
-	if cfg.GetBool("trace") {
-		log.Level = logrus.TraceLevel
-		log.Debug("Enabling Trace Logging")
-	}
-	if cfg.GetBool("disable_logging") {
-		log.Level = logrus.FatalLevel
-	}
+	// Setup Stats
+	srv.stats = telemetry.New()
+	defer srv.stats.Close()
 
 	// Setup Scheduler
-	scheduler = tasks.New()
-	defer scheduler.Stop()
+	srv.scheduler = tasks.New()
+	defer srv.scheduler.Stop()
 
 	// Config Reload
-	if cfg.GetInt("config_watch_interval") > 0 && cfg.GetBool("use_consul") {
-		_, err := scheduler.Add(&tasks.Task{
-			Interval: time.Duration(cfg.GetInt("config_watch_interval")) * time.Second,
+	if srv.cfg.GetInt("config_watch_interval") > 0 && srv.cfg.GetBool("use_consul") {
+		_, err := srv.scheduler.Add(&tasks.Task{
+			Interval: time.Duration(srv.cfg.GetInt("config_watch_interval")) * time.Second,
 			TaskFunc: func() error {
 				// Reload config using Viper's Watch capabilities
-				err := cfg.WatchRemoteConfig()
+				err := srv.cfg.WatchRemoteConfig()
 				if err != nil {
 					return err
 				}
 
 				// Support hot enable/disable of debug logging
-				if cfg.GetBool("debug") {
-					log.Level = logrus.DebugLevel
+				if srv.cfg.GetBool("debug") {
+					srv.log.Level = logrus.DebugLevel
 				}
 
 				// Support hot enable/disable of trace logging
-				if cfg.GetBool("trace") {
-					log.Level = logrus.TraceLevel
+				if srv.cfg.GetBool("trace") {
+					srv.log.Level = logrus.TraceLevel
 				}
 
 				// Support hot enable/disable of all logging
-				if cfg.GetBool("disable_logging") {
-					log.Level = logrus.FatalLevel
+				if srv.cfg.GetBool("disable_logging") {
+					srv.log.Level = logrus.FatalLevel
 				}
 
-				log.Tracef("Config reloaded from Consul")
+				srv.log.Tracef("Config reloaded from Consul")
 				return nil
 			},
 		})
 		if err != nil {
-			log.Errorf("Error scheduling Config watcher - %s", err)
+			srv.log.Errorf("Error scheduling Config watcher - %s", err)
 		}
 	}
 
 	// Setup the KV Connection
-	if cfg.GetBool("enable_kvstore") {
-		log.Infof("Connecting to KV Store")
-		switch cfg.GetString("kvstore_type") {
+	if srv.cfg.GetBool("enable_kvstore") {
+		srv.log.Infof("Connecting to KV Store")
+		switch srv.cfg.GetString("kvstore_type") {
 		case "redis":
-			kv, err = redis.Dial(redis.Config{
-				Server:   cfg.GetString("redis_server"),
-				Password: cfg.GetString("redis_password"),
+			srv.kv, err = redis.Dial(redis.Config{
+				Server:   srv.cfg.GetString("redis_server"),
+				Password: srv.cfg.GetString("redis_password"),
 				SentinelConfig: redis.SentinelConfig{
-					Servers: cfg.GetStringSlice("redis_sentinel_servers"),
-					Master:  cfg.GetString("redis_sentinel_master"),
+					Servers: srv.cfg.GetStringSlice("redis_sentinel_servers"),
+					Master:  srv.cfg.GetString("redis_sentinel_master"),
 				},
-				ConnectTimeout: time.Duration(cfg.GetInt("redis_connect_timeout")) * time.Second,
-				Database:       cfg.GetInt("redis_database"),
-				SkipTLSVerify:  cfg.GetBool("redis_hostname_verify"),
-				KeepAlive:      time.Duration(cfg.GetInt("redis_keepalive")) * time.Second,
-				MaxActive:      cfg.GetInt("redis_max_active"),
-				ReadTimeout:    time.Duration(cfg.GetInt("redis_read_timeout")) * time.Second,
-				WriteTimeout:   time.Duration(cfg.GetInt("redis_write_timeout")) * time.Second,
+				ConnectTimeout: time.Duration(srv.cfg.GetInt("redis_connect_timeout")) * time.Second,
+				Database:       srv.cfg.GetInt("redis_database"),
+				SkipTLSVerify:  srv.cfg.GetBool("redis_hostname_verify"),
+				KeepAlive:      time.Duration(srv.cfg.GetInt("redis_keepalive")) * time.Second,
+				MaxActive:      srv.cfg.GetInt("redis_max_active"),
+				ReadTimeout:    time.Duration(srv.cfg.GetInt("redis_read_timeout")) * time.Second,
+				WriteTimeout:   time.Duration(srv.cfg.GetInt("redis_write_timeout")) * time.Second,
 			})
 			if err != nil {
 				return fmt.Errorf("could not establish kvstore connection - %s", err)
 			}
 		case "cassandra":
-			kv, err = cassandra.Dial(cassandra.Config{
-				Hosts:                      cfg.GetStringSlice("cassandra_hosts"),
-				Port:                       cfg.GetInt("cassandra_port"),
-				Keyspace:                   cfg.GetString("cassandra_keyspace"),
-				Consistency:                cfg.GetString("cassandra_consistency"),
-				ReplicationStrategy:        cfg.GetString("cassandra_repl_strategy"),
-				Replicas:                   cfg.GetInt("cassandra_replicas"),
-				User:                       cfg.GetString("cassandra_user"),
-				Password:                   cfg.GetString("cassandra_password"),
-				EnableHostnameVerification: cfg.GetBool("cassandra_hostname_verify"),
+			srv.kv, err = cassandra.Dial(cassandra.Config{
+				Hosts:                      srv.cfg.GetStringSlice("cassandra_hosts"),
+				Port:                       srv.cfg.GetInt("cassandra_port"),
+				Keyspace:                   srv.cfg.GetString("cassandra_keyspace"),
+				Consistency:                srv.cfg.GetString("cassandra_consistency"),
+				ReplicationStrategy:        srv.cfg.GetString("cassandra_repl_strategy"),
+				Replicas:                   srv.cfg.GetInt("cassandra_replicas"),
+				User:                       srv.cfg.GetString("cassandra_user"),
+				Password:                   srv.cfg.GetString("cassandra_password"),
+				EnableHostnameVerification: srv.cfg.GetBool("cassandra_hostname_verify"),
 			})
 			if err != nil {
 				return fmt.Errorf("could not establish kvstore connection - %s", err)
 			}
 		default:
-			return fmt.Errorf("unknown kvstore specified - %s", cfg.GetString("kvstore_type"))
+			return fmt.Errorf("unknown kvstore specified - %s", srv.cfg.GetString("kvstore_type"))
 		}
 
 		// Clean up KV Store connections on shutdown
-		defer kv.Close()
+		defer srv.kv.Close()
 
 		// Initialize the KV
-		err = kv.Setup()
+		err = srv.kv.Setup()
 		if err != nil {
 			return fmt.Errorf("could not setup kvstore - %s", err)
 		}
 	}
 
-	if kv == nil {
-		log.Infof("KV Store not configured, skipping")
+	if srv.kv == nil {
+		srv.log.Infof("KV Store not configured, skipping")
 	}
 
-	if cfg.GetBool("enable_sql") {
-		log.Infof("Connecting to SQL DB")
-		switch cfg.GetString("sql_type") {
+	if srv.cfg.GetBool("enable_sql") {
+		srv.log.Infof("Connecting to SQL DB")
+		switch srv.cfg.GetString("sql_type") {
 		case "mysql":
-			db, err = sql.Open("mysql", cfg.GetString("sql_dsn"))
+			srv.db, err = sql.Open("mysql", srv.cfg.GetString("sql_dsn"))
 			if err != nil {
 				return fmt.Errorf("could not establish sql db connection - %s", err)
 			}
 		case "postgres":
-			db, err = sql.Open("postgres", cfg.GetString("sql_dsn"))
+			srv.db, err = sql.Open("postgres", srv.cfg.GetString("sql_dsn"))
 			if err != nil {
 				return fmt.Errorf("could not establish sql db connection - %s", err)
 			}
 		default:
-			return fmt.Errorf("unknown sql store specified - %s", cfg.GetString("sql_type"))
+			return fmt.Errorf("unknown sql store specified - %s", srv.cfg.GetString("sql_type"))
 		}
 	}
-	if db == nil {
-		log.Infof("SQL DB not configured, skipping")
+	if srv.db == nil {
+		srv.log.Infof("SQL DB not configured, skipping")
 	}
 
 	// Setup the HTTP Server
-	srv = &server{
-		httpRouter: httprouter.New(),
-	}
+	srv.httpRouter = httprouter.New()
 	srv.httpServer = &http.Server{
-		Addr:    cfg.GetString("listen_addr"),
+		Addr:    srv.cfg.GetString("listen_addr"),
 		Handler: srv.httpRouter,
 	}
 
 	// Setup TLS Configuration
-	if cfg.GetBool("enable_tls") {
+	if srv.cfg.GetBool("enable_tls") {
 		tlsCfg := tlsconfig.New()
 
 		// Load Certs from file
-		err := tlsCfg.CertsFromFile(cfg.GetString("cert_file"), cfg.GetString("key_file"))
+		err := tlsCfg.CertsFromFile(srv.cfg.GetString("cert_file"), srv.cfg.GetString("key_file"))
 		if err != nil {
 			return fmt.Errorf("unable to configure HTTPS server with certificate and key - %s", err)
 		}
 
 		// Load CA enabling m-TLS
-		if cfg.GetString("ca_file") != "" {
-			err := tlsCfg.CAFromFile(cfg.GetString("ca_file"))
+		if srv.cfg.GetString("ca_file") != "" {
+			err := tlsCfg.CAFromFile(srv.cfg.GetString("ca_file"))
 			if err != nil {
 				return fmt.Errorf("unable to configure HTTPS server with provided client certificate authority - %s", err)
 			}
 
 			// Set to ask but ignore client certs
-			if cfg.GetBool("ignore_client_cert") {
+			if srv.cfg.GetBool("ignore_client_cert") {
 				tlsCfg.IgnoreClientCert()
 			}
 		}
@@ -257,9 +274,9 @@ func Run(c *viper.Viper) error {
 
 		// Wait for a signal then action
 		s := <-trap
-		log.Infof("Received shutdown signal %s", s)
+		srv.log.Infof("Received shutdown signal %s", s)
 
-		defer Stop()
+		defer srv.Stop()
 	}()
 
 	// Register Health Check Handler used for Liveness checks
@@ -272,7 +289,7 @@ func Run(c *viper.Viper) error {
 	router := callbacks.New(callbacks.Config{
 		PreFunc: func(namespace, op string, data []byte) ([]byte, error) {
 			// Trace logging of callback
-			log.WithFields(logrus.Fields{
+			srv.log.WithFields(logrus.Fields{
 				"namespace": namespace,
 				"function":  op,
 			}).Tracef("CallbackRouter called with payload %s", data)
@@ -280,10 +297,10 @@ func Run(c *viper.Viper) error {
 		},
 		PostFunc: func(r callbacks.CallbackResult) {
 			// Measure Callback Execution time and counts
-			stats.Callbacks.WithLabelValues(fmt.Sprintf("%s:%s", r.Namespace, r.Operation)).Observe(r.EndTime.Sub(r.StartTime).Seconds())
+			srv.stats.Callbacks.WithLabelValues(fmt.Sprintf("%s:%s", r.Namespace, r.Operation)).Observe(r.EndTime.Sub(r.StartTime).Seconds())
 
 			// Trace logging of callback results
-			log.WithFields(logrus.Fields{
+			srv.log.WithFields(logrus.Fields{
 				"namespace": r.Namespace,
 				"function":  r.Operation,
 				"input":     r.Input,
@@ -292,7 +309,7 @@ func Run(c *viper.Viper) error {
 
 			// Log Callback failures as warnings
 			if r.Err != nil {
-				log.WithFields(logrus.Fields{
+				srv.log.WithFields(logrus.Fields{
 					"namespace": r.Namespace,
 					"function":  r.Operation,
 				}).Warnf("Callback call resulted in error after %f seconds - %s", r.EndTime.Sub(r.StartTime).Seconds(), r.Err)
@@ -301,8 +318,8 @@ func Run(c *viper.Viper) error {
 	})
 
 	// Setup SQL Callbacks
-	if cfg.GetBool("enable_sql") {
-		cbSQL, err := sqlstore.New(sqlstore.Config{DB: db})
+	if srv.cfg.GetBool("enable_sql") {
+		cbSQL, err := sqlstore.New(sqlstore.Config{DB: srv.db})
 		if err != nil {
 			return fmt.Errorf("unable to initialize callback sqlstore for WASM functions - %s", err)
 		}
@@ -312,8 +329,8 @@ func Run(c *viper.Viper) error {
 	}
 
 	// Setup KVStore Callbacks
-	if cfg.GetBool("enable_kvstore") {
-		cbKVStore, err := kvstore.New(kvstore.Config{KV: kv})
+	if srv.cfg.GetBool("enable_kvstore") {
+		cbKVStore, err := kvstore.New(kvstore.Config{KV: srv.kv})
 		if err != nil {
 			return fmt.Errorf("unable to initialize callback kvstore for WASM functions - %s", err)
 		}
@@ -337,7 +354,7 @@ func Run(c *viper.Viper) error {
 	// Setup Logger Callbacks
 	cbLogger, err := logging.New(logging.Config{
 		// Pass general logger into host callback
-		Log: log,
+		Log: srv.log,
 	})
 	if err != nil {
 		return fmt.Errorf("unable to initialize callback logger for WASM functions - %s", err)
@@ -362,7 +379,7 @@ func Run(c *viper.Viper) error {
 	router.RegisterCallback("metrics", "histogram", cbMetrics.Histogram)
 
 	// Start WASM Engine
-	engine, err = wasm.NewServer(wasm.Config{
+	srv.engine, err = wasm.NewServer(wasm.Config{
 		Callback: router.Callback,
 	})
 	if err != nil {
@@ -370,17 +387,17 @@ func Run(c *viper.Viper) error {
 	}
 
 	// Look for Functions Config
-	srv.funcCfg, err = config.Parse(cfg.GetString("wasm_function_config"))
+	srv.funcCfg, err = config.Parse(srv.cfg.GetString("wasm_function_config"))
 	if err != nil {
-		log.Infof("Could not load wasm_function_config (%s) starting with default function path - %s", cfg.GetString("wasm_function_config"), err)
+		srv.log.Infof("Could not load wasm_function_config (%s) starting with default function path - %s", srv.cfg.GetString("wasm_function_config"), err)
 
 		// Load WASM Function using default path
-		err = engine.LoadModule(wasm.ModuleConfig{
+		err = srv.engine.LoadModule(wasm.ModuleConfig{
 			Name:     "default",
-			Filepath: cfg.GetString("wasm_function"),
+			Filepath: srv.cfg.GetString("wasm_function"),
 		})
 		if err != nil {
-			return fmt.Errorf("could not load default function path for wasm_function (%s) - %s", cfg.GetString("wasm_function"), err)
+			return fmt.Errorf("could not load default function path for wasm_function (%s) - %s", srv.cfg.GetString("wasm_function"), err)
 		}
 
 		// Register WASM Handler with default path
@@ -393,63 +410,63 @@ func Run(c *viper.Viper) error {
 
 	// Load Functions from Config
 	if err == nil {
-		log.Infof("Loading Services from wasm_function_config %s", cfg.GetString("wasm_function_config"))
+		srv.log.Infof("Loading Services from wasm_function_config %s", srv.cfg.GetString("wasm_function_config"))
 
 		for svcName, svcCfg := range srv.funcCfg.Services {
 			// Load WASM Functions
-			log.Infof("Loading Functions from Service %s", svcName)
+			srv.log.Infof("Loading Functions from Service %s", svcName)
 			for fName, fCfg := range svcCfg.Functions {
-				err := engine.LoadModule(wasm.ModuleConfig{
+				err := srv.engine.LoadModule(wasm.ModuleConfig{
 					Name:     fName,
 					Filepath: fCfg.Filepath,
 				})
 				if err != nil {
 					return fmt.Errorf("could not load function %s from path %s - %s", fName, fCfg.Filepath, err)
 				}
-				log.Infof("Loaded Function %s for Service %s", fName, svcName)
+				srv.log.Infof("Loaded Function %s for Service %s", fName, svcName)
 			}
 
 			// Register Routes
-			log.Infof("Registering Routes from Service %s", svcName)
+			srv.log.Infof("Registering Routes from Service %s", svcName)
 			funcRoutes := make(map[string]string)
 			for _, r := range svcCfg.Routes {
 				if r.Type == "http" {
 					for _, m := range r.Methods {
 						key := fmt.Sprintf("%s:%s:%s", r.Type, m, r.Path)
-						log.Infof("Registering Route %s for function %s", key, r.Function)
+						srv.log.Infof("Registering Route %s for function %s", key, r.Function)
 						funcRoutes[key] = r.Function
 						srv.httpRouter.Handle(m, r.Path, srv.middleware(srv.WASMHandler))
 					}
 				}
 
 				if r.Type == "scheduled_task" {
-					log.Infof("Scheduling custom task for function %s with interval of %d", r.Function, r.Frequency)
-					id, err := scheduler.Add(&tasks.Task{
+					srv.log.Infof("Scheduling custom task for function %s with interval of %d", r.Function, r.Frequency)
+					id, err := srv.scheduler.Add(&tasks.Task{
 						Interval: time.Duration(r.Frequency) * time.Second,
 						TaskFunc: func() error {
 							now := time.Now()
-							log.Tracef("Executing Scheduled Function %s", r.Function)
-							_, err := runWASM(r.Function, "handler", []byte(""))
+							srv.log.Tracef("Executing Scheduled Function %s", r.Function)
+							_, err := srv.runWASM(r.Function, "handler", []byte(""))
 							if err != nil {
-								stats.Tasks.WithLabelValues(r.Function).Observe(time.Since(now).Seconds())
+								srv.stats.Tasks.WithLabelValues(r.Function).Observe(time.Since(now).Seconds())
 								return err
 							}
-							stats.Tasks.WithLabelValues(r.Function).Observe(time.Since(now).Seconds())
+							srv.stats.Tasks.WithLabelValues(r.Function).Observe(time.Since(now).Seconds())
 							return nil
 						},
 					})
 					if err != nil {
-						log.Errorf("Error scheduling scheduled task %s - %s", r.Function, err)
+						srv.log.Errorf("Error scheduling scheduled task %s - %s", r.Function, err)
 					}
 
 					// Clean up Task on Shutdown
-					defer scheduler.Del(id)
+					defer srv.scheduler.Del(id)
 				}
 
 				if r.Type == "function" {
-					log.Infof("Registering Function to Function callback for %s", r.Function)
+					srv.log.Infof("Registering Function to Function callback for %s", r.Function)
 					router.RegisterCallback("function", r.Function, func(b []byte) ([]byte, error) {
-						return runWASM(r.Function, "handler", b)
+						return srv.runWASM(r.Function, "handler", b)
 					})
 				}
 			}
@@ -474,13 +491,13 @@ func Run(c *viper.Viper) error {
 	srv.httpRouter.GET("/debug/pprof/block", srv.handlerWrapper(pprof.Handler("block")))
 
 	// Start HTTP Listener
-	log.Infof("Starting HTTP Listener on %s", cfg.GetString("listen_addr"))
-	if cfg.GetBool("enable_tls") {
-		err := srv.httpServer.ListenAndServeTLS(cfg.GetString("cert_file"), cfg.GetString("key_file"))
+	srv.log.Infof("Starting HTTP Listener on %s", srv.cfg.GetString("listen_addr"))
+	if srv.cfg.GetBool("enable_tls") {
+		err := srv.httpServer.ListenAndServeTLS(srv.cfg.GetString("cert_file"), srv.cfg.GetString("key_file"))
 		if err != nil {
 			if err == http.ErrServerClosed {
 				// Wait until all outstanding requests are done
-				<-runCtx.Done()
+				<-srv.runCtx.Done()
 				return ErrShutdown
 			}
 			return fmt.Errorf("unable to start HTTPS Server - %s", err)
@@ -490,7 +507,7 @@ func Run(c *viper.Viper) error {
 	if err != nil {
 		if err == http.ErrServerClosed {
 			// Wait until all outstanding requests are done
-			<-runCtx.Done()
+			<-srv.runCtx.Done()
 			return ErrShutdown
 		}
 		return fmt.Errorf("unable to start HTTP Server - %s", err)
@@ -500,10 +517,11 @@ func Run(c *viper.Viper) error {
 }
 
 // Stop is used to gracefully shutdown the server.
-func Stop() {
+func (srv *Server) Stop() {
+	srv.stats.Close()
 	err := srv.httpServer.Shutdown(context.Background())
 	if err != nil {
-		log.Errorf("Unexpected error while shutting down HTTP server - %s", err)
+		srv.log.Errorf("Unexpected error while shutting down HTTP server - %s", err)
 	}
-	defer runCancel()
+	defer srv.runCancel()
 }
