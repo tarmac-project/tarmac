@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func TestNewTelemetry(t *testing.T) {
@@ -15,30 +17,19 @@ func TestNewTelemetry(t *testing.T) {
 			tm := New()
 			defer tm.Close()
 
-			// Check if the Telemetry instance is not nil
-			if tm == nil {
-				t.Error("New Telemetry instance is nil")
-			}
+			// Simulate usage of the metrics
+			labels := prometheus.Labels{"path": "/api"}
+			tm.Srv.With(labels).Observe(0.5)
 
-			// Check if the Tasks field is not nil
-			if tm.Tasks == nil {
-				t.Error("Tasks field is nil")
-			}
+			taskLabels := prometheus.Labels{"tasks": "task1"}
+			tm.Tasks.With(taskLabels).Observe(1.2)
 
-			// Check if the Srv field is not nil
-			if tm.Srv == nil {
-				t.Error("Srv field is nil")
-			}
+			callbackLabels := prometheus.Labels{"callback": "callback1"}
+			tm.Callbacks.With(callbackLabels).Observe(0.8)
 
-			// Check if the Callbacks field is not nil
-			if tm.Callbacks == nil {
-				t.Error("Callbacks field is nil")
-			}
+			wasmLabels := prometheus.Labels{"route": "/wasm"}
+			tm.Wasm.With(wasmLabels).Observe(0.3)
 
-			// Check if the Wasm field is not nil
-			if tm.Wasm == nil {
-				t.Error("Wasm field is nil")
-			}
 		})
 	}
 }
