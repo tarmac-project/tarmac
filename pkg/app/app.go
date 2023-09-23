@@ -14,6 +14,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/madflojo/hord"
 	"github.com/madflojo/hord/drivers/cassandra"
+	"github.com/madflojo/hord/drivers/hashmap"
 	"github.com/madflojo/hord/drivers/redis"
 	"github.com/madflojo/tarmac/pkg/callbacks"
 	"github.com/madflojo/tarmac/pkg/callbacks/httpclient"
@@ -159,6 +160,11 @@ func (srv *Server) Run() error {
 	if srv.cfg.GetBool("enable_kvstore") {
 		srv.log.Infof("Connecting to KV Store")
 		switch srv.cfg.GetString("kvstore_type") {
+		case "in-memory":
+			srv.kv, err = hashmap.Dial(hashmap.Config{})
+			if err != nil {
+				return fmt.Errorf("could not create internal kvstore - %w", err)
+			}
 		case "redis":
 			srv.kv, err = redis.Dial(redis.Config{
 				Server:   srv.cfg.GetString("redis_server"),

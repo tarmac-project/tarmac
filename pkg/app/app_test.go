@@ -152,7 +152,6 @@ func TestRunningServer(t *testing.T) {
 			t.Errorf("Unexpected http status code when checking metrics - %d", r.StatusCode)
 		}
 	})
-
 }
 
 func TestPProfServerEnabled(t *testing.T) {
