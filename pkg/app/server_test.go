@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 	"io"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 )
@@ -131,6 +132,29 @@ func TestFullService(t *testing.T) {
 	tc.cfg.Set("kvstore_type", "cassandra")
 	tc.cfg.Set("cassandra_hosts", []string{"cassandra-primary", "cassandra"})
 	tc.cfg.Set("cassandra_keyspace", "tarmac")
+	tc.cfg.Set("enable_kvstore", true)
+	tc.cfg.Set("enable_sql", true)
+	tc.cfg.Set("sql_type", "mysql")
+	tc.cfg.Set("sql_dsn", "root:example@tcp(mysql:3306)/example")
+	tc.cfg.Set("config_watch_interval", 5)
+	tc.cfg.Set("wasm_function_config", "/testdata/tarmac.json")
+	tc.cfg.Set("wasm_function", "/testdata/doesnotexist/tarmac.wasm")
+	tt = append(tt, tc)
+
+	fh, err := os.CreateTemp("", "*.db")
+	if err != nil {
+		t.Fatalf("Unexpected error creating temp file - %s", err)
+	}
+	defer os.Remove(fh.Name())
+	fh.Close()
+
+	tc = FullServiceTestCase{name: "BoltDB Key:Value Store", cfg: viper.New()}
+	tc.cfg.Set("disable_logging", false)
+	tc.cfg.Set("debug", true)
+	tc.cfg.Set("listen_addr", "localhost:9001")
+	tc.cfg.Set("kvstore_type", "internal")
+	tc.cfg.Set("boltdb_filename", fh.Name())
+	tc.cfg.Set("boltdb_bucket", "tarmac")
 	tc.cfg.Set("enable_kvstore", true)
 	tc.cfg.Set("enable_sql", true)
 	tc.cfg.Set("sql_type", "mysql")

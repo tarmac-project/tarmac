@@ -23,7 +23,10 @@ func main() {
 	cfg.SetDefault("wasm_function", "/functions/tarmac.wasm")
 	cfg.SetDefault("wasm_function_config", "/functions/tarmac.json")
 	cfg.SetDefault("kvstore_type", "internal")
-	cfg.SetDefault("data_dir", "/data/tarmac")
+	cfg.SetDefault("boltdb_filename", "/data/tarmac/tarmac.db")
+	cfg.SetDefault("boltdb_bucket", "tarmac")
+	cfg.SetDefault("boltdb_permissions", 0600)
+	cfg.SetDefault("boltdb_timeout", 5)
 	cfg.SetDefault("grpc_socket_path", "/grpc.sock")
 
 	// Load Config
