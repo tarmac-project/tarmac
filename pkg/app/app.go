@@ -168,7 +168,11 @@ func (srv *Server) Run() error {
 			}
 		case "internal", "boltdb":
 			// Check if file exists, if not create one
-			if _, err := os.Stat(srv.cfg.GetString("boltdb_filename")); os.IsNotExist(err) {
+			_, err := os.Stat(srv.cfg.GetString("boltdb_filename"))
+			if err != nil {
+				if !os.IsNotExist(err) {
+					return fmt.Errorf("could not identify if kvstore file exists - %w", err)
+				}
 				srv.log.Infof("Internal key/value store file does not exist, creating %s", srv.cfg.GetString("boltdb_filename"))
 				file, err := os.Create(srv.cfg.GetString("boltdb_filename"))
 				if err != nil {
