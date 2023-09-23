@@ -119,7 +119,7 @@ services:
     ports:
       - 3306:3306
   consul:
-    image: consul
+    image: bitnami/consul:latest
     ports:
       - 8500:8500
   consulator:
