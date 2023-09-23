@@ -169,7 +169,7 @@ func (srv *Server) Run() error {
 		case "internal", "boltdb":
 			// Check if file exists, if not create one
 			fh, err := os.OpenFile(srv.cfg.GetString("boltdb_filename"), os.O_RDWR|os.O_CREATE|os.O_EXCL, os.FileMode(srv.cfg.GetInt("boltdb_permissions")))
-			if err != nil {
+			if err != nil && !os.IsExist(err) {
 				return fmt.Errorf("could not create boltdb file - %w", err)
 			}
 			fh.Close()
