@@ -11,6 +11,7 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    container: madflojo/ubuntu-build:latest
     services:
       mysql:
         image: bitnami/mysql:latest
@@ -49,6 +50,7 @@ jobs:
 
   redis:
     runs-on: ubuntu-latest
+    container: madflojo/ubuntu-build:latest
     services:
       redis:
         image: bitnami/redis:latest
@@ -122,6 +124,7 @@ jobs:
 
   boltdb:
     runs-on: ubuntu-latest
+    container: madflojo/ubuntu-build:latest
     steps:
     - uses: actions/checkout@v3
     - name: Set up Go
@@ -139,6 +142,7 @@ jobs:
 
   in-memory:
     runs-on: ubuntu-latest
+    container: madflojo/ubuntu-build:latest
     steps:
     - uses: actions/checkout@v3
     - name: Set up Go
