@@ -11,7 +11,6 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
-    container: madflojo/ubuntu-build
     services:
       mysql:
         image: bitnami/mysql:latest
@@ -65,3 +64,127 @@ jobs:
         go test -v -race -covermode=atomic -coverprofile=coverage.out -run "TestFullService/Redis_.*" ./...
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
+
+  cassandra:
+    runs-on: ubuntu-latest
+    services:
+      cassandra-primary:
+        image: madflojo/cassandra:latest
+        env:
+          CASSANDRA_KEYSPACE: tarmac
+        ports:
+          - 7000
+          - 7001
+          - 7199
+          - 9042
+          - 9160
+
+      cassandra:
+        image: madflojo/cassandra:latest
+        env:
+          CASSANDRA_SEEDS: cassandra-primary
+          CASSANDRA_KEYSPACE: tarmac
+          SLEEP_TIMER: 15
+        ports:
+          - 7000
+          - 7001
+          - 7199
+          - 9042
+          - 9160
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.21'
+    - name: Build Test WASM Modules
+      run: make build
+    - name: Execute Tests
+      run: |
+        go test -v -race -covermode=atomic -coverprofile=coverage.out -run "TestFullService/Cassandra_.*" ./...
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+
+
+  boltdb:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.21'
+    - name: Build Test WASM Modules
+      run: make build
+    - name: Execute Tests
+      run: |
+        go test -v -race -covermode=atomic -coverprofile=coverage.out -run "TestFullService/BoltDB_.*" ./...
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+
+
+  in-memory:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.21'
+    - name: Build Test WASM Modules
+      run: make build
+    - name: Execute Tests
+      run: |
+        go test -v -race -covermode=atomic -coverprofile=coverage.out -run "TestFullService/In-Memory_.*" ./...
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+
+
+  mysql:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: bitnami/mysql:latest
+        env: 
+          MYSQL_ROOT_PASSWORD: example
+          MYSQL_DATABASE: example
+        ports:
+          - 3306:3306
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.21'
+    - name: Build Test WASM Modules
+      run: make build
+    - name: Execute Tests
+      run: |
+        go test -v -race -covermode=atomic -coverprofile=coverage.out -run "TestFullService/MySQL_.*" ./...
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+
+  postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: bitnami/postgres:latest
+        env: 
+          POSTGRESQL_USERNAME: example
+          POSTGRESQL_PASSWORD: example
+          POSTGRESQL_DATABASE: example 
+        ports:
+          - 5432:5432
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.21'
+    - name: Build Test WASM Modules
+      run: make build
+    - name: Execute Tests
+      run: |
+        go test -v -race -covermode=atomic -coverprofile=coverage.out -run "TestFullService/Postgres_.*" ./...
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3 

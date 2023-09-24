@@ -96,36 +96,26 @@ type FullServiceTestCase struct {
 func TestFullService(t *testing.T) {
 	var tt []FullServiceTestCase
 
-	tc := FullServiceTestCase{name: "Base Case", cfg: viper.New()}
+	tc := FullServiceTestCase{name: "Redis", cfg: viper.New()}
 	tc.cfg.Set("disable_logging", false)
 	tc.cfg.Set("debug", true)
 	tc.cfg.Set("listen_addr", "localhost:9001")
 	tc.cfg.Set("kvstore_type", "redis")
 	tc.cfg.Set("redis_server", "redis:6379")
 	tc.cfg.Set("enable_kvstore", true)
-	tc.cfg.Set("enable_sql", true)
-	tc.cfg.Set("sql_type", "mysql")
-	tc.cfg.Set("sql_dsn", "root:example@tcp(mysql:3306)/example")
-	tc.cfg.Set("config_watch_interval", 5)
 	tc.cfg.Set("wasm_function_config", "/testdata/tarmac.json")
-	tc.cfg.Set("wasm_function", "/testdata/doesnotexist/tarmac.wasm")
 	tt = append(tt, tc)
 
-	tc = FullServiceTestCase{name: "In-Memory Key:Value Store", cfg: viper.New()}
+	tc = FullServiceTestCase{name: "In-Memory", cfg: viper.New()}
 	tc.cfg.Set("disable_logging", false)
 	tc.cfg.Set("debug", true)
 	tc.cfg.Set("listen_addr", "localhost:9001")
 	tc.cfg.Set("kvstore_type", "in-memory")
 	tc.cfg.Set("enable_kvstore", true)
-	tc.cfg.Set("enable_sql", true)
-	tc.cfg.Set("sql_type", "mysql")
-	tc.cfg.Set("sql_dsn", "root:example@tcp(mysql:3306)/example")
-	tc.cfg.Set("config_watch_interval", 5)
 	tc.cfg.Set("wasm_function_config", "/testdata/tarmac.json")
-	tc.cfg.Set("wasm_function", "/testdata/doesnotexist/tarmac.wasm")
 	tt = append(tt, tc)
 
-	tc = FullServiceTestCase{name: "Cassandra Key:Value Store", cfg: viper.New()}
+	tc = FullServiceTestCase{name: "Cassandra", cfg: viper.New()}
 	tc.cfg.Set("disable_logging", false)
 	tc.cfg.Set("debug", true)
 	tc.cfg.Set("listen_addr", "localhost:9001")
@@ -133,12 +123,7 @@ func TestFullService(t *testing.T) {
 	tc.cfg.Set("cassandra_hosts", []string{"cassandra-primary", "cassandra"})
 	tc.cfg.Set("cassandra_keyspace", "tarmac")
 	tc.cfg.Set("enable_kvstore", true)
-	tc.cfg.Set("enable_sql", true)
-	tc.cfg.Set("sql_type", "mysql")
-	tc.cfg.Set("sql_dsn", "root:example@tcp(mysql:3306)/example")
-	tc.cfg.Set("config_watch_interval", 5)
 	tc.cfg.Set("wasm_function_config", "/testdata/tarmac.json")
-	tc.cfg.Set("wasm_function", "/testdata/doesnotexist/tarmac.wasm")
 	tt = append(tt, tc)
 
 	fh, err := os.CreateTemp("", "*.db")
@@ -148,7 +133,7 @@ func TestFullService(t *testing.T) {
 	defer os.Remove(fh.Name())
 	fh.Close()
 
-	tc = FullServiceTestCase{name: "BoltDB Key:Value Store", cfg: viper.New()}
+	tc = FullServiceTestCase{name: "BoltDB", cfg: viper.New()}
 	tc.cfg.Set("disable_logging", false)
 	tc.cfg.Set("debug", true)
 	tc.cfg.Set("listen_addr", "localhost:9001")
@@ -156,13 +141,26 @@ func TestFullService(t *testing.T) {
 	tc.cfg.Set("boltdb_filename", fh.Name())
 	tc.cfg.Set("boltdb_bucket", "tarmac")
 	tc.cfg.Set("enable_kvstore", true)
-	tc.cfg.Set("enable_sql", true)
-	tc.cfg.Set("sql_type", "mysql")
-	tc.cfg.Set("sql_dsn", "root:example@tcp(mysql:3306)/example")
-	tc.cfg.Set("config_watch_interval", 5)
 	tc.cfg.Set("wasm_function_config", "/testdata/tarmac.json")
-	tc.cfg.Set("wasm_function", "/testdata/doesnotexist/tarmac.wasm")
 	tt = append(tt, tc)
+
+  tc = FullServiceTestCase{name: "MySQL", cfg: viper.New()}
+  tc.cfg.Set("disable_logging", false)
+  tc.cfg.Set("debug", true)
+  tc.cfg.Set("listen_addr", "localhost:9001")
+  tc.cfg.Set("enable_sql", true)
+  tc.cfg.Set("sql_type", "mysql")
+  tc.cfg.Set("sql_dsn", "root:example@tcp(mysql:3306)/example")
+  tc.cfg.Set("wasm_function_config", "/testdata/tarmac.json")
+
+  tc = FullServiceTestCase{name: "Postgres", cfg: viper.New()}
+  tc.cfg.Set("disable_logging", false)
+  tc.cfg.Set("debug", true)
+  tc.cfg.Set("listen_addr", "localhost:9001")
+  tc.cfg.Set("enable_sql", true)
+  tc.cfg.Set("sql_type", "postgres")
+  tc.cfg.Set("sql_dsn", "postgres://exmaple:example@postgres:5432/postgres?sslmode=disable")
+  tc.cfg.Set("wasm_function_config", "/testdata/tarmac.json")
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
@@ -198,28 +196,31 @@ func TestFullService(t *testing.T) {
 				}
 			})
 
-			// Call /kv and /sql with GET
-			t.Run("Do a Get on /kv", func(t *testing.T) {
-				r, err := http.Get("http://localhost:9001/kv")
-				if err != nil {
-					t.Fatalf("Unexpected error when making HTTP request - %s", err)
-				}
-				defer r.Body.Close()
-				if r.StatusCode != 200 {
-					t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
-				}
-			})
+			if tc.cfg.GetBool("enable_kvstore") {
+				t.Run("Do a Get on /kv", func(t *testing.T) {
+					r, err := http.Get("http://localhost:9001/kv")
+					if err != nil {
+						t.Fatalf("Unexpected error when making HTTP request - %s", err)
+					}
+					defer r.Body.Close()
+					if r.StatusCode != 200 {
+						t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
+					}
+				})
+			}
 
-			t.Run("Do a Get on /sql", func(t *testing.T) {
-				r, err := http.Get("http://localhost:9001/sql")
-				if err != nil {
-					t.Fatalf("Unexpected error when making HTTP request - %s", err)
-				}
-				defer r.Body.Close()
-				if r.StatusCode != 200 {
-					t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
-				}
-			})
+			if tc.cfg.GetBool("enable_sql") {
+				t.Run("Do a Get on /sql", func(t *testing.T) {
+					r, err := http.Get("http://localhost:9001/sql")
+					if err != nil {
+						t.Fatalf("Unexpected error when making HTTP request - %s", err)
+					}
+					defer r.Body.Close()
+					if r.StatusCode != 200 {
+						t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
+					}
+				})
+			}
 
 			t.Run("Do a Get on /func", func(t *testing.T) {
 				r, err := http.Get("http://localhost:9001/func")

@@ -59,6 +59,7 @@ services:
       - consul
       - consulator
       - mysql
+      - postgres
   benchmarks:
     image: golang:latest
     working_dir: /go/src/github.com/madflojo/tarmac
@@ -81,6 +82,7 @@ services:
       - consul
       - consulator
       - mysql
+      - postgres
   redis:
     image: bitnami/redis:latest
     environment:
@@ -118,6 +120,15 @@ services:
       MYSQL_DATABASE: example
     ports:
       - 3306:3306
+  postgres:
+    image: bitnami/postgresql:latest
+    restart: always
+    environment:
+      - POSTGRESQL_USERNAME=example
+      - POSTGRESQL_PASSWORD=example
+      - POSTGRESQL_DATABASE=example
+    ports:
+      - 5432:5432
   consul:
     image: bitnami/consul:latest
     ports:
