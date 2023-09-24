@@ -168,7 +168,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: bitnami/postgres:latest
+        image: bitnami/postgresql:latest
         env: 
           POSTGRESQL_USERNAME: example
           POSTGRESQL_PASSWORD: example
