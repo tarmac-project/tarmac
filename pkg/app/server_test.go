@@ -99,6 +99,7 @@ func TestFullService(t *testing.T) {
 	tc := FullServiceTestCase{name: "Redis", cfg: viper.New()}
 	tc.cfg.Set("disable_logging", false)
 	tc.cfg.Set("debug", true)
+	tc.cfg.Set("enable_tls", false)
 	tc.cfg.Set("listen_addr", "localhost:9001")
 	tc.cfg.Set("kvstore_type", "redis")
 	tc.cfg.Set("redis_server", "redis:6379")
@@ -175,7 +176,7 @@ func TestFullService(t *testing.T) {
 			defer srv.Stop()
 
 			// Wait for Server to start
-			time.Sleep(2 * time.Second)
+			time.Sleep(10 * time.Second)
 
 			// Call /logger with POST
 			t.Run("Do a Post on /logger", func(t *testing.T) {
