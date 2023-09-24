@@ -34,6 +34,7 @@ services:
     volumes:
       - "./testdata:/testdata"
     depends_on:
+      - mysql
       - redis
       - consul
       - consulator

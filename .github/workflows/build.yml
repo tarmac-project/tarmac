@@ -19,6 +19,20 @@ jobs:
           MYSQL_DATABASE: example
         ports:
           - 3306:3306
+      redis:
+        image: bitnami/redis:latest
+        # Set health checks to wait until redis has started
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        env:
+          ALLOW_EMPTY_PASSWORD: yes
+      consul:
+        image: bitnami/consul:latest
+        ports:
+          - 8500:8500
     steps:
     - uses: actions/checkout@v3
     - name: Set up Go
