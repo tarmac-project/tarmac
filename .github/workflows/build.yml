@@ -11,17 +11,58 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    container: madflojo/ubuntu-build
+    services:
+      mysql:
+        image: bitnami/mysql:latest
+        env: 
+          MYSQL_ROOT_PASSWORD: example
+          MYSQL_DATABASE: example
+        ports:
+          - 3306:3306
     steps:
     - uses: actions/checkout@v3
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
         go-version: '1.21'
-    - name: Install goveralls
-      run: go install github.com/mattn/goveralls@latest
+    - name: Build Test WASM Modules
+      run: make build
     - name: Execute Tests
-      run: make tests
-    - name: Update Coveralls
-      env:
-        COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: goveralls -coverprofile=coverage/coverage.out -service=github
+      run: |
+        go test -v -race -covermode=atomic =coverprofile=coverage.out -skip "TestFullService/.*" ./...
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+
+  redis:
+    runs-on: ubuntu-latest
+    container: madflojo/ubuntu-build
+    services:
+      redis:
+        image: bitnami/redis:latest
+        # Set health checks to wait until redis has started
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        env:
+          ALLOW_EMPTY_PASSWORD: yes
+
+      redis-sentinel:
+        image: bitnami/redis-sentinel:latest
+        env:
+          REDIS_URL: redis://redis:6379
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.21'
+    - name: Build Test WASM Modules
+      run: make build
+    - name: Execute Tests
+      run: |
+        go test -v -race -covermode=atomic =coverprofile=coverage.out -run "TestFullService/Redis_.*" ./...
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3

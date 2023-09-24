@@ -40,7 +40,7 @@ services:
   tests:
     image: golang:latest
     working_dir: /go/src/github.com/madflojo/tarmac
-    entrypoint: go test -v -covermode=count -coverprofile=/tmp/coverage/coverage.out ./...
+    entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out ./...
     volumes:
       - "./:/go/src/github.com/madflojo/tarmac"
       - "./coverage:/tmp/coverage"
