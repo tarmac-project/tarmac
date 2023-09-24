@@ -13,7 +13,9 @@ import (
 	// PostgreSQL Database Driver
 	_ "github.com/lib/pq"
 	"github.com/madflojo/hord"
+	"github.com/madflojo/hord/drivers/bbolt"
 	"github.com/madflojo/hord/drivers/cassandra"
+	"github.com/madflojo/hord/drivers/hashmap"
 	"github.com/madflojo/hord/drivers/redis"
 	"github.com/madflojo/tarmac/pkg/callbacks"
 	"github.com/madflojo/tarmac/pkg/callbacks/httpclient"
@@ -159,6 +161,29 @@ func (srv *Server) Run() error {
 	if srv.cfg.GetBool("enable_kvstore") {
 		srv.log.Infof("Connecting to KV Store")
 		switch srv.cfg.GetString("kvstore_type") {
+		case "in-memory":
+			srv.kv, err = hashmap.Dial(hashmap.Config{})
+			if err != nil {
+				return fmt.Errorf("could not create internal kvstore - %w", err)
+			}
+		case "internal", "boltdb":
+			// Check if file exists, if not create one
+			fh, err := os.OpenFile(srv.cfg.GetString("boltdb_filename"), os.O_RDWR|os.O_CREATE|os.O_EXCL, os.FileMode(srv.cfg.GetInt("boltdb_permissions")))
+			if err != nil && !os.IsExist(err) {
+				return fmt.Errorf("could not create boltdb file - %w", err)
+			}
+			fh.Close()
+
+			// Open datastore
+			srv.kv, err = bbolt.Dial(bbolt.Config{
+				Filename:    srv.cfg.GetString("boltdb_filename"),
+				Bucketname:  srv.cfg.GetString("boltdb_bucket"),
+				Permissions: os.FileMode(srv.cfg.GetInt("boltdb_permissions")),
+				Timeout:     time.Duration(srv.cfg.GetInt("boltdb_timeout")) * time.Second,
+			})
+			if err != nil {
+				return fmt.Errorf("could not create internal kvstore - %w", err)
+			}
 		case "redis":
 			srv.kv, err = redis.Dial(redis.Config{
 				Server:   srv.cfg.GetString("redis_server"),

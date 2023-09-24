@@ -9,6 +9,8 @@ WORKDIR /go/src/github.com/madflojo/tarmac/
 
 FROM ubuntu:latest
 RUN install -d -m 0755 -o 1000 -g 500 /app/tarmac
+# Create Data directory for local data storage, override with volume mounts to retain data
+RUN install -d -m 0755 -o 1000 -g 500 /data/tarmac
 COPY --chown=1000:500 --from=0 /go/bin/tarmac /app/tarmac/
 COPY --chown=1000:500 --from=0 /go/src/github.com/madflojo/tarmac/docker-entrypoint.sh /app/tarmac/
 RUN chmod 755 /app/tarmac/tarmac /app/tarmac/docker-entrypoint.sh

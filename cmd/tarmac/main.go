@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/madflojo/tarmac/app"
+	"github.com/madflojo/tarmac/pkg/app"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	_ "github.com/spf13/viper/remote"
@@ -22,6 +22,11 @@ func main() {
 	cfg.SetDefault("config_watch_interval", 15)
 	cfg.SetDefault("wasm_function", "/functions/tarmac.wasm")
 	cfg.SetDefault("wasm_function_config", "/functions/tarmac.json")
+	cfg.SetDefault("kvstore_type", "internal")
+	cfg.SetDefault("boltdb_filename", "/data/tarmac/tarmac.db")
+	cfg.SetDefault("boltdb_bucket", "tarmac")
+	cfg.SetDefault("boltdb_permissions", 0600)
+	cfg.SetDefault("boltdb_timeout", 5)
 	cfg.SetDefault("grpc_socket_path", "/grpc.sock")
 
 	// Load Config

@@ -28,27 +28,7 @@ When using Environment Variables, all configurations are prefixed with `APP_`. T
 | `APP_WASM_FUNCTION_CONFIG` | `wasm_function_config` | `string` | Path to Service configuration for multi-function services \(Default: `/functions/tarmac.json`\) |
 | `APP_ENABLE_PPROF` | `enable_pprof` | `bool` | Enable PProf Collection HTTP end-points |
 | `APP_ENABLE_KVSTORE` | `enable_kvstore` | `bool` | Enable the KV Store |
-| `APP_KVSTORE_TYPE` | `kvstore_type` | `string` | Select KV Store to use (Options: `redis`, `cassandra`)|
-| `APP_REDIS_SERVER` | `redis_server` | `string` | Redis server address |
-| `APP_REDIS_DATABASE` | `redis_database` | `int` | Redis Database (default: `0`) |
-| `APP_REDIS_PASSWORD` | `redis_password` | `string` | Redis password |
-| `APP_REDIS_SENTINEL_SERVERS` | `redis_sentinel_servers` | `[]string` | Redis Sentinel Server Addresses |
-| `APP_REDIS_SENTINEL_MASTER` | `redis_sentinel_master` | `string` | Redis Sentinel Master Instance Name |
-| `APP_REDIS_CONNECT_TIMEOUT` | `redis_connect_timeout` | `int` | Redis Connection Timeout in seconds |
-| `APP_REDIS_HOSTNAME_VERIFY` | `redis_hostname_verify` | `bool` | Skip hostname verification for TLS |
-| `APP_REDIS_KEEPALIVE` | `redis_keepalive` | `int` | TCP Keepalive Interval in seconds (Default: `300`) |
-| `APP_REDIS_MAX_ACTIVE` | `redis_max_active` | `int` | Max Active Connections |
-| `APP_REDIS_READ_TIMEOUT` | `redis_read_timeout` | `int` | Read timeout in seconds |
-| `APP_REDIS_WRITE_TIMEOUT` | `redis_write_timeout` | `int` | Write timeout in seconds |
-| `APP_CASSANDRA_HOSTS` | `cassandra_hosts` | `[]string` | Cassandra node addresses |
-| `APP_CASSANDRA_PORT` | `cassandra_port` | `int` | Cassandra node port |
-| `APP_CASSANDRA_KEYSPACE` | `cassandra_keyspace` | `string` | Cassandra Keyspace name |
-| `APP_CASSANDRA_CONSISTENCY` | `cassandra_consistency` | `string` | Desired Consistency (Default: `Quorum`)|
-| `APP_CASSANDRA_REPL_STRATEGY` | `cassandra_repl_strategy` | `string` | Replication Strategy for Cluster (Default: `SimpleStrategy`)|
-| `APP_CASSANDRA_REPLICAS` | `cassandra_replicas` | `int` | Default number of replicas for data (Default: `1`) |
-| `APP_CASSANDRA_USER` | `cassandra_user` | `string` | Username to authenticate with |
-| `APP_CASSANDRA_PASSWORD` | `cassandra_password` | `string` | Password to authenticate with |
-| `APP_CASSANDRA_HOSTNAME_VERIFY` | `cassandra_hostname_verify` | `bool` | Enable/Disable hostname verification for TLS |
+| `APP_KVSTORE_TYPE` | `kvstore_type` | `string` | Select KV Store to use (Options: `redis`, `cassandra`, `boltdb`, `in-memory`, `internal`)|
 
 ## Consul Format
 

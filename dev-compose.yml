@@ -87,9 +87,9 @@ services:
       - ALLOW_EMPTY_PASSWORD=yes
   cassandra-primary:
     image: madflojo/cassandra:latest
-    command: /bin/bash -c "sleep 1 && /docker-entrypoint.sh cassandra -f"
     environment:
       - CASSANDRA_KEYSPACE=tarmac
+      - SLEEP_TIMER=1
     expose:
       - 7000
       - 7001
@@ -98,10 +98,10 @@ services:
       - 9160
   cassandra:
     image: madflojo/cassandra:latest
-    command: /bin/bash -c "sleep 15 && /docker-entrypoint.sh cassandra -f"
     environment:
       - CASSANDRA_SEEDS=cassandra-primary
       - CASSANDRA_KEYSPACE=tarmac
+      - SLEEP_TIMER=15
     depends_on:
       - cassandra-primary
     expose:
@@ -119,7 +119,7 @@ services:
     ports:
       - 3306:3306
   consul:
-    image: consul
+    image: bitnami/consul:latest
     ports:
       - 8500:8500
   consulator:
