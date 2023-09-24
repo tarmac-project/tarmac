@@ -8,7 +8,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/madflojo/tarmac)](https://goreportcard.com/report/github.com/madflojo/tarmac)
 [![Coverage Status](https://coveralls.io/repos/github/madflojo/tarmac/badge.svg?branch=master)](https://coveralls.io/github/madflojo/tarmac?branch=master)
 
-## Framework for writing functions, microservices, or monoliths with Web Assembly Functions
+## Framework for writing functions, microservices, or monoliths with Web Assembly
 
 Tarmac is a new approach to application frameworks. Tarmac is language agnostic and offers built-in support for key/value stores like BoltDB, Redis, and Cassandra, traditional SQL databases like MySQL and Postgres, and fundamental capabilities like mutual TLS authentication and observability.
 
