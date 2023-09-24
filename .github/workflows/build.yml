@@ -75,7 +75,7 @@ jobs:
       run: make build
     - name: Execute Tests
       run: |
-        go test -v -race -covermode=atomic -coverprofile=coverage.out -run "TestFullService/Redis_.*" ./...
+        go test -v -race -covermode=atomic -coverprofile=coverage.out -run "TestFullService/Redis.*" ./...
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
 
@@ -115,7 +115,7 @@ jobs:
       run: make build
     - name: Execute Tests
       run: |
-        go test -v -race -covermode=atomic -coverprofile=coverage.out -run "TestFullService/Cassandra_.*" ./...
+        go test -v -race -covermode=atomic -coverprofile=coverage.out -run "TestFullService/Cassandra.*" ./...
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
 
@@ -132,7 +132,7 @@ jobs:
       run: make build
     - name: Execute Tests
       run: |
-        go test -v -race -covermode=atomic -coverprofile=coverage.out -run "TestFullService/BoltDB_.*" ./...
+        go test -v -race -covermode=atomic -coverprofile=coverage.out -run "TestFullService/BoltDB.*" ./...
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
 
@@ -149,7 +149,7 @@ jobs:
       run: make build
     - name: Execute Tests
       run: |
-        go test -v -race -covermode=atomic -coverprofile=coverage.out -run "TestFullService/In-Memory_.*" ./...
+        go test -v -race -covermode=atomic -coverprofile=coverage.out -run "TestFullService/In-Memory.*" ./...
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
 
@@ -174,7 +174,7 @@ jobs:
       run: make build
     - name: Execute Tests
       run: |
-        go test -v -race -covermode=atomic -coverprofile=coverage.out -run "TestFullService/MySQL_.*" ./...
+        go test -v -race -covermode=atomic -coverprofile=coverage.out -run "TestFullService/MySQL.*" ./...
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
 
@@ -199,6 +199,6 @@ jobs:
       run: make build
     - name: Execute Tests
       run: |
-        go test -v -race -covermode=atomic -coverprofile=coverage.out -run "TestFullService/Postgres_.*" ./...
+        go test -v -race -covermode=atomic -coverprofile=coverage.out -run "TestFullService/Postgres.*" ./...
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3 
