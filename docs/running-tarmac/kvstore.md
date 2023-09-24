@@ -15,6 +15,8 @@ The below table outlines the different available options.
 
 | Datastore | Type option | Description | Useful for |
 | --------  | ----------- | ----------- | ---------- |
+| In-Memory | `in-memory` | In-Memory key/value store | Testing, Development, Non-Persistent Caching |
+| BoltDB | `boltdb` | BoltDB Embedded key/value store | Strong Consistency, Persistent Storage |
 | Redis | `redis` | Redis including Sentinel and Enterprise capabilities | Strong Consistency, Fast Reads and Writes, Non-Persistent storage  |
 | Cassandra | `cassandra` | Cassandra including TLS connectivity | Eventual Consistency, Persistent Storage, Large sets of data |
 

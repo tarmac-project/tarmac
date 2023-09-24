@@ -21,6 +21,7 @@
 
 ## Running Tarmac
 * [Configuration](running-tarmac/configuration.md)
+  * [BoltDB](running-tarmac/boltdb.md)
   * [Redis](running-tarmac/redis.md)
   * [Cassandra](running-tarmac/cassandra.md)
 * Datastores

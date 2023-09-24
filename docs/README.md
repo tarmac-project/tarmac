@@ -2,21 +2,21 @@
 
 ![](tarmac-logo.png)
 
-Build Serverless Microservices with WebAssembly Functions
-
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/madflojo/tarmac/pkg/sdk)](https://pkg.go.dev/github.com/madflojo/tarmac/pkg/sdk)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://tarmac.gitbook.io/tarmac/)
 [![Build Status](https://github.com/madflojo/tarmac/actions/workflows/build.yml/badge.svg)](https://github.com/madflojo/tarmac/actions/workflows/build.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/madflojo/tarmac)](https://goreportcard.com/report/github.com/madflojo/tarmac)
 [![Coverage Status](https://coveralls.io/repos/github/madflojo/tarmac/badge.svg?branch=master)](https://coveralls.io/github/madflojo/tarmac?branch=master)
 
-Tarmac is a lightweight, open-source application server that simplifies building microservices using WebAssembly (WASM) functions. With Tarmac, you can quickly write and deploy a single function as a standalone microservice. Or you can use Tarmac's ability to run multi-function services to create a purpose-built serverless platform.
+## Framework for writing functions, microservices, or monoliths with Web Assembly Functions
 
-Tarmac delivers more than just a lightweight application server for WebAssembly functions. It offers built-in support for key-value stores like Redis and Cassandra, traditional SQL databases like MySQL and Postgres, and fundamental capabilities like mutual TLS authentication and observability. With Tarmac, you can easily focus on writing your functions while benefiting from a robust suite of integrations for building modern distributed services.
+Tarmac is a new approach to application frameworks. Tarmac is language agnostic and offers built-in support for key/value stores like BoltDB, Redis, and Cassandra, traditional SQL databases like MySQL and Postgres, and fundamental capabilities like mutual TLS authentication and observability.
+
+Supporting languages like Go, Rust, & Zig, you can focus on writing your functions in whatever language you like while benefiting from a robust suite of capabilities for building modern distributed services.
 
 ## Quick Start
 
-Tarmac makes it easy to get started with building complex functions. This Go function is an excellent example of its simplicity. Its payload reversal logic leverages a key:value datastore for caching, demonstrating how effortless it is to create complex functionality with very little code.
+Tarmac makes it easy to get started with building complex functions. The below function (written in Go) is an excellent example of its simplicity.
 
 ```go
 // Tac is a small, simple Go program that is an example WASM module for Tarmac. This program will accept a Tarmac
@@ -98,7 +98,7 @@ That's it! You can write and deploy functions in Go, Rust, AssemblyScript, Swift
 
 ## Multi-Function Services
 
-While users of Tarmac can build standalone microservices with a single function quickly, it shines with multi-function services. Tarmac's ability to run multiple functions means you can create purpose-built serverless platforms or full-featured distributed services with the developer experience of serverless functions.
+While users of Tarmac can build standalone microservices with a single function quickly, it shines with multi-function services. Tarmac's ability to run multiple functions means you can create purpose-built platforms with the developer experience of serverless functions.
 
 To get started with multi-function services, you must provide a `tarmac.json` configuration file (via the `WASM_FUNCTION_CONFIG` configuration parameter) that lists the Functions to load and the various protocols and routes to expose as endpoints. Below is a sample `tarmac.json` configuration file.
 
@@ -160,13 +160,15 @@ By leveraging waPC, WebAssembly Functions can interact with Tarmac's core capabi
 
 To provide a streamlined developer experience, Tarmac offers a Go SDK that simplifies the usage of waPC. The SDK abstracts away the complexity of using waPC, allowing developers to focus on writing their functions and leveraging Tarmac's features.
 
-With Tarmac, users can build a simple microservice (depicted below).
-
-![Tarmac Single Function Architecture](tarmac-single-function.png)
-
-Or, users can build complex Serverless platforms to enable multiple use cases.
-
 ![Tarmac Architecture](tarmac-architecture.png)
+
+| Language | waPC Client | Tarmac SDK |
+| :--- | :--- | :--- |
+| AssemblyScript | ✅ | |
+| Go | ✅ | ✅ |
+| Rust | ✅ | |
+| Swift | ✅ | |
+| Zig | ✅ | |
 
 ## Contributing
 
