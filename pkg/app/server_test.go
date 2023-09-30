@@ -153,6 +153,7 @@ func TestFullService(t *testing.T) {
 	tc.cfg.Set("sql_type", "mysql")
 	tc.cfg.Set("sql_dsn", "root:example@tcp(mysql:3306)/example")
 	tc.cfg.Set("wasm_function_config", "/testdata/tarmac.json")
+	tt = append(tt, tc)
 
 	tc = FullServiceTestCase{name: "Postgres", cfg: viper.New()}
 	tc.cfg.Set("disable_logging", false)
@@ -162,6 +163,7 @@ func TestFullService(t *testing.T) {
 	tc.cfg.Set("sql_type", "postgres")
 	tc.cfg.Set("sql_dsn", "postgres://exmaple:example@postgres:5432/postgres?sslmode=disable")
 	tc.cfg.Set("wasm_function_config", "/testdata/tarmac.json")
+	tt = append(tt, tc)
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {

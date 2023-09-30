@@ -11,7 +11,7 @@ build-testdata:
 	$(MAKE) -C testdata/function build
 
 tests: build tests-nobuild
-tests-nobuild: tests-nodeps tests-redis tests-cassandra tests-mysql tests-postgres
+tests-nobuild: tests-nodeps tests-redis tests-cassandra tests-mysql tests-postgres tests-boltdb tests-inmemory
 
 tests-nodeps:
 	@echo "Launching Tests in Docker Compose"
