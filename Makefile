@@ -10,17 +10,46 @@ build-testdata:
 	$(MAKE) -C testdata/logger build
 	$(MAKE) -C testdata/function build
 
-tests: build
-	@echo "Launching Tests in Docker Compose"
-	docker-compose -f dev-compose.yml up -d cassandra-primary cassandra mysql consul consulator
-	sleep 120 
-	docker-compose -f dev-compose.yml up --exit-code-from tests --build tests
+tests: build tests-nobuild
+tests-nobuild: tests-nodeps tests-redis tests-cassandra tests-mysql tests-postgres tests-boltdb tests-inmemory
 
-tests-nobuild:
+tests-nodeps:
 	@echo "Launching Tests in Docker Compose"
-	docker-compose -f dev-compose.yml up -d cassandra-primary cassandra mysql consul consulator
-	sleep 120 
-	docker-compose -f dev-compose.yml up --exit-code-from tests --build tests
+	docker-compose -f dev-compose.yml up --exit-code-from tests-nodeps --build tests-nodeps
+	docker-compose -f dev-compose.yml down
+
+tests-boltdb:
+	@echo "Launching Tests in Docker Compose"
+	docker-compose -f dev-compose.yml up --exit-code-from tests-boltdb tests-boltdb
+	docker-compose -f dev-compose.yml down
+
+tests-inmemory:
+	@echo "Launching Tests in Docker Compose"
+	docker-compose -f dev-compose.yml up --exit-code-from tests-inmemory tests-inmemory
+	docker-compose -f dev-compose.yml down
+
+tests-redis:
+	@echo "Launching Tests in Docker Compose"
+	docker-compose -f dev-compose.yml up --exit-code-from tests-redis tests-redis
+	docker-compose -f dev-compose.yml down
+
+tests-cassandra:
+	@echo "Launching Tests in Docker Compose"
+	docker-compose -f dev-compose.yml up -d cassandra-primary cassandra
+	docker-compose -f dev-compose.yml up --exit-code-from tests-cassandra tests-cassandra
+	docker-compose -f dev-compose.yml down
+
+tests-mysql:
+	@echo "Launching Tests in Docker Compose"
+	docker-compose -f dev-compose.yml up -d mysql
+	docker-compose -f dev-compose.yml up --exit-code-from tests-mysql tests-mysql
+	docker-compose -f dev-compose.yml down
+
+tests-postgres:
+	@echo "Launching Tests in Docker Compose"
+	docker-compose -f dev-compose.yml up -d postgres
+	docker-compose -f dev-compose.yml up --exit-code-from tests-postgres tests-postgres
+	docker-compose -f dev-compose.yml down
 
 benchmarks:
 	@echo "Launching Tests in Docker Compose"

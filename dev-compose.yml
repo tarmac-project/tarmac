@@ -34,13 +34,14 @@ services:
     volumes:
       - "./testdata:/testdata"
     depends_on:
+      - mysql
       - redis
       - consul
       - consulator
-  tests:
+  tests-nodeps:
     image: golang:latest
     working_dir: /go/src/github.com/madflojo/tarmac
-    entrypoint: go test -v -covermode=count -coverprofile=/tmp/coverage/coverage.out ./...
+    entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -skip "TestFullService/.*" ./...
     volumes:
       - "./:/go/src/github.com/madflojo/tarmac"
       - "./coverage:/tmp/coverage"
@@ -54,11 +55,122 @@ services:
       - "CONSUL_HTTP_SSL=false"
     depends_on:
       - redis
+      - consul
+      - consulator
+      - mysql
+  tests-inmemory:
+    image: golang:latest
+    working_dir: /go/src/github.com/madflojo/tarmac
+    entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -run "TestFullService/In-Memory.*" ./...
+    volumes:
+      - "./:/go/src/github.com/madflojo/tarmac"
+      - "./coverage:/tmp/coverage"
+      - "./example:/example"
+      - "./testdata:/testdata"
+    environment:
+      - "APP_ENABLE_TLS=false"
+      - "APP_CONSUL_ADDR=consul:8500"
+      - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
+      - "CONSUL_HTTP_ADDR=consul:8500"
+      - "CONSUL_HTTP_SSL=false"
+    depends_on:
+      - consul
+      - consulator
+  tests-boltdb:
+    image: golang:latest
+    working_dir: /go/src/github.com/madflojo/tarmac
+    entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -run "TestFullService/BoltDB.*" ./...
+    volumes:
+      - "./:/go/src/github.com/madflojo/tarmac"
+      - "./coverage:/tmp/coverage"
+      - "./example:/example"
+      - "./testdata:/testdata"
+    environment:
+      - "APP_ENABLE_TLS=false"
+      - "APP_CONSUL_ADDR=consul:8500"
+      - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
+      - "CONSUL_HTTP_ADDR=consul:8500"
+      - "CONSUL_HTTP_SSL=false"
+    depends_on:
+      - consul
+      - consulator
+  tests-redis:
+    image: golang:latest
+    working_dir: /go/src/github.com/madflojo/tarmac
+    entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -run "TestFullService/Redis.*" ./...
+    volumes:
+      - "./:/go/src/github.com/madflojo/tarmac"
+      - "./coverage:/tmp/coverage"
+      - "./example:/example"
+      - "./testdata:/testdata"
+    environment:
+      - "APP_ENABLE_TLS=false"
+      - "APP_CONSUL_ADDR=consul:8500"
+      - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
+      - "CONSUL_HTTP_ADDR=consul:8500"
+      - "CONSUL_HTTP_SSL=false"
+    depends_on:
+      - redis
+      - consul
+      - consulator
+  tests-cassandra:
+    image: golang:latest
+    working_dir: /go/src/github.com/madflojo/tarmac
+    entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -run "TestFullService/Cassandra.*" ./...
+    volumes:
+      - "./:/go/src/github.com/madflojo/tarmac"
+      - "./coverage:/tmp/coverage"
+      - "./example:/example"
+      - "./testdata:/testdata"
+    environment:
+      - "APP_ENABLE_TLS=false"
+      - "APP_CONSUL_ADDR=consul:8500"
+      - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
+      - "CONSUL_HTTP_ADDR=consul:8500"
+      - "CONSUL_HTTP_SSL=false"
+    depends_on:
       - cassandra-primary
       - cassandra
       - consul
       - consulator
+  tests-mysql:
+    image: golang:latest
+    working_dir: /go/src/github.com/madflojo/tarmac
+    entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -run "TestFullService/MySQL.*" ./...
+    volumes:
+      - "./:/go/src/github.com/madflojo/tarmac"
+      - "./coverage:/tmp/coverage"
+      - "./example:/example"
+      - "./testdata:/testdata"
+    environment:
+      - "APP_ENABLE_TLS=false"
+      - "APP_CONSUL_ADDR=consul:8500"
+      - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
+      - "CONSUL_HTTP_ADDR=consul:8500"
+      - "CONSUL_HTTP_SSL=false"
+    depends_on:
       - mysql
+      - consul
+      - consulator
+  tests-postgres:
+    image: golang:latest
+    working_dir: /go/src/github.com/madflojo/tarmac
+    entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -run "TestFullService/Postgres.*" ./...
+    volumes:
+      - "./:/go/src/github.com/madflojo/tarmac"
+      - "./coverage:/tmp/coverage"
+      - "./example:/example"
+      - "./testdata:/testdata"
+    environment:
+      - "APP_ENABLE_TLS=false"
+      - "APP_CONSUL_ADDR=consul:8500"
+      - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
+      - "CONSUL_HTTP_ADDR=consul:8500"
+      - "CONSUL_HTTP_SSL=false"
+    depends_on:
+      - postgres
+      - consul
+      - consulator
   benchmarks:
     image: golang:latest
     working_dir: /go/src/github.com/madflojo/tarmac
@@ -81,6 +193,7 @@ services:
       - consul
       - consulator
       - mysql
+      - postgres
   redis:
     image: bitnami/redis:latest
     environment:
@@ -118,6 +231,15 @@ services:
       MYSQL_DATABASE: example
     ports:
       - 3306:3306
+  postgres:
+    image: bitnami/postgresql:latest
+    restart: always
+    environment:
+      - POSTGRESQL_USERNAME=example
+      - POSTGRESQL_PASSWORD=example
+      - POSTGRESQL_DATABASE=example
+    ports:
+      - 5432:5432
   consul:
     image: bitnami/consul:latest
     ports:

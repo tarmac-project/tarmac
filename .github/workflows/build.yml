@@ -17,11 +17,90 @@ jobs:
       uses: actions/setup-go@v3
       with:
         go-version: '1.21'
-    - name: Install goveralls
-      run: go install github.com/mattn/goveralls@latest
     - name: Execute Tests
-      run: make tests
-    - name: Update Coveralls
-      env:
-        COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: goveralls -coverprofile=coverage/coverage.out -service=github
+      run: make build tests-nodeps
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+
+  redis:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.21'
+    - name: Execute Tests
+      run: make build tests-redis
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+
+  cassandra:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.21'
+    - name: Execute Tests
+      run: make build tests-cassandra
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+
+
+  boltdb:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.21'
+    - name: Build Test WASM Modules
+      run: make build
+    - name: Execute Tests
+      run: make build tests-boltdb
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+
+
+  in-memory:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.21'
+    - name: Execute Tests
+      run: make build tests-inmemory
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+
+
+  mysql:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.21'
+    - name: Execute Tests
+      run: make build tests-mysql
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+
+  postgres:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.21'
+    - name: Execute Tests
+      run: make build tests-postgres
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3 
