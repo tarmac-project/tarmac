@@ -161,7 +161,7 @@ func TestFullService(t *testing.T) {
 	tc.cfg.Set("listen_addr", "localhost:9001")
 	tc.cfg.Set("enable_sql", true)
 	tc.cfg.Set("sql_type", "postgres")
-	tc.cfg.Set("sql_dsn", "postgres://example:example@postgres:5432/postgres?sslmode=disable")
+	tc.cfg.Set("sql_dsn", "postgres://example:example@postgres:5432/example?sslmode=disable")
 	tc.cfg.Set("wasm_function_config", "/testdata/tarmac.json")
 	tt = append(tt, tc)
 
