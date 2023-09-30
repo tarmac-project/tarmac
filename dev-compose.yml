@@ -38,7 +38,7 @@ services:
       - redis
       - consul
       - consulator
-  tests-nodeps:
+  tests-base:
     image: golang:latest
     working_dir: /go/src/github.com/madflojo/tarmac
     entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -skip "TestFullService/.*" ./...
@@ -246,7 +246,7 @@ services:
       - 8500:8500
   consulator:
     image: lewispeckover/consulator
-    command: "import /app/tarmac-consul.yml"
+    command: "import /app/testdata/tarmac-consul.yml"
     depends_on:
       - consul
     volumes:
