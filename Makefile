@@ -11,11 +11,12 @@ build-testdata:
 	$(MAKE) -C testdata/function build
 
 tests: build tests-nobuild
-tests-nobuild: tests-nodeps tests-redis tests-cassandra tests-mysql tests-postgres tests-boltdb tests-inmemory
+tests-nobuild: tests-base tests-redis tests-cassandra tests-mysql tests-postgres tests-boltdb tests-inmemory
 
-tests-nodeps:
+tests-base:
 	@echo "Launching Tests in Docker Compose"
-	docker-compose -f dev-compose.yml up --exit-code-from tests-nodeps --build tests-nodeps
+	docker-compose -f dev-compose.yml up -d consul consulator
+	docker-compose -f dev-compose.yml up --exit-code-from tests-base --build tests-base
 	docker-compose -f dev-compose.yml down
 
 tests-boltdb:

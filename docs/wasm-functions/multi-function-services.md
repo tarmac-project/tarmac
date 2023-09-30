@@ -12,9 +12,6 @@ The `tarmac.json` file has a simple structure that consists of a single object w
 
 ```json
 {
-  "globals": {
-    "log_level": "debug"
-  },
   "services": {
     "my-service": {
       "name": "my-service",
