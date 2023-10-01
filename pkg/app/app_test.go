@@ -85,6 +85,15 @@ func TestBadConfigs(t *testing.T) {
 	v.Set("wasm_function", "something-that-does-not-exist")
 	cfgs["invalid WASM path"] = v
 
+	// Failing init function
+	v = viper.New()
+	v.Set("enable_tls", false)
+	v.Set("listen_addr", "0.0.0.0:8443")
+	v.Set("disable_logging", true)
+	v.Set("enable_kvstore", false)
+	v.Set("wasm_function_config", "/testdata/tarmac-fail.json")
+	cfgs["failing init function"] = v
+
 	// Loop through bad configs, creating sub-tests as we go
 	for k, v := range cfgs {
 		t.Run("Testing "+k, func(t *testing.T) {

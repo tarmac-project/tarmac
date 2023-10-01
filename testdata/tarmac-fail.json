@@ -1,0 +1,18 @@
+{
+  "services": {
+    "test-service": {
+      "name": "test-service",
+      "functions": {
+        "fail": {
+          "filepath": "/testdata/fail/tarmac.wasm"
+        }
+      },
+      "routes": [
+        {
+          "type": "init",
+          "function": "fail"
+        }
+      ]
+    }
+  }
+}

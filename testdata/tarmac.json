@@ -21,6 +21,10 @@
       },
       "routes": [
         {
+          "type": "init",
+          "function": "default"
+        },
+        {
           "type": "http",
           "path": "/",
           "methods": ["GET", "POST", "PUT"],

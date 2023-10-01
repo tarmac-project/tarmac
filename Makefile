@@ -5,6 +5,7 @@ build: build-testdata
 
 build-testdata:
 	$(MAKE) -C testdata/default build
+	$(MAKE) -C testdata/fail build
 	$(MAKE) -C testdata/kv build
 	$(MAKE) -C testdata/sql build
 	$(MAKE) -C testdata/logger build
