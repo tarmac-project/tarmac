@@ -5,7 +5,7 @@ This package provides user-friendly functions that wrap the Web Assembly Procedu
 Tarmac. Guest WASM functions running inside Tarmac can use this library to call back the Tarmac host and perform
 host-level actions such as storing data within the database, logging specific data, or looking up configurations.
 
-	import "github.com/madflojo/tarmac/pkg/sdk"
+	import "github.com/tarmac-project/tarmac/pkg/sdk"
 
 	var tarmac *Tarmac
 
@@ -25,12 +25,12 @@ package sdk
 
 import (
 	"fmt"
-	"github.com/madflojo/tarmac/pkg/sdk/function"
-	"github.com/madflojo/tarmac/pkg/sdk/http"
-	"github.com/madflojo/tarmac/pkg/sdk/kvstore"
-	"github.com/madflojo/tarmac/pkg/sdk/logger"
-	"github.com/madflojo/tarmac/pkg/sdk/metrics"
-	"github.com/madflojo/tarmac/pkg/sdk/sql"
+	"github.com/tarmac-project/tarmac/pkg/sdk/function"
+	"github.com/tarmac-project/tarmac/pkg/sdk/http"
+	"github.com/tarmac-project/tarmac/pkg/sdk/kvstore"
+	"github.com/tarmac-project/tarmac/pkg/sdk/logger"
+	"github.com/tarmac-project/tarmac/pkg/sdk/metrics"
+	"github.com/tarmac-project/tarmac/pkg/sdk/sql"
 	wapc "github.com/wapc/wapc-guest-tinygo"
 )
 

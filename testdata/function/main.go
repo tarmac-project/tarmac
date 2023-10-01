@@ -2,7 +2,7 @@
 package main
 
 import (
-	"github.com/madflojo/tarmac/pkg/sdk"
+	"github.com/tarmac-project/tarmac/pkg/sdk"
 )
 
 var tarmac *sdk.Tarmac

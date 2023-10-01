@@ -40,10 +40,10 @@ services:
       - consulator
   tests-base:
     image: golang:latest
-    working_dir: /go/src/github.com/madflojo/tarmac
+    working_dir: /go/src/github.com/tarmac-project/tarmac
     entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -skip "TestFullService/.*" ./...
     volumes:
-      - "./:/go/src/github.com/madflojo/tarmac"
+      - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
       - "./example:/example"
       - "./testdata:/testdata"
@@ -60,10 +60,10 @@ services:
       - mysql
   tests-inmemory:
     image: golang:latest
-    working_dir: /go/src/github.com/madflojo/tarmac
+    working_dir: /go/src/github.com/tarmac-project/tarmac
     entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -run "TestFullService/In-Memory.*" ./...
     volumes:
-      - "./:/go/src/github.com/madflojo/tarmac"
+      - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
       - "./example:/example"
       - "./testdata:/testdata"
@@ -78,10 +78,10 @@ services:
       - consulator
   tests-boltdb:
     image: golang:latest
-    working_dir: /go/src/github.com/madflojo/tarmac
+    working_dir: /go/src/github.com/tarmac-project/tarmac
     entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -run "TestFullService/BoltDB.*" ./...
     volumes:
-      - "./:/go/src/github.com/madflojo/tarmac"
+      - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
       - "./example:/example"
       - "./testdata:/testdata"
@@ -96,10 +96,10 @@ services:
       - consulator
   tests-redis:
     image: golang:latest
-    working_dir: /go/src/github.com/madflojo/tarmac
+    working_dir: /go/src/github.com/tarmac-project/tarmac
     entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -run "TestFullService/Redis.*" ./...
     volumes:
-      - "./:/go/src/github.com/madflojo/tarmac"
+      - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
       - "./example:/example"
       - "./testdata:/testdata"
@@ -115,10 +115,10 @@ services:
       - consulator
   tests-cassandra:
     image: golang:latest
-    working_dir: /go/src/github.com/madflojo/tarmac
+    working_dir: /go/src/github.com/tarmac-project/tarmac
     entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -run "TestFullService/Cassandra.*" ./...
     volumes:
-      - "./:/go/src/github.com/madflojo/tarmac"
+      - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
       - "./example:/example"
       - "./testdata:/testdata"
@@ -135,10 +135,10 @@ services:
       - consulator
   tests-mysql:
     image: golang:latest
-    working_dir: /go/src/github.com/madflojo/tarmac
+    working_dir: /go/src/github.com/tarmac-project/tarmac
     entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -run "TestFullService/MySQL.*" ./...
     volumes:
-      - "./:/go/src/github.com/madflojo/tarmac"
+      - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
       - "./example:/example"
       - "./testdata:/testdata"
@@ -154,10 +154,10 @@ services:
       - consulator
   tests-postgres:
     image: golang:latest
-    working_dir: /go/src/github.com/madflojo/tarmac
+    working_dir: /go/src/github.com/tarmac-project/tarmac
     entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -run "TestFullService/Postgres.*" ./...
     volumes:
-      - "./:/go/src/github.com/madflojo/tarmac"
+      - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
       - "./example:/example"
       - "./testdata:/testdata"
@@ -173,10 +173,10 @@ services:
       - consulator
   benchmarks:
     image: golang:latest
-    working_dir: /go/src/github.com/madflojo/tarmac
+    working_dir: /go/src/github.com/tarmac-project/tarmac
     entrypoint: go test -v -run=XXX -bench=. ./...
     volumes:
-      - "./:/go/src/github.com/madflojo/tarmac"
+      - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
       - "./example:/example"
       - "./testdata:/testdata"

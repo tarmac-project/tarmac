@@ -4,8 +4,8 @@ github.com/bytecodealliance/wasmtime-go v1.0.0 h1:9u9gqaUiaJeN5IoD1L7egD8atOnTGy
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/madflojo/tarmac v0.4.0 h1:DDvKUKYVelpsvc25ABkzGxVAI2ds8+h4EocS5ZH8CEc=
-github.com/madflojo/tarmac v0.4.0/go.mod h1:xXfc3Eh5CQUHV47IVWhrzM7+se7vlfsUXZQOcAA0b9o=
+github.com/tarmac-project/tarmac v0.4.0 h1:DDvKUKYVelpsvc25ABkzGxVAI2ds8+h4EocS5ZH8CEc=
+github.com/tarmac-project/tarmac v0.4.0/go.mod h1:xXfc3Eh5CQUHV47IVWhrzM7+se7vlfsUXZQOcAA0b9o=
 github.com/philhofer/fwd v1.1.1/go.mod h1:gk3iGcWd9+svBvR0sR+KPcfE+RNWozjowpeBVG3ZVNU=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=

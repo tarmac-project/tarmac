@@ -4,7 +4,7 @@ Thank you for considering contributing to Tarmac. The time, skills, and perspect
 
 ## How can I contribute?
 
-Bugs, design proposals, feature requests, and questions are all welcome and can be submitted by creating a [Github Issue](https://github.com/madflojo/tarmac/issues/new/choose) using one of the templates provided. Please provide as much detail as you can.
+Bugs, design proposals, feature requests, and questions are all welcome and can be submitted by creating a [Github Issue](https://github.com/tarmac-project/tarmac/issues/new/choose) using one of the templates provided. Please provide as much detail as you can.
 
 Code contributions are welcome as well! In an effort to keep this project tidy, please:
 

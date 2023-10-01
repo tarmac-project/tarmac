@@ -3,7 +3,7 @@ package kvstore
 import (
 	"fmt"
 	"github.com/madflojo/hord/drivers/mock"
-	"github.com/madflojo/tarmac"
+	"github.com/tarmac-project/tarmac"
 	"github.com/pquerna/ffjson/ffjson"
 	"testing"
 )

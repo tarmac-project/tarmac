@@ -18,7 +18,7 @@ Within our `main.go` file; we will need first to import the Tarmac Go SDK.
 package main
 
 import (
-	"github.com/madflojo/tarmac/pkg/sdk"
+	"github.com/tarmac-project/tarmac/pkg/sdk"
 )
 ```
 
@@ -93,7 +93,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/madflojo/tarmac/pkg/sdk"
+	"github.com/tarmac-project/tarmac/pkg/sdk"
 )
 
 var tarmac *sdk.Tarmac

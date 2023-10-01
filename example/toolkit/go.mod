@@ -1,9 +1,9 @@
-module github.com/madflojo/tarmac/example/toolkit
+module github.com/tarmac-project/tarmac/example/toolkit
 
 go 1.20
 
 require (
-	github.com/madflojo/tarmac v0.4.0
+	github.com/tarmac-project/tarmac v0.4.0
 	github.com/sirupsen/logrus v1.9.0
 )
 

@@ -3,7 +3,7 @@ package app
 import (
 	"context"
 	"crypto/tls"
-	"github.com/madflojo/tarmac/pkg/tlsconfig"
+	"github.com/tarmac-project/tarmac/pkg/tlsconfig"
 	"github.com/madflojo/testcerts"
 	"github.com/spf13/viper"
 	_ "github.com/spf13/viper/remote"

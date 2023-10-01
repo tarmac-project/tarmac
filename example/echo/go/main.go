@@ -4,7 +4,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/madflojo/tarmac/pkg/sdk"
+	"github.com/tarmac-project/tarmac/pkg/sdk"
 )
 
 // tarmac provides an interface for executing host capabilities such as Logging, KVStore, etc.

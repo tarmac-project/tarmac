@@ -3,7 +3,7 @@ package httpclient
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/madflojo/tarmac"
+	"github.com/tarmac-project/tarmac"
 	"github.com/pquerna/ffjson/ffjson"
 	"io"
 	"net/http"

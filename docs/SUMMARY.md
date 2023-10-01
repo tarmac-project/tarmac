@@ -34,7 +34,7 @@
 
 ## WebAssembly Developer Resources
 
-* [Go SDK](https://pkg.go.dev/github.com/madflojo/tarmac/pkg/sdk)
+* [Go SDK](https://pkg.go.dev/github.com/tarmac-project/tarmac/pkg/sdk)
 * [Toolkit](developers/toolkit.md)
-* [GitHub](https://github.com/madflojo/tarmac)
+* [GitHub](https://github.com/tarmac-project/tarmac)
 

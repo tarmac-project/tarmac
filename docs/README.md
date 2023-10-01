@@ -2,10 +2,10 @@
 
 ![](tarmac-logo.png)
 
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/madflojo/tarmac/pkg/sdk)](https://pkg.go.dev/github.com/madflojo/tarmac/pkg/sdk)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/tarmac-project/tarmac/pkg/sdk)](https://pkg.go.dev/github.com/tarmac-project/tarmac/pkg/sdk)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://tarmac.gitbook.io/tarmac/)
-[![Build Status](https://github.com/madflojo/tarmac/actions/workflows/build.yml/badge.svg)](https://github.com/madflojo/tarmac/actions/workflows/build.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/madflojo/tarmac)](https://goreportcard.com/report/github.com/madflojo/tarmac)
+[![Build Status](https://github.com/tarmac-project/tarmac/actions/workflows/build.yml/badge.svg)](https://github.com/tarmac-project/tarmac/actions/workflows/build.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/tarmac-project/tarmac)](https://goreportcard.com/report/github.com/tarmac-project/tarmac)
 [![Coverage Status](https://coveralls.io/repos/github/madflojo/tarmac/badge.svg?branch=master)](https://coveralls.io/github/madflojo/tarmac?branch=master)
 
 ## Framework for writing functions, microservices, or monoliths with Web Assembly
@@ -25,7 +25,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/madflojo/tarmac/pkg/sdk"
+	"github.com/tarmac-project/tarmac/pkg/sdk"
 )
 
 var tarmac *sdk.Tarmac

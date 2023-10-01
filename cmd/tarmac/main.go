@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/madflojo/tarmac/pkg/app"
+	"github.com/tarmac-project/tarmac/pkg/app"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	_ "github.com/spf13/viper/remote"

@@ -3,8 +3,8 @@ Package metrics is part of the Tarmac suite of Host Callback packages. This pack
 to provide WASM functions with a host callback interface that provides metrics tracking capabilities.
 
 	import (
-		"github.com/madflojo/tarmac/pkg/callbacks"
-		"github.com/madflojo/tarmac/pkg/callbacks/metrics"
+		"github.com/tarmac-project/tarmac/pkg/callbacks"
+		"github.com/tarmac-project/tarmac/pkg/callbacks/metrics"
 	)
 
 	func main() {
@@ -20,7 +20,7 @@ package metrics
 
 import (
 	"fmt"
-	"github.com/madflojo/tarmac"
+	"github.com/tarmac-project/tarmac"
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"

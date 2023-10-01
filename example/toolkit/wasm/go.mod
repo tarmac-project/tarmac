@@ -1,4 +1,4 @@
-module github.com/madflojo/tarmac/example/toolkit/wasm
+module github.com/tarmac-project/tarmac/example/toolkit/wasm
 
 go 1.20
 

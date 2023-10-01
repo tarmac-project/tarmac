@@ -1,4 +1,4 @@
-module github.com/madflojo/tarmac/pkg/sdk
+module github.com/tarmac-project/tarmac/pkg/sdk
 
 go 1.20
 

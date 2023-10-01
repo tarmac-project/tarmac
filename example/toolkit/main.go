@@ -6,10 +6,10 @@ package main
 
 import (
 	// Import Tarmac Callbacks Router and Desired Callback Capabilities
-	"github.com/madflojo/tarmac/pkg/callbacks"
-	"github.com/madflojo/tarmac/pkg/callbacks/logging"
+	"github.com/tarmac-project/tarmac/pkg/callbacks"
+	"github.com/tarmac-project/tarmac/pkg/callbacks/logging"
 	// Import Tarmac WASM Engine
-	"github.com/madflojo/tarmac/pkg/wasm"
+	"github.com/tarmac-project/tarmac/pkg/wasm"
 	"github.com/sirupsen/logrus"
 )
 
