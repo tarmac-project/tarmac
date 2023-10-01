@@ -24,8 +24,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/madflojo/hord"
-	"github.com/tarmac-project/tarmac"
 	"github.com/pquerna/ffjson/ffjson"
+	"github.com/tarmac-project/tarmac"
 )
 
 // KVStore provides access to Host Callbacks that interact with the key:value datastores within Tarmac. The callbacks

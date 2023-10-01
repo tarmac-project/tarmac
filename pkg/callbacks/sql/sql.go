@@ -22,8 +22,8 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"fmt"
-	"github.com/tarmac-project/tarmac"
 	"github.com/pquerna/ffjson/ffjson"
+	"github.com/tarmac-project/tarmac"
 )
 
 // Database provides access to Host Callbacks that interface with a SQL database within Tarmac. The callbacks
