@@ -2,7 +2,7 @@
 
 build:
 	## Run TinyGo build via Docker because its easier
-	docker run -v `pwd`/:/build -w /build tinygo/tinygo:latest tinygo build -o /build/tarmac.wasm -target wasi /build/main.go
+	docker run -v `pwd`/:/src -w /src tinygo/tinygo:latest tinygo build -o /src/tarmac.wasm -target wasi /src/main.go
 
 docker-compose:
 	docker compose up
