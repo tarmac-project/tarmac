@@ -1,6 +1,6 @@
 module github.com/tarmac-project/tarmac/testdata/kv
 
-go 1.21.1
+go 1.21
 
 require github.com/tarmac-project/tarmac/pkg/sdk v0.5.0
 

@@ -1,6 +1,6 @@
 module github.com/tarmac-project/tarmac/example/toolkit
 
-go 1.21.1
+go 1.21
 
 require (
 	github.com/sirupsen/logrus v1.9.3
