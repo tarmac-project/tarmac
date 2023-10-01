@@ -6,7 +6,7 @@
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://tarmac.gitbook.io/tarmac/)
 [![Build Status](https://github.com/tarmac-project/tarmac/actions/workflows/build.yml/badge.svg)](https://github.com/tarmac-project/tarmac/actions/workflows/build.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/tarmac-project/tarmac)](https://goreportcard.com/report/github.com/tarmac-project/tarmac)
-[![Coverage Status](https://coveralls.io/repos/github/madflojo/tarmac/badge.svg?branch=master)](https://coveralls.io/github/madflojo/tarmac?branch=master)
+[![codecov](https://codecov.io/gh/tarmac-project/tarmac/graph/badge.svg?token=15WYYOWVCE)](https://codecov.io/gh/tarmac-project/tarmac)
 
 ## Framework for writing functions, microservices, or monoliths with Web Assembly
 
