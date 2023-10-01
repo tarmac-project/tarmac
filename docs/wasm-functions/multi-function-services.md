@@ -114,6 +114,26 @@ Here is an example of a route object that defines a scheduled task that executes
 
 You can define multiple scheduled tasks in the routes array.
 
+##### Init Functions
+
+In addition to HTTP and scheduled task routes, Tarmac also supports init functions.
+
+You can define an init function route by adding a route object with the following properties to the routes array:
+
+- `type` (required): For Init Functions, set to `init`.
+- `function` (required): The function to call when the service is initialized.
+
+Here is an example of a route object that defines an init function that executes the default function when the service is initialized:
+
+```json
+{
+  "type": "init",
+  "function": "default"
+}
+```
+
+You can define multiple init functions in the routes array. Functions will be executed before the server is fully started but after the WASM modules are loaded and callbacks are registered.
+
 ##### Functions
 
 Tarmac supports the ability for Functions to call other Functions using the Function to Function route. 
