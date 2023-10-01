@@ -1,8 +1,8 @@
 module github.com/tarmac-project/tarmac/testdata/default
 
-go 1.20
+go 1.21.1
 
-require github.com/tarmac-project/tarmac/pkg/sdk v0.4.0
+require github.com/tarmac-project/tarmac/pkg/sdk v0.5.0
 
 require (
 	github.com/valyala/fastjson v1.6.4 // indirect
