@@ -9,8 +9,8 @@ import (
 	"github.com/tarmac-project/tarmac/pkg/callbacks"
 	"github.com/tarmac-project/tarmac/pkg/callbacks/logging"
 	// Import Tarmac WASM Engine
-	"github.com/tarmac-project/tarmac/pkg/wasm"
 	"github.com/sirupsen/logrus"
+	"github.com/tarmac-project/tarmac/pkg/wasm"
 )
 
 func main() {

@@ -7,8 +7,8 @@ import (
 	"strconv"
 	// Import MySQL Driver
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/tarmac-project/tarmac"
 	"github.com/pquerna/ffjson/ffjson"
+	"github.com/tarmac-project/tarmac"
 	"testing"
 )
 

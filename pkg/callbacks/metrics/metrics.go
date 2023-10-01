@@ -20,10 +20,10 @@ package metrics
 
 import (
 	"fmt"
-	"github.com/tarmac-project/tarmac"
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/tarmac-project/tarmac"
 	"regexp"
 	"sync"
 )

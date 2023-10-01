@@ -3,8 +3,8 @@ package app
 import (
 	"fmt"
 	"github.com/julienschmidt/httprouter"
-	"github.com/tarmac-project/tarmac/pkg/config"
 	"github.com/sirupsen/logrus"
+	"github.com/tarmac-project/tarmac/pkg/config"
 	"io"
 	"net/http"
 	"regexp"

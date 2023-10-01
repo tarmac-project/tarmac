@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/tarmac-project/tarmac/pkg/app"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	_ "github.com/spf13/viper/remote"
+	"github.com/tarmac-project/tarmac/pkg/app"
 )
 
 func main() {
