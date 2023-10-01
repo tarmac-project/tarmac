@@ -454,7 +454,14 @@ func (srv *Server) Run() error {
 			// Register Routes
 			srv.log.Infof("Registering Routes from Service %s", svcName)
 			funcRoutes := make(map[string]string)
+			initRoutes := []string{}
 			for _, r := range svcCfg.Routes {
+				// Copy init functions for later execution
+				if r.Type == "init" {
+					initRoutes = append(initRoutes, r.Function)
+				}
+
+				// Register HTTP based functions with the HTTP router
 				if r.Type == "http" {
 					for _, m := range r.Methods {
 						key := fmt.Sprintf("%s:%s:%s", r.Type, m, r.Path)
@@ -464,6 +471,7 @@ func (srv *Server) Run() error {
 					}
 				}
 
+				// Schedule tasks for scheduled functions
 				if r.Type == "scheduled_task" {
 					srv.log.Infof("Scheduling custom task for function %s with interval of %d", r.Function, r.Frequency)
 					id, err := srv.scheduler.Add(&tasks.Task{
@@ -488,6 +496,7 @@ func (srv *Server) Run() error {
 					defer srv.scheduler.Del(id)
 				}
 
+				// Setup callbacks for function to function calls
 				if r.Type == "function" {
 					srv.log.Infof("Registering Function to Function callback for %s", r.Function)
 					router.RegisterCallback("function", r.Function, func(b []byte) ([]byte, error) {
@@ -495,8 +504,16 @@ func (srv *Server) Run() error {
 					})
 				}
 			}
-		}
 
+			// Execute init functions
+			for _, f := range initRoutes {
+				srv.log.Infof("Executing Init Function %s", f)
+				_, err := srv.runWASM(f, "handler", []byte(""))
+				if err != nil {
+					return fmt.Errorf("error executing init function %s - %s", f, err)
+				}
+			}
+		}
 	}
 
 	// Register Metrics Handler
