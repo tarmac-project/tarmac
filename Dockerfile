@@ -8,6 +8,8 @@ RUN go install -v .
 WORKDIR /go/src/github.com/tarmac-project/tarmac/
 
 FROM ubuntu:latest
+# Install latest CA certificates
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && update-ca-certificates
 RUN install -d -m 0755 -o 1000 -g 500 /app/tarmac
 # Create Data directory for local data storage, override with volume mounts to retain data
 RUN install -d -m 0755 -o 1000 -g 500 /data/tarmac

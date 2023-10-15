@@ -317,7 +317,7 @@ func (srv *Server) Run() error {
 			srv.log.WithFields(logrus.Fields{
 				"namespace": namespace,
 				"function":  op,
-			}).Tracef("CallbackRouter called with payload %s", data)
+			}).Tracef("CallbackRouter called with payload - %s", data)
 			return []byte(""), nil
 		},
 		PostFunc: func(r callbacks.CallbackResult) {
@@ -448,11 +448,17 @@ func (srv *Server) Run() error {
 				if err != nil {
 					return fmt.Errorf("could not load function %s from path %s - %s", fName, fCfg.Filepath, err)
 				}
-				srv.log.Infof("Loaded Function %s for Service %s", fName, svcName)
+				srv.log.WithFields(logrus.Fields{
+					"function": fName,
+					"service":  svcName,
+					"filepath": fCfg.Filepath,
+				}).Infof("Loaded Function %s for Service %s with filepath of %s", fName, svcName, fCfg.Filepath)
 			}
 
 			// Register Routes
-			srv.log.Infof("Registering Routes from Service %s", svcName)
+			srv.log.WithFields(logrus.Fields{
+				"service": svcName,
+			}).Infof("Registering Routes from Service %s", svcName)
 			funcRoutes := make(map[string]string)
 			initRoutes := []string{}
 			for _, r := range svcCfg.Routes {
@@ -465,7 +471,13 @@ func (srv *Server) Run() error {
 				if r.Type == "http" {
 					for _, m := range r.Methods {
 						key := fmt.Sprintf("%s:%s:%s", r.Type, m, r.Path)
-						srv.log.Infof("Registering Route %s for function %s", key, r.Function)
+						srv.log.WithFields(logrus.Fields{
+							"function":      r.Function,
+							"method":        m,
+							"path":          r.Path,
+							"function_type": r.Type,
+							"service":       svcName,
+						}).Infof("Registering Route %s for function %s", key, r.Function)
 						funcRoutes[key] = r.Function
 						srv.httpRouter.Handle(m, r.Path, srv.middleware(srv.WASMHandler))
 					}
