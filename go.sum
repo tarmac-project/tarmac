@@ -407,8 +407,8 @@ github.com/tetratelabs/wazero v1.5.0/go.mod h1:0U0G41+ochRKoPKCJlh0jMg1CHkyfK8kD
 github.com/tinylib/msgp v1.1.5/go.mod h1:eQsjooMTnV42mHu917E26IogZ2930nFyBQdofk10Udg=
 github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31/go.mod h1:onvgF043R+lC5RZ8IT9rBXDaEDnpnw/Cl+HFiw+v/7Q=
 github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926/go.mod h1:9ESjWnEqriFuLhtthL60Sar/7RFoluCcXsuvEwTV5KM=
-github.com/wapc/wapc-go v0.6.1 h1:Nq6Y72Zny6VM/cA/SprPZ2WAt6BITQqo5P8sQHkvUjs=
-github.com/wapc/wapc-go v0.6.1/go.mod h1:CC0cdSRMHlnSw6yoWX0FdV5r37vgaETlcH6bf9r3+y4=
+github.com/wapc/wapc-go v0.6.2 h1:GLiNfdY9RU3m2QzSL2APjMaRJzpFG8MuwFI77aHdaZs=
+github.com/wapc/wapc-go v0.6.2/go.mod h1:CC0cdSRMHlnSw6yoWX0FdV5r37vgaETlcH6bf9r3+y4=
 github.com/wasmerio/wasmer-go v1.0.4 h1:MnqHoOGfiQ8MMq2RF6wyCeebKOe84G88h5yv+vmxJgs=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
