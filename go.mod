@@ -8,7 +8,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/madflojo/hord v0.2.0
 	github.com/madflojo/tasks v1.1.0
-	github.com/madflojo/testcerts v1.0.1
+	github.com/madflojo/testcerts v1.1.1
 	github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7
 	github.com/prometheus/client_golang v1.16.0
 	github.com/sirupsen/logrus v1.9.3
