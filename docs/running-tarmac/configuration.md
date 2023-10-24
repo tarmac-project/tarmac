@@ -29,6 +29,8 @@ When using Environment Variables, all configurations are prefixed with `APP_`. T
 | `APP_ENABLE_PPROF` | `enable_pprof` | `bool` | Enable PProf Collection HTTP end-points |
 | `APP_ENABLE_KVSTORE` | `enable_kvstore` | `bool` | Enable the KV Store |
 | `APP_KVSTORE_TYPE` | `kvstore_type` | `string` | Select KV Store to use (Options: `redis`, `cassandra`, `boltdb`, `in-memory`, `internal`)|
+| `APP_ENABLE_SQL` | `enable_sql` | `bool` | Enable the SQL Store |
+| `APP_SQL_TYPE` | `sql_type` | `string` | Select SQL Store to use (Options: `postgres`, `mysql`)|
 
 ## Consul Format
 
