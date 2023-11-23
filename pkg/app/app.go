@@ -328,14 +328,15 @@ func (srv *Server) Run() error {
 		},
 		PostFunc: func(r callbacks.CallbackResult) {
 			// Measure Callback Execution time and counts
-			srv.stats.Callbacks.WithLabelValues(fmt.Sprintf("%s:%s", r.Namespace, r.Operation)).Observe(r.EndTime.Sub(r.StartTime).Seconds())
+			srv.stats.Callbacks.WithLabelValues(fmt.Sprintf("%s:%s", r.Namespace, r.Operation)).Observe(float64(r.EndTime.Sub(r.StartTime).Milliseconds()))
 
 			// Debug logging of callback results
 			srv.log.WithFields(logrus.Fields{
 				"namespace": r.Namespace,
 				"operation": r.Operation,
 				"error":     r.Err,
-			}).Debugf("Callback returned result after %f seconds", r.EndTime.Sub(r.StartTime).Seconds())
+				"duration":  r.EndTime.Sub(r.StartTime).Milliseconds(),
+			}).Debugf("Callback returned result after %d milliseconds", r.EndTime.Sub(r.StartTime).Milliseconds())
 
 			// Trace logging of callback results
 			srv.log.WithFields(logrus.Fields{
@@ -343,14 +344,16 @@ func (srv *Server) Run() error {
 				"operation": r.Operation,
 				"input":     r.Input,
 				"error":     r.Err,
-			}).Tracef("Callback returned result after %f seconds with output - %s", r.EndTime.Sub(r.StartTime).Seconds(), r.Output)
+				"duration":  r.EndTime.Sub(r.StartTime).Milliseconds(),
+			}).Tracef("Callback returned result after %d milliseconds with output - %s", r.EndTime.Sub(r.StartTime).Milliseconds(), r.Output)
 
 			// Log Callback failures as warnings
 			if r.Err != nil {
 				srv.log.WithFields(logrus.Fields{
 					"namespace": r.Namespace,
 					"operation": r.Operation,
-				}).Warnf("Callback call resulted in error after %f seconds - %s", r.EndTime.Sub(r.StartTime).Seconds(), r.Err)
+					"duration":  r.EndTime.Sub(r.StartTime).Milliseconds(),
+				}).Warnf("Callback call resulted in error after %d milliseconds - %s", r.EndTime.Sub(r.StartTime).Milliseconds(), r.Err)
 			}
 		},
 	})
@@ -508,10 +511,10 @@ func (srv *Server) Run() error {
 							srv.log.Tracef("Executing Scheduled Function %s", fname)
 							_, err := srv.runWASM(fname, "handler", []byte(""))
 							if err != nil {
-								srv.stats.Tasks.WithLabelValues(fname).Observe(time.Since(now).Seconds())
+								srv.stats.Tasks.WithLabelValues(fname).Observe(float64(time.Since(now).Milliseconds()))
 								return err
 							}
-							srv.stats.Tasks.WithLabelValues(fname).Observe(time.Since(now).Seconds())
+							srv.stats.Tasks.WithLabelValues(fname).Observe(float64(time.Since(now).Milliseconds()))
 							return nil
 						},
 					})
