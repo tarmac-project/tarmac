@@ -335,7 +335,7 @@ func (srv *Server) Run() error {
 				"namespace": r.Namespace,
 				"operation": r.Operation,
 				"error":     r.Err,
-        "duration":  r.EndTime.Sub(r.StartTime).Milliseconds(),
+				"duration":  r.EndTime.Sub(r.StartTime).Milliseconds(),
 			}).Debugf("Callback returned result after %d milliseconds", r.EndTime.Sub(r.StartTime).Milliseconds())
 
 			// Trace logging of callback results
@@ -344,7 +344,7 @@ func (srv *Server) Run() error {
 				"operation": r.Operation,
 				"input":     r.Input,
 				"error":     r.Err,
-        "duration":  r.EndTime.Sub(r.StartTime).Milliseconds(),
+				"duration":  r.EndTime.Sub(r.StartTime).Milliseconds(),
 			}).Tracef("Callback returned result after %d milliseconds with output - %s", r.EndTime.Sub(r.StartTime).Milliseconds(), r.Output)
 
 			// Log Callback failures as warnings
@@ -352,8 +352,8 @@ func (srv *Server) Run() error {
 				srv.log.WithFields(logrus.Fields{
 					"namespace": r.Namespace,
 					"operation": r.Operation,
-          "duration":  r.EndTime.Sub(r.StartTime).Milliseconds(),
-				}).Warnf("Callback call resulted in error after %d milliseconds - %s", r.EndTime.Sub(r.StartTime).Millimilliseconds(), r.Err)
+					"duration":  r.EndTime.Sub(r.StartTime).Milliseconds(),
+				}).Warnf("Callback call resulted in error after %d milliseconds - %s", r.EndTime.Sub(r.StartTime).Milliseconds(), r.Err)
 			}
 		},
 	})
@@ -511,10 +511,10 @@ func (srv *Server) Run() error {
 							srv.log.Tracef("Executing Scheduled Function %s", fname)
 							_, err := srv.runWASM(fname, "handler", []byte(""))
 							if err != nil {
-								srv.stats.Tasks.WithLabelValues(fname).Observe(time.Since(now).Milliseconds())
+								srv.stats.Tasks.WithLabelValues(fname).Observe(float64(time.Since(now).Milliseconds()))
 								return err
 							}
-							srv.stats.Tasks.WithLabelValues(fname).Observe(time.Since(now).Milliseconds())
+							srv.stats.Tasks.WithLabelValues(fname).Observe(float64(time.Since(now).Milliseconds()))
 							return nil
 						},
 					})
