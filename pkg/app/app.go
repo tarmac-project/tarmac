@@ -336,7 +336,7 @@ func (srv *Server) Run() error {
 				"operation": r.Operation,
 				"error":     r.Err,
         "duration":  r.EndTime.Sub(r.StartTime).Milliseconds(),
-			}).Debugf("Callback returned result after %f milliseconds", r.EndTime.Sub(r.StartTime).Milliseconds())
+			}).Debugf("Callback returned result after %d milliseconds", r.EndTime.Sub(r.StartTime).Milliseconds())
 
 			// Trace logging of callback results
 			srv.log.WithFields(logrus.Fields{
@@ -345,7 +345,7 @@ func (srv *Server) Run() error {
 				"input":     r.Input,
 				"error":     r.Err,
         "duration":  r.EndTime.Sub(r.StartTime).Milliseconds(),
-			}).Tracef("Callback returned result after %f milliseconds with output - %s", r.EndTime.Sub(r.StartTime).Milliseconds(), r.Output)
+			}).Tracef("Callback returned result after %d milliseconds with output - %s", r.EndTime.Sub(r.StartTime).Milliseconds(), r.Output)
 
 			// Log Callback failures as warnings
 			if r.Err != nil {
@@ -353,7 +353,7 @@ func (srv *Server) Run() error {
 					"namespace": r.Namespace,
 					"operation": r.Operation,
           "duration":  r.EndTime.Sub(r.StartTime).Milliseconds(),
-				}).Warnf("Callback call resulted in error after %f milliseconds - %s", r.EndTime.Sub(r.StartTime).Millimilliseconds(), r.Err)
+				}).Warnf("Callback call resulted in error after %d milliseconds - %s", r.EndTime.Sub(r.StartTime).Millimilliseconds(), r.Err)
 			}
 		},
 	})
