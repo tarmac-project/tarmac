@@ -58,23 +58,23 @@ func (srv *Server) middleware(n httprouter.Handle) httprouter.Handle {
 				"remote-addr":    r.RemoteAddr,
 				"http-protocol":  r.Proto,
 				"content-length": r.ContentLength,
-				"duration":       time.Since(now).Seconds(),
+				"duration":       time.Since(now).Milliseconds(),
 			}).Debugf("Request to PProf Address failed, PProf disabled")
 			w.WriteHeader(http.StatusForbidden)
 
-			srv.stats.Srv.WithLabelValues(r.URL.Path).Observe(time.Since(now).Seconds())
+			srv.stats.Srv.WithLabelValues(r.URL.Path).Observe(time.Since(now).Milliseconds())
 			return
 		}
 
 		// Call registered handler
 		n(w, r, ps)
-		srv.stats.Srv.WithLabelValues(r.URL.Path).Observe(time.Since(now).Seconds())
+		srv.stats.Srv.WithLabelValues(r.URL.Path).Observe(time.Since(now).Milliseconds())
 		srv.log.WithFields(logrus.Fields{
 			"method":         r.Method,
 			"remote-addr":    r.RemoteAddr,
 			"http-protocol":  r.Proto,
 			"content-length": r.ContentLength,
-			"duration":       time.Since(now).Seconds(),
+			"duration":       time.Since(now).Milliseconds(),
 		}).Debugf("HTTP Request to %s complete", r.URL)
 	}
 }
@@ -138,23 +138,23 @@ func (srv *Server) runWASM(module, handler string, rq []byte) ([]byte, error) {
 	// Fetch Module and run with payload
 	m, err := srv.engine.Module(module)
 	if err != nil {
-		srv.stats.Wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
+		srv.stats.Wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Milliseconds())
 		return []byte(""), fmt.Errorf("unable to load wasi environment - %s", err)
 	}
 
 	// Execute the WASM Handler
 	rsp, err := m.Run(handler, rq)
 	if err != nil {
-		srv.stats.Wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
+		srv.stats.Wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Milliseconds())
 		return rsp, fmt.Errorf("failed to execute wasm module - %s", err)
 	}
 
 	// Return results
-	srv.stats.Wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
+	srv.stats.Wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Milliseconds())
 	srv.log.WithFields(logrus.Fields{
 		"module":   module,
 		"handler":  handler,
-		"duration": time.Since(now).Seconds(),
+		"duration": time.Since(now).Milliseconds(),
 	}).Debugf("WASM Module Executed")
 	return rsp, nil
 }
