@@ -48,9 +48,8 @@ func (srv *Server) middleware(n httprouter.Handle) httprouter.Handle {
 			"method":         r.Method,
 			"remote-addr":    r.RemoteAddr,
 			"http-protocol":  r.Proto,
-			"headers":        r.Header,
 			"content-length": r.ContentLength,
-		}).Debugf("HTTP Request to %s", r.URL)
+		}).Debugf("HTTP Request to %s received", r.URL)
 
 		// Verify if PProf
 		if isPProf.MatchString(r.URL.Path) && !srv.cfg.GetBool("enable_pprof") {
@@ -58,8 +57,8 @@ func (srv *Server) middleware(n httprouter.Handle) httprouter.Handle {
 				"method":         r.Method,
 				"remote-addr":    r.RemoteAddr,
 				"http-protocol":  r.Proto,
-				"headers":        r.Header,
 				"content-length": r.ContentLength,
+				"duration":       time.Since(now).Seconds(),
 			}).Debugf("Request to PProf Address failed, PProf disabled")
 			w.WriteHeader(http.StatusForbidden)
 
@@ -70,6 +69,13 @@ func (srv *Server) middleware(n httprouter.Handle) httprouter.Handle {
 		// Call registered handler
 		n(w, r, ps)
 		srv.stats.Srv.WithLabelValues(r.URL.Path).Observe(time.Since(now).Seconds())
+		srv.log.WithFields(logrus.Fields{
+			"method":         r.Method,
+			"remote-addr":    r.RemoteAddr,
+			"http-protocol":  r.Proto,
+			"content-length": r.ContentLength,
+			"duration":       time.Since(now).Seconds(),
+		}).Debugf("HTTP Request to %s complete", r.URL)
 	}
 }
 
@@ -145,5 +151,10 @@ func (srv *Server) runWASM(module, handler string, rq []byte) ([]byte, error) {
 
 	// Return results
 	srv.stats.Wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(time.Since(now).Seconds())
+	srv.log.WithFields(logrus.Fields{
+		"module":   module,
+		"handler":  handler,
+		"duration": time.Since(now).Seconds(),
+	}).Debugf("WASM Module Executed")
 	return rsp, nil
 }
