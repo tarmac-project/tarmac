@@ -3,7 +3,6 @@ Package metrics is part of the Tarmac suite of Host Callback packages. This pack
 to provide WASM functions with a host callback interface that provides metrics tracking capabilities.
 
 	import (
-		"github.com/tarmac-project/tarmac/pkg/callbacks"
 		"github.com/tarmac-project/tarmac/pkg/callbacks/metrics"
 	)
 

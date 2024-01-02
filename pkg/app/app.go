@@ -8,9 +8,6 @@ import (
 	"database/sql"
 	"fmt"
 	// MySQL Database Driver
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/julienschmidt/httprouter"
-	// PostgreSQL Database Driver
 	"net/http"
 	pprof "net/http/pprof"
 	"os"
@@ -18,6 +15,10 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/julienschmidt/httprouter"
+
+	// PostgreSQL Database Driver
 	_ "github.com/lib/pq"
 	"github.com/madflojo/hord"
 	"github.com/madflojo/hord/drivers/bbolt"
