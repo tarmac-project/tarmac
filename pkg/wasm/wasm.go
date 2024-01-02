@@ -4,7 +4,6 @@ Package wasm is a Web Assembly Runtime wrapper for Tarmac.
 This package is deprecated and will be removed in a future release.
 
 Use github.com/tarmac-project/wapc-toolkit instead.
-
 */
 package wasm
 

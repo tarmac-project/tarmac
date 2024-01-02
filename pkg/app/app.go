@@ -561,6 +561,9 @@ func (srv *Server) Run() error {
 		Operation:  "histogram",
 		Func:       cbMetrics.Histogram,
 	})
+	if err != nil {
+		return fmt.Errorf("unable to register callback for metrics histogram - %s", err)
+	}
 
 	// Look for Functions Config
 	srv.funcCfg, err = config.Parse(srv.cfg.GetString("wasm_function_config"))
