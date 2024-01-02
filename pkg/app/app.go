@@ -7,7 +7,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	// MySQL Database Driver
 	"net/http"
 	pprof "net/http/pprof"
 	"os"
@@ -15,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	// MySQL Database Driver
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/julienschmidt/httprouter"
 
