@@ -1,19 +1,9 @@
 /*
 Package callbacks provides a Host Callback router for wapc-go servers.
 
-With this package, users can register Callback functions with the specified namespace and function name. Users can then set this router's Callback method in the waPC server.
+This package is deprecated and will be removed in a future release.
 
-When the waPC server calls the callback function, the provided namespace and function name will be used as a lookup to execute the pre-defined host callback.
-
-	router := callbacks.New()
-	router.RegisterCallback("database:kv", "Get", myFunc)
-	router.RegisterCallback("database:kv", "Set", myFunc2)
-	router.RegisterCallback("database:kv", "Delete", myFunc3)
-
-	module, err := wapc.New(someCode, router.Callback)
-	if err != nil {
-	  // do stuff
-	}
+Use github.com/tarmac-project/wapc-toolkit instead.
 */
 package callbacks
 
