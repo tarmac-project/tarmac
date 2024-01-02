@@ -8,6 +8,7 @@ package sql
 import (
 	"encoding/base64"
 	"fmt"
+
 	"github.com/valyala/fastjson"
 )
 

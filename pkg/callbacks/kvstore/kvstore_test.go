@@ -2,10 +2,11 @@ package kvstore
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/madflojo/hord/drivers/mock"
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/tarmac-project/tarmac"
-	"testing"
 )
 
 type KVStoreCase struct {

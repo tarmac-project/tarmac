@@ -2,13 +2,14 @@ package app
 
 import (
 	"fmt"
-	"github.com/julienschmidt/httprouter"
-	"github.com/sirupsen/logrus"
-	"github.com/tarmac-project/tarmac/pkg/config"
 	"io"
 	"net/http"
 	"regexp"
 	"time"
+
+	"github.com/julienschmidt/httprouter"
+	"github.com/sirupsen/logrus"
+	"github.com/tarmac-project/tarmac/pkg/config"
 )
 
 // isPProf is a regex that validates if the given path is used for PProf

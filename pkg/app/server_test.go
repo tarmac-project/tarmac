@@ -2,12 +2,13 @@ package app
 
 import (
 	"bytes"
-	"github.com/spf13/viper"
 	"io"
 	"net/http"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/spf13/viper"
 )
 
 type RunnerCase struct {

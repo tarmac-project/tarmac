@@ -25,6 +25,7 @@ package sdk
 
 import (
 	"fmt"
+
 	"github.com/tarmac-project/tarmac/pkg/sdk/function"
 	"github.com/tarmac-project/tarmac/pkg/sdk/http"
 	"github.com/tarmac-project/tarmac/pkg/sdk/kvstore"

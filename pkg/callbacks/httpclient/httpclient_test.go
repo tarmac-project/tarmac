@@ -3,13 +3,14 @@ package httpclient
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/pquerna/ffjson/ffjson"
-	"github.com/tarmac-project/tarmac"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/pquerna/ffjson/ffjson"
+	"github.com/tarmac-project/tarmac"
 )
 
 type HTTPClientCase struct {

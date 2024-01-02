@@ -1,6 +1,6 @@
 module github.com/tarmac-project/tarmac
 
-go 1.18
+go 1.21.4
 
 require (
 	github.com/go-sql-driver/mysql v1.7.1
@@ -13,6 +13,7 @@ require (
 	github.com/prometheus/client_golang v1.17.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.18.2
+	github.com/tarmac-project/wapc-toolkit v0.1.0
 	github.com/wapc/wapc-go v0.6.2
 )
 

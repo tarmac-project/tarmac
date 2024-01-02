@@ -1,18 +1,21 @@
 /*
 Package wasm is a Web Assembly Runtime wrapper for Tarmac.
 
-This package provides the ability to start a WASM engine server, load modules, and invoke functions within those WASM modules.
+This package is deprecated and will be removed in a future release.
+
+Use github.com/tarmac-project/wapc-toolkit instead.
 */
 package wasm
 
 import (
 	"context"
 	"fmt"
-	"github.com/wapc/wapc-go"
-	"github.com/wapc/wapc-go/engines/wazero"
 	"os"
 	"sync"
 	"time"
+
+	wapc "github.com/wapc/wapc-go"
+	"github.com/wapc/wapc-go/engines/wazero"
 )
 
 const (

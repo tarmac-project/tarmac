@@ -3,7 +3,6 @@ Package kvstore is part of the Tarmac suite of Host Callback packages. This pack
 provide WASM functions with a host callback interface that provides key:value storage capabilities.
 
 	import (
-		"github.com/tarmac-project/tarmac/pkg/callbacks"
 		"github.com/tarmac-project/tarmac/pkg/callbacks/kvstore"
 	)
 
@@ -23,6 +22,7 @@ package kvstore
 import (
 	"encoding/base64"
 	"fmt"
+
 	"github.com/madflojo/hord"
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/tarmac-project/tarmac"
