@@ -22,6 +22,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"fmt"
+
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/tarmac-project/tarmac"
 )

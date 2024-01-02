@@ -7,7 +7,7 @@ import (
 
 func main() {
 	// Initialize the Tarmac SDK
-	_, err := sdk.New(sdk.Config{Namespace: "test-service", Handler: Handler})
+	_, err := sdk.New(sdk.Config{Namespace: "tarmac", Handler: Handler})
 	if err != nil {
 		return
 	}

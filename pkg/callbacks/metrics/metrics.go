@@ -20,12 +20,13 @@ package metrics
 
 import (
 	"fmt"
+	"regexp"
+	"sync"
+
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/tarmac-project/tarmac"
-	"regexp"
-	"sync"
 )
 
 // Metrics stores and manages the user-defined metrics created via

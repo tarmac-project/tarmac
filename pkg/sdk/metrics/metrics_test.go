@@ -1,8 +1,9 @@
 package metrics
 
 import (
-	"github.com/pquerna/ffjson/ffjson"
 	"testing"
+
+	"github.com/pquerna/ffjson/ffjson"
 )
 
 type CounterTestCase struct {

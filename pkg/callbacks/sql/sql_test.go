@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"strconv"
 	// Import MySQL Driver
+	"testing"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/tarmac-project/tarmac"
-	"testing"
 )
 
 type TestCase struct {

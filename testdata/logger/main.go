@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/tarmac-project/tarmac/pkg/sdk"
 )
 
@@ -12,7 +13,7 @@ func main() {
 	var err error
 
 	// Initialize the Tarmac SDK
-	tarmac, err = sdk.New(sdk.Config{Namespace: "test-service", Handler: Handler})
+	tarmac, err = sdk.New(sdk.Config{Namespace: "tarmac", Handler: Handler})
 	if err != nil {
 		return
 	}

@@ -5,6 +5,7 @@ package main
 
 import (
 	"fmt"
+
 	wapc "github.com/wapc/wapc-guest-tinygo"
 )
 

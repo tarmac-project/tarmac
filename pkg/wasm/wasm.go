@@ -8,11 +8,12 @@ package wasm
 import (
 	"context"
 	"fmt"
-	"github.com/wapc/wapc-go"
-	"github.com/wapc/wapc-go/engines/wazero"
 	"os"
 	"sync"
 	"time"
+
+	wapc "github.com/wapc/wapc-go"
+	"github.com/wapc/wapc-go/engines/wazero"
 )
 
 const (

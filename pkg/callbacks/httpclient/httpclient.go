@@ -23,11 +23,12 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
-	"github.com/pquerna/ffjson/ffjson"
-	"github.com/tarmac-project/tarmac"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/pquerna/ffjson/ffjson"
+	"github.com/tarmac-project/tarmac"
 )
 
 // HTTPClient provides access to Host Callbacks that interact with an HTTP client. These callbacks offer all of the logic

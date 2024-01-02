@@ -23,6 +23,7 @@ package kvstore
 import (
 	"encoding/base64"
 	"fmt"
+
 	"github.com/madflojo/hord"
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/tarmac-project/tarmac"
