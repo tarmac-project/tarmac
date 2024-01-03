@@ -8,8 +8,9 @@ package http
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/valyala/fastjson"
 	"strings"
+
+	"github.com/valyala/fastjson"
 )
 
 // Client provides an interface to make outbound HTTP calls.

@@ -3,7 +3,6 @@ Package httpclient is part of the Tarmac suite of Host Callback packages. This p
 ability to provide WASM functions with a host callback interface that provides HTTP client capabilities.
 
 	import (
-		"github.com/tarmac-project/tarmac/pkg/callbacks"
 		"github.com/tarmac-project/tarmac/pkg/callbacks/httpclient"
 	)
 
@@ -23,11 +22,12 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
-	"github.com/pquerna/ffjson/ffjson"
-	"github.com/tarmac-project/tarmac"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/pquerna/ffjson/ffjson"
+	"github.com/tarmac-project/tarmac"
 )
 
 // HTTPClient provides access to Host Callbacks that interact with an HTTP client. These callbacks offer all of the logic

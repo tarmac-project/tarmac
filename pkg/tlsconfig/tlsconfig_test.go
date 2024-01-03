@@ -2,9 +2,10 @@ package tlsconfig
 
 import (
 	"crypto/tls"
-	"github.com/madflojo/testcerts"
 	"os"
 	"testing"
+
+	"github.com/madflojo/testcerts"
 )
 
 type TestCase struct {

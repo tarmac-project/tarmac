@@ -7,9 +7,17 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/http"
+	pprof "net/http/pprof"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	// MySQL Database Driver
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/julienschmidt/httprouter"
+
 	// PostgreSQL Database Driver
 	_ "github.com/lib/pq"
 	"github.com/madflojo/hord"
@@ -21,7 +29,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/tarmac-project/tarmac/pkg/callbacks"
 	"github.com/tarmac-project/tarmac/pkg/callbacks/httpclient"
 	"github.com/tarmac-project/tarmac/pkg/callbacks/kvstore"
 	"github.com/tarmac-project/tarmac/pkg/callbacks/logging"
@@ -30,18 +37,18 @@ import (
 	"github.com/tarmac-project/tarmac/pkg/config"
 	"github.com/tarmac-project/tarmac/pkg/telemetry"
 	"github.com/tarmac-project/tarmac/pkg/tlsconfig"
-	"github.com/tarmac-project/tarmac/pkg/wasm"
-	"net/http"
-	pprof "net/http/pprof"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
+	"github.com/tarmac-project/wapc-toolkit/callbacks"
+	"github.com/tarmac-project/wapc-toolkit/engine"
 )
 
 // Common errors returned by this app.
 var (
 	ErrShutdown = fmt.Errorf("application shutdown gracefully")
+)
+
+const (
+	// DefaultNamespace is the default namespace for callback functions.
+	DefaultNamespace = "tarmac"
 )
 
 // Server represents the main server structure.
@@ -53,7 +60,7 @@ type Server struct {
 	db *sql.DB
 
 	// engine is the global WASM Engine.
-	engine *wasm.Server
+	engine *engine.Server
 
 	// funcCfg is used to store and access multi-function service configurations.
 	funcCfg *config.Config
@@ -311,19 +318,23 @@ func (srv *Server) Run() error {
 	srv.httpRouter.GET("/ready", srv.middleware(srv.Ready))
 
 	// Create WASM Callback Router
-	router := callbacks.New(callbacks.Config{
-		PreFunc: func(namespace, op string, data []byte) ([]byte, error) {
+	router, err := callbacks.New(callbacks.RouterConfig{
+		PreFunc: func(rq callbacks.CallbackRequest) ([]byte, error) {
 			// Debug logging of callback
 			srv.log.WithFields(logrus.Fields{
-				"namespace": namespace,
-				"operation": op,
+				"namespace":           rq.Namespace,
+				"capability":          rq.Capability,
+				"operation":           rq.Operation,
+				"callback_start_time": rq.StartTime.String(),
 			}).Debugf("CallbackRouter called")
 
 			// Trace logging of callback
 			srv.log.WithFields(logrus.Fields{
-				"namespace": namespace,
-				"operation": op,
-			}).Tracef("CallbackRouter called with payload - %s", data)
+				"namespace":           rq.Namespace,
+				"capability":          rq.Capability,
+				"operation":           rq.Operation,
+				"callback_start_time": rq.StartTime.String(),
+			}).Tracef("CallbackRouter called with payload - %s", rq.Input)
 			return []byte(""), nil
 		},
 		PostFunc: func(r callbacks.CallbackResult) {
@@ -332,31 +343,46 @@ func (srv *Server) Run() error {
 
 			// Debug logging of callback results
 			srv.log.WithFields(logrus.Fields{
-				"namespace": r.Namespace,
-				"operation": r.Operation,
-				"error":     r.Err,
-				"duration":  r.EndTime.Sub(r.StartTime).Milliseconds(),
+				"namespace":  r.Namespace,
+				"capability": r.Capability,
+				"operation":  r.Operation,
+				"error":      r.Err,
+				"duration":   r.EndTime.Sub(r.StartTime).Milliseconds(),
 			}).Debugf("Callback returned result after %d milliseconds", r.EndTime.Sub(r.StartTime).Milliseconds())
 
 			// Trace logging of callback results
 			srv.log.WithFields(logrus.Fields{
-				"namespace": r.Namespace,
-				"operation": r.Operation,
-				"input":     r.Input,
-				"error":     r.Err,
-				"duration":  r.EndTime.Sub(r.StartTime).Milliseconds(),
+				"namespace":  r.Namespace,
+				"capability": r.Capability,
+				"operation":  r.Operation,
+				"error":      r.Err,
+				"input":      r.Input,
+				"duration":   r.EndTime.Sub(r.StartTime).Milliseconds(),
 			}).Tracef("Callback returned result after %d milliseconds with output - %s", r.EndTime.Sub(r.StartTime).Milliseconds(), r.Output)
 
 			// Log Callback failures as warnings
 			if r.Err != nil {
 				srv.log.WithFields(logrus.Fields{
-					"namespace": r.Namespace,
-					"operation": r.Operation,
-					"duration":  r.EndTime.Sub(r.StartTime).Milliseconds(),
+					"namespace":  r.Namespace,
+					"capability": r.Capability,
+					"operation":  r.Operation,
+					"duration":   r.EndTime.Sub(r.StartTime).Milliseconds(),
+					"error":      r.Err,
 				}).Warnf("Callback call resulted in error after %d milliseconds - %s", r.EndTime.Sub(r.StartTime).Milliseconds(), r.Err)
 			}
 		},
 	})
+	if err != nil {
+		return fmt.Errorf("unable to initialize callback router - %s", err)
+	}
+
+	// Start WASM Engine
+	srv.engine, err = engine.New(engine.ServerConfig{
+		Callback: router.Callback,
+	})
+	if err != nil {
+		return fmt.Errorf("unable to initialize wasm engine - %s", err)
+	}
 
 	// Setup SQL Callbacks
 	if srv.cfg.GetBool("enable_sql") {
@@ -366,7 +392,15 @@ func (srv *Server) Run() error {
 		}
 
 		// Register SQLStore Callbacks
-		router.RegisterCallback("sql", "query", cbSQL.Query)
+		err = router.RegisterCallback(callbacks.CallbackConfig{
+			Namespace:  DefaultNamespace,
+			Capability: "sql",
+			Operation:  "query",
+			Func:       cbSQL.Query,
+		})
+		if err != nil {
+			return fmt.Errorf("unable to register callback for sql query - %s", err)
+		}
 	}
 
 	// Setup KVStore Callbacks
@@ -377,10 +411,45 @@ func (srv *Server) Run() error {
 		}
 
 		// Register KVStore Callbacks
-		router.RegisterCallback("kvstore", "get", cbKVStore.Get)
-		router.RegisterCallback("kvstore", "set", cbKVStore.Set)
-		router.RegisterCallback("kvstore", "delete", cbKVStore.Delete)
-		router.RegisterCallback("kvstore", "keys", cbKVStore.Keys)
+		err = router.RegisterCallback(callbacks.CallbackConfig{
+			Namespace:  DefaultNamespace,
+			Capability: "kvstore",
+			Operation:  "get",
+			Func:       cbKVStore.Get,
+		})
+		if err != nil {
+			return fmt.Errorf("unable to register callback for kvstore get - %s", err)
+		}
+
+		err = router.RegisterCallback(callbacks.CallbackConfig{
+			Namespace:  DefaultNamespace,
+			Capability: "kvstore",
+			Operation:  "set",
+			Func:       cbKVStore.Set,
+		})
+		if err != nil {
+			return fmt.Errorf("unable to register callback for kvstore set - %s", err)
+		}
+
+		err = router.RegisterCallback(callbacks.CallbackConfig{
+			Namespace:  DefaultNamespace,
+			Capability: "kvstore",
+			Operation:  "delete",
+			Func:       cbKVStore.Delete,
+		})
+		if err != nil {
+			return fmt.Errorf("unable to register callback for kvstore delete - %s", err)
+		}
+
+		err = router.RegisterCallback(callbacks.CallbackConfig{
+			Namespace:  DefaultNamespace,
+			Capability: "kvstore",
+			Operation:  "keys",
+			Func:       cbKVStore.Keys,
+		})
+		if err != nil {
+			return fmt.Errorf("unable to register callback for kvstore keys - %s", err)
+		}
 	}
 
 	// Setup HTTP Callbacks
@@ -390,7 +459,15 @@ func (srv *Server) Run() error {
 	}
 
 	// Register HTTPClient Functions
-	router.RegisterCallback("httpclient", "call", cbHTTPClient.Call)
+	err = router.RegisterCallback(callbacks.CallbackConfig{
+		Namespace:  DefaultNamespace,
+		Capability: "httpclient",
+		Operation:  "call",
+		Func:       cbHTTPClient.Call,
+	})
+	if err != nil {
+		return fmt.Errorf("unable to register callback for httpclient call - %s", err)
+	}
 
 	// Setup Logger Callbacks
 	cbLogger, err := logging.New(logging.Config{
@@ -402,11 +479,55 @@ func (srv *Server) Run() error {
 	}
 
 	// Register Logger Functions
-	router.RegisterCallback("logger", "info", cbLogger.Info)
-	router.RegisterCallback("logger", "error", cbLogger.Error)
-	router.RegisterCallback("logger", "warn", cbLogger.Warn)
-	router.RegisterCallback("logger", "debug", cbLogger.Debug)
-	router.RegisterCallback("logger", "trace", cbLogger.Trace)
+	err = router.RegisterCallback(callbacks.CallbackConfig{
+		Namespace:  DefaultNamespace,
+		Capability: "logger",
+		Operation:  "info",
+		Func:       cbLogger.Info,
+	})
+	if err != nil {
+		return fmt.Errorf("unable to register callback for logger info - %s", err)
+	}
+
+	err = router.RegisterCallback(callbacks.CallbackConfig{
+		Namespace:  DefaultNamespace,
+		Capability: "logger",
+		Operation:  "error",
+		Func:       cbLogger.Error,
+	})
+	if err != nil {
+		return fmt.Errorf("unable to register callback for logger error - %s", err)
+	}
+
+	err = router.RegisterCallback(callbacks.CallbackConfig{
+		Namespace:  DefaultNamespace,
+		Capability: "logger",
+		Operation:  "warn",
+		Func:       cbLogger.Warn,
+	})
+	if err != nil {
+		return fmt.Errorf("unable to register callback for logger warn - %s", err)
+	}
+
+	err = router.RegisterCallback(callbacks.CallbackConfig{
+		Namespace:  DefaultNamespace,
+		Capability: "logger",
+		Operation:  "debug",
+		Func:       cbLogger.Debug,
+	})
+	if err != nil {
+		return fmt.Errorf("unable to register callback for logger debug - %s", err)
+	}
+
+	err = router.RegisterCallback(callbacks.CallbackConfig{
+		Namespace:  DefaultNamespace,
+		Capability: "logger",
+		Operation:  "trace",
+		Func:       cbLogger.Trace,
+	})
+	if err != nil {
+		return fmt.Errorf("unable to register callback for logger trace - %s", err)
+	}
 
 	// Setup Metrics Callbacks
 	cbMetrics, err := metrics.New(metrics.Config{})
@@ -415,16 +536,34 @@ func (srv *Server) Run() error {
 	}
 
 	// Register Metrics Callbacks
-	router.RegisterCallback("metrics", "counter", cbMetrics.Counter)
-	router.RegisterCallback("metrics", "gauge", cbMetrics.Gauge)
-	router.RegisterCallback("metrics", "histogram", cbMetrics.Histogram)
-
-	// Start WASM Engine
-	srv.engine, err = wasm.NewServer(wasm.Config{
-		Callback: router.Callback,
+	err = router.RegisterCallback(callbacks.CallbackConfig{
+		Namespace:  DefaultNamespace,
+		Capability: "metrics",
+		Operation:  "counter",
+		Func:       cbMetrics.Counter,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to register callback for metrics counter - %s", err)
+	}
+
+	err = router.RegisterCallback(callbacks.CallbackConfig{
+		Namespace:  DefaultNamespace,
+		Capability: "metrics",
+		Operation:  "gauge",
+		Func:       cbMetrics.Gauge,
+	})
+	if err != nil {
+		return fmt.Errorf("unable to register callback for metrics gauge - %s", err)
+	}
+
+	err = router.RegisterCallback(callbacks.CallbackConfig{
+		Namespace:  DefaultNamespace,
+		Capability: "metrics",
+		Operation:  "histogram",
+		Func:       cbMetrics.Histogram,
+	})
+	if err != nil {
+		return fmt.Errorf("unable to register callback for metrics histogram - %s", err)
 	}
 
 	// Look for Functions Config
@@ -433,7 +572,7 @@ func (srv *Server) Run() error {
 		srv.log.Infof("Could not load wasm_function_config (%s) starting with default function path - %s", srv.cfg.GetString("wasm_function_config"), err)
 
 		// Load WASM Function using default path
-		err = srv.engine.LoadModule(wasm.ModuleConfig{
+		err = srv.engine.LoadModule(engine.ModuleConfig{
 			Name:     "default",
 			Filepath: srv.cfg.GetString("wasm_function"),
       PoolSize: srv.cfg.GetInt("wasm_pool_size"),
@@ -458,7 +597,7 @@ func (srv *Server) Run() error {
 			// Load WASM Functions
 			srv.log.Infof("Loading Functions from Service %s", svcName)
 			for fName, fCfg := range svcCfg.Functions {
-				err := srv.engine.LoadModule(wasm.ModuleConfig{
+				err := srv.engine.LoadModule(engine.ModuleConfig{
 					Name:     fName,
 					Filepath: fCfg.Filepath,
           PoolSize: fCfg.PoolSize,
@@ -537,7 +676,15 @@ func (srv *Server) Run() error {
 						srv.log.Infof("Executing Function to Function callback for %s", fname)
 						return srv.runWASM(fname, "handler", b)
 					}
-					router.RegisterCallback("function", fname, f)
+					err := router.RegisterCallback(callbacks.CallbackConfig{
+						Namespace:  DefaultNamespace,
+						Capability: "function",
+						Operation:  fname,
+						Func:       f,
+					})
+					if err != nil {
+						return fmt.Errorf("error registering callback for function %s - %s", fname, err)
+					}
 				}
 			}
 

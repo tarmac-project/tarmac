@@ -2,8 +2,9 @@ package http
 
 import (
 	"fmt"
-	"github.com/pquerna/ffjson/ffjson"
 	"testing"
+
+	"github.com/pquerna/ffjson/ffjson"
 )
 
 type HTTPDoTestCase struct {
