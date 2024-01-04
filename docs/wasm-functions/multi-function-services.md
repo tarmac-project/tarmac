@@ -17,7 +17,8 @@ The `tarmac.json` file has a simple structure that consists of a single object w
       "name": "my-service",
       "functions": {
         "function1": {
-          "filepath": "/path/to/function1.wasm"
+          "filepath": "/path/to/function1.wasm",
+          "pool_size": 10
         },
         "function2": {
           "filepath": "/path/to/function2.wasm"
@@ -61,7 +62,7 @@ The functions object contains one or more key-value pairs, with each key represe
 Each function object should include the following properties:
 
 - `filepath`: The file path to the .wasm file containing the function code (required).
-- `configuration`: An optional object containing configuration data for the function.
+- `pool_size`: The number of instances of the function to create (optional). Defaults to 100.
 
 #### Routes
 

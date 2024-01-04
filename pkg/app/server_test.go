@@ -179,7 +179,7 @@ func TestFullService(t *testing.T) {
 			defer srv.Stop()
 
 			// Wait for Server to start
-			time.Sleep(10 * time.Second)
+			time.Sleep(30 * time.Second)
 
 			// Call /logger with POST
 			t.Run("Do a Post on /logger", func(t *testing.T) {
@@ -236,6 +236,7 @@ func TestFullService(t *testing.T) {
 					t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
 				}
 			})
+
 		})
 	}
 }

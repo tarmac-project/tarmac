@@ -26,6 +26,7 @@ When using Environment Variables, all configurations are prefixed with `APP_`. T
 | `APP_IGNORE_CLIENT_CERT` | `ignore_client_cert` | `string` | When defined will disable Client Cert validation for m-TLS authentication |
 | `APP_WASM_FUNCTION` | `wasm_function` | `string` | Path and Filename of the WASM Function to execute \(Default: `/functions/tarmac.wasm`\) |
 | `APP_WASM_FUNCTION_CONFIG` | `wasm_function_config` | `string` | Path to Service configuration for multi-function services \(Default: `/functions/tarmac.json`\) |
+| `APP_WASM_POOL_SIZE` | `wasm_pool_size` | `int` | Number of WASM function instances to create \(Default: `100`\). Only applicable when `wasm_function` is used. |
 | `APP_ENABLE_PPROF` | `enable_pprof` | `bool` | Enable PProf Collection HTTP end-points |
 | `APP_ENABLE_KVSTORE` | `enable_kvstore` | `bool` | Enable the KV Store |
 | `APP_KVSTORE_TYPE` | `kvstore_type` | `string` | Select KV Store to use (Options: `redis`, `cassandra`, `boltdb`, `in-memory`, `internal`)|

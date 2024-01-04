@@ -40,8 +40,8 @@ type Function struct {
 	// Filepath to the WASM function
 	Filepath string `json:"filepath"`
 
-  // PoolSize defines the number of instances of the function to create
-  PoolSize int `json:"pool_size"`
+	// PoolSize defines the number of instances of the function to create
+	PoolSize int `json:"pool_size"`
 }
 
 // Route defines available routes for the service.
