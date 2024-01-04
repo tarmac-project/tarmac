@@ -575,6 +575,7 @@ func (srv *Server) Run() error {
 		err = srv.engine.LoadModule(engine.ModuleConfig{
 			Name:     "default",
 			Filepath: srv.cfg.GetString("wasm_function"),
+			PoolSize: srv.cfg.GetInt("wasm_pool_size"),
 		})
 		if err != nil {
 			return fmt.Errorf("could not load default function path for wasm_function (%s) - %s", srv.cfg.GetString("wasm_function"), err)
@@ -599,6 +600,7 @@ func (srv *Server) Run() error {
 				err := srv.engine.LoadModule(engine.ModuleConfig{
 					Name:     fName,
 					Filepath: fCfg.Filepath,
+					PoolSize: fCfg.PoolSize,
 				})
 				if err != nil {
 					return fmt.Errorf("could not load function %s from path %s - %s", fName, fCfg.Filepath, err)

@@ -324,6 +324,8 @@ github.com/subosito/gotenv v1.6.0 h1:9NlTDc1FTs4qu0DDq7AEtTPNw6SVm7uBMsUCUjABIf8
 github.com/subosito/gotenv v1.6.0/go.mod h1:Dk4QP5c2W3ibzajGcXpNraDfq2IrhjMIvMSWPKKo0FU=
 github.com/tarmac-project/wapc-toolkit v0.1.0 h1:GbL3SqbgD0O4aSX2GdxDiu/g1tqNxCR/eQF4wOKtLbQ=
 github.com/tarmac-project/wapc-toolkit v0.1.0/go.mod h1:3u2DX1cOveIKuYVL3hmD9lkFbF2HVVfYTpF6Y17cWBo=
+github.com/tarmac-project/wapc-toolkit v0.1.1 h1:Mp4C8Iv9mHMkCLOzXjmWbjUsVwUp5QO+GmZm0tQU2L0=
+github.com/tarmac-project/wapc-toolkit v0.1.1/go.mod h1:3u2DX1cOveIKuYVL3hmD9lkFbF2HVVfYTpF6Y17cWBo=
 github.com/tetratelabs/wazero v1.5.0 h1:Yz3fZHivfDiZFUXnWMPUoiW7s8tC1sjdBtlJn08qYa0=
 github.com/tetratelabs/wazero v1.5.0/go.mod h1:0U0G41+ochRKoPKCJlh0jMg1CHkyfK8kDqiirMmKY8A=
 github.com/tinylib/msgp v1.1.5/go.mod h1:eQsjooMTnV42mHu917E26IogZ2930nFyBQdofk10Udg=

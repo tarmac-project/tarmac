@@ -7,16 +7,19 @@
           "filepath": "/testdata/default/tarmac.wasm"
         },
         "kv": {
-          "filepath": "/testdata/kv/tarmac.wasm"
+          "filepath": "/testdata/kv/tarmac.wasm",
+          "pool_size": 1000
         },
         "logger": {
           "filepath": "/testdata/logger/tarmac.wasm"
         },
         "sql": {
-          "filepath": "/testdata/sql/tarmac.wasm"
+          "filepath": "/testdata/sql/tarmac.wasm",
+          "pool_size": 10
         },
         "func": {
-          "filepath": "/testdata/function/tarmac.wasm"
+          "filepath": "/testdata/function/tarmac.wasm",
+          "pool_size": 1
         }
       },
       "routes": [
