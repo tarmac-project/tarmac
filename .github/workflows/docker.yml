@@ -33,4 +33,5 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: madflojo/tarmac:latest
+          # tag with the git tag v*
+          tags: madflojo/tarmac:${{ github.ref_name }}
