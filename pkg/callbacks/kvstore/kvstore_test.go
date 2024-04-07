@@ -26,7 +26,7 @@ func TestKVStore(t *testing.T) {
 			}
 			return []byte(""), fmt.Errorf("Forced Error")
 		},
-		SetFunc: func(key string, data []byte) error {
+		SetFunc: func(key string, _ []byte) error {
 			if key == "testing-happy" {
 				return nil
 			}

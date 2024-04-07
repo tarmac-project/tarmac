@@ -29,7 +29,7 @@ func TestCallbacksDefaults(t *testing.T) {
 	router := New(Config{})
 	counter := &Counter{}
 
-	t.Run("Add New Callback", func(t *testing.T) {
+	t.Run("Add New Callback", func(_ *testing.T) {
 		router.RegisterCallback("counter", "++", func([]byte) ([]byte, error) {
 			counter.Increment()
 			return []byte(""), nil
@@ -51,7 +51,7 @@ func TestCallbacksDefaults(t *testing.T) {
 func TestCallbacks(t *testing.T) {
 	postCount := &Counter{}
 	router := New(Config{
-		PreFunc: func(namespace, op string, b []byte) ([]byte, error) {
+		PreFunc: func(namespace, _ string, _ []byte) ([]byte, error) {
 			if namespace == "badfunc" {
 				return []byte(""), fmt.Errorf("Forced Error")
 			}
@@ -64,7 +64,7 @@ func TestCallbacks(t *testing.T) {
 	counter := &Counter{}
 	ctx, cancel := context.WithCancel(context.Background())
 
-	t.Run("Add New Callback", func(t *testing.T) {
+	t.Run("Add New Callback", func(_ *testing.T) {
 		router.RegisterCallback("counter", "++", func([]byte) ([]byte, error) {
 			counter.Increment()
 			return []byte(""), nil
