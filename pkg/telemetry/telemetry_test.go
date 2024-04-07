@@ -11,7 +11,7 @@ import (
 func TestNewTelemetry(t *testing.T) {
 	// Test Multiple Initializations and Closures do not panic
 	for i := 0; i < 3; i++ {
-		t.Run(fmt.Sprintf("TestNewTelemetry - %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("TestNewTelemetry - %d", i), func(_ *testing.T) {
 			<-time.After(1 * time.Second)
 			// Create a new Telemetry instance
 			tm := New()

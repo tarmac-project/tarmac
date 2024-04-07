@@ -82,7 +82,7 @@ func (srv *Server) middleware(n httprouter.Handle) httprouter.Handle {
 
 // handlerWrapper is used to wrap http.Handler functions with the server middleware.
 func (srv *Server) handlerWrapper(h http.Handler) httprouter.Handle {
-	return srv.middleware(func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	return srv.middleware(func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		h.ServeHTTP(w, r)
 	})
 }
