@@ -160,7 +160,57 @@ By leveraging waPC, WebAssembly Functions can interact with Tarmac's core capabi
 
 To provide a streamlined developer experience, Tarmac offers a Go SDK that simplifies the usage of waPC. The SDK abstracts away the complexity of using waPC, allowing developers to focus on writing their functions and leveraging Tarmac's features.
 
-![Tarmac Architecture](tarmac-architecture.png)
+### Example Application - Architecture Diagram
+
+The below diagram shows the architecture of the [Example Airport Lookup Application](https://github.com/tarmac-project/example-airport-lookup-go/tree/main). This application demonstrates how to build a multi-function service with Tarmac using Go.
+
+```text
+          +-------------------------------------------------------------------------------------------------------+                                 
+          | Tarmac Host                                                                                           |                                 
+          |                                       +------------------------------------------------------------+  |                                 
+          |                                       | WebAssembly Engine                                         |  |                                 
+          |                                       |                                                            |  |                                 
+          |  +------------------------+           |  +-----------------------------------+                     |  |                                 
+          |  |On Boot Function Trigger+-----------+-->Init: Creates DB Tables, Calls Load|                     |  |                                 
+          |  +------------------------+           |  +--+--------------------------------+                     |  |                                 
+          |                                       |     |                                                      |  |                                 
+          |  +--------------------------+         |  +--v---------------------------------------------------+  |  |                                 
+          |  |Scheduled Function Trigger+---------+--> Load: Calls Fetch, then loads results to SQL Database|  |  |                                 
+          |  +--------------------------+         |  +--+---------------------------------------------------+  |  |                                 
+          |                                       |     |                                                      |  |                                 
+          |                                       |  +--v-----------------------------+                        |  |  +-----------------------------+
+          |                                       |  | Fetch: Download AirportData.CSV+------------------------+--+-->HTTP Server: AirportData.CSV |
+          |                                       |  +--------------------------------+                        |  |  +-----------------------------+
+          |                                       |                                                            |  |                                 
++------+  |  +--------------------+               |  +----------------------------------+                      |  |                                 
+|Client+--+-->HTTP Request Handler+---------------+-->Lookup: Fetches Data from Cache/DB|                      |  |                                 
++------+  |  +--------------------+               |  +----------------------------------+                      |  |                                 
+          |                                       |                                                            |  |                                 
+          |                                       +----------------------------+-------------------------------+  |                                 
+          |                                                                    |                                  |                                 
+          |                                                                    |                                  |                                 
+          |                                                                    |                                  |                                 
+          |                                       +----------------------------v-------------------------------+  |                                 
+          |                                       | Tarmac Capabilities                                        |  |                                 
+          |                                       |                                                            |  |                                 
+          |                                       | +--------+ +------------+ +-------+ +------+               |  |                                 
+          |                                       | |KV Store| |SQL Database| |Metrics| |Logger|               |  |                                 
+          |                                       | +--------+ +------------+ +-------+ +------+               |  |                                 
+          |                                       |                                                            |  |                                 
+          |                                       +------------------------------------------------------------+  |                                 
+          |                                                                                                       |                                 
+          +-------------------------------------------------+-----------------------------------------------------+                                 
+                                                            |                                                                                       
+          +-------------------------------------------------v-----------------------------------------------------+                                 
+          | External Services (Not all used in Example Application)                                               |                                 
+          |                                                                                                       |                                 
+          | +------+ +----------+ +-----+ +-----+ +----------+ +---------+                                        |                                 
+          | |Consul| |Prometheus| |Redis| |MySQL| |PostgreSQL| |Cassandra|                                        |                                 
+          | +------+ +----------+ +-----+ +-----+ +----------+ +---------+                                        |                                 
+          |                                                                                                       |                                 
+          +-------------------------------------------------------------------------------------------------------+                                 
+```
+
 
 | Language | waPC Client | Tarmac SDK |
 | :--- | :--- | :--- |
