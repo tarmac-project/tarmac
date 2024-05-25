@@ -5,7 +5,7 @@ on:
       - main
     tags:
       - v*
-    pull_request:
+  pull_request:
      
 jobs:
   build:
@@ -27,6 +27,13 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build only
+        id: docker_build_only
+        uses: docker/build-push-action@v2
+        with:
+          platforms: linux/amd64,linux/arm64
+          push: false
+          tags: madflojo/tarmac:${{ github.sha }}
       - name: Build and push (main)
         id: docker_build
         if: github.ref == 'refs/heads/main'
@@ -41,7 +48,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name == 'push', 'true', 'false' }}
+          push: ${{ github.event_name == 'push' && 'true' || 'false' }}
           # tag with the git tag v*
           tags: |
             madflojo/tarmac:${{ github.ref_name }}
