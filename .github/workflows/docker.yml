@@ -26,6 +26,11 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: madflojo/tarmac:unstable
+      - name: Checkout code and fetch all tags
+        run: |
+          git fetch --tags
+          echo "current_tag=$(echo ${GITHUB_REF#refs/tags/})" >> $GITHUB_ENV
+          echo "latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)" >> $GITHUB_ENV
       - name: Build and push (tag)
         id: docker_build_tag
         if: startsWith(github.ref, 'refs/tags/v')
@@ -34,4 +39,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           # tag with the git tag v*
-          tags: madflojo/tarmac:${{ github.ref_name }}
+          tags: |
+            madflojo/tarmac:${{ github.ref_name }}
+            ${{ env.latest_tag == env.current_tag && 'madflojo/tarmac:latest' }}
