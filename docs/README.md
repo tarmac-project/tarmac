@@ -1,6 +1,6 @@
 # Tarmac
 
-![](tarmac-logo.png)
+![Tarmac Banner](tarmac-banner.png)
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/tarmac-project/tarmac/pkg/sdk)](https://pkg.go.dev/github.com/tarmac-project/tarmac/pkg/sdk)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://tarmac.gitbook.io/tarmac/)
