@@ -105,7 +105,6 @@ func (srv *Server) WASMHandler(w http.ResponseWriter, r *http.Request, _ httprou
 				"method":         r.Method,
 				"remote-addr":    r.RemoteAddr,
 				"http-protocol":  r.Proto,
-				"headers":        r.Header,
 				"content-length": r.ContentLength,
 			}).Debugf("Error reading HTTP payload - %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -120,7 +119,6 @@ func (srv *Server) WASMHandler(w http.ResponseWriter, r *http.Request, _ httprou
 			"method":         r.Method,
 			"remote-addr":    r.RemoteAddr,
 			"http-protocol":  r.Proto,
-			"headers":        r.Header,
 			"content-length": r.ContentLength,
 		}).Debugf("Error executing WASM module - %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
