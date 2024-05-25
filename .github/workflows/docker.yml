@@ -33,7 +33,7 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
           push: false
-          tags: madflojo/tarmac:{{ github.sha }}
+          tags: madflojo/tarmac:${{ github.sha }}
       - name: Build and push (main)
         id: docker_build
         if: github.ref == 'refs/heads/main'
