@@ -21,6 +21,8 @@ jobs:
       run: make build tests-base
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
 
   redis:
     runs-on: ubuntu-latest
@@ -34,6 +36,8 @@ jobs:
       run: make build tests-redis
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
 
   cassandra:
     runs-on: ubuntu-latest
@@ -47,6 +51,8 @@ jobs:
       run: make build tests-cassandra
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
 
 
   boltdb:
@@ -63,6 +69,8 @@ jobs:
       run: make build tests-boltdb
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
 
 
   in-memory:
@@ -77,6 +85,8 @@ jobs:
       run: make build tests-inmemory
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
 
 
   mysql:
@@ -91,6 +101,8 @@ jobs:
       run: make build tests-mysql
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
 
   postgres:
     runs-on: ubuntu-latest
@@ -104,3 +116,5 @@ jobs:
       run: make build tests-postgres
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3 
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
