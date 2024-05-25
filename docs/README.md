@@ -173,3 +173,9 @@ To provide a streamlined developer experience, Tarmac offers a Go SDK that simpl
 ## Contributing
 
 We are thrilled that you are interested in contributing to Tarmac and helping to make it even better! To get started, please check out our contributing guide for information on how to submit bug reports, feature requests, and code contributions.
+
+### Project Contributors
+
+<a href="https://github.com/tarmac-project/tarmac/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=tarmac-project/tarmac" />
+</a>
