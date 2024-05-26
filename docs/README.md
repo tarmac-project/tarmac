@@ -160,9 +160,11 @@ By leveraging waPC, WebAssembly Functions can interact with Tarmac's core capabi
 
 To provide a streamlined developer experience, Tarmac offers a Go SDK that simplifies the usage of waPC. The SDK abstracts away the complexity of using waPC, allowing developers to focus on writing their functions and leveraging Tarmac's features.
 
-### Example Application - Architecture Diagram
+### Example Application Architecture
 
-The below diagram shows the architecture of the [Example Airport Lookup Application](https://github.com/tarmac-project/example-airport-lookup-go/tree/main). This application demonstrates how to build a multi-function service with Tarmac using Go.
+The below diagram shows the architecture of an [example application](https://github.com/tarmac-project/example-airport-lookup-go/tree/main). This application demonstrates how to build a multi-function service with Tarmac using Go.
+
+This example application will execute WebAssembly functions on boot and via a scheduler to manage airport data. The application also includes an HTTP server that serves the airport data to clients via a WebAssembly function.
 
 ```text
           +-------------------------------------------------------------------------------------------------------+                                 
@@ -179,7 +181,7 @@ The below diagram shows the architecture of the [Example Airport Lookup Applicat
           |  +--------------------------+         |  +--+---------------------------------------------------+  |  |                                 
           |                                       |     |                                                      |  |                                 
           |                                       |  +--v-----------------------------+                        |  |  +-----------------------------+
-          |                                       |  | Fetch: Download AirportData.CSV+------------------------+--+-->HTTP Server: AirportData.CSV |
+          |                                       |  | Fetch: Download AirportData.csv+------------------------+--+-->HTTP Server: AirportData.csv |
           |                                       |  +--------------------------------+                        |  |  +-----------------------------+
           |                                       |                                                            |  |                                 
 +------+  |  +--------------------+               |  +----------------------------------+                      |  |                                 
