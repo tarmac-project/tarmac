@@ -39,7 +39,6 @@ jobs:
       - name: Build and push (main)
         id: docker_build
         if: github.ref == 'refs/heads/main'
-        needs: docker_login
         uses: docker/build-push-action@v2
         with:
           platforms: linux/amd64,linux/arm64
@@ -48,7 +47,6 @@ jobs:
       - name: Build and push (tag)
         id: docker_build_tag
         if: startsWith(github.ref, 'refs/tags/v')
-        needs: docker_login
         uses: docker/build-push-action@v2
         with:
           platforms: linux/amd64,linux/arm64
