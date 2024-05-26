@@ -50,10 +50,10 @@ func (srv *Server) middleware(n httprouter.Handle) httprouter.Handle {
 			"remote-addr":    r.RemoteAddr,
 			"http-protocol":  r.Proto,
 			"content-length": r.ContentLength,
-		}).Debugf("HTTP Request to %s received", r.URL)
+		}).Debugf("HTTP Request to %s received", r.URL.EscapedPath())
 
 		// Verify if PProf
-		if isPProf.MatchString(r.URL.Path) && !srv.cfg.GetBool("enable_pprof") {
+		if isPProf.MatchString(r.URL.EscapedPath()) && !srv.cfg.GetBool("enable_pprof") {
 			srv.log.WithFields(logrus.Fields{
 				"method":         r.Method,
 				"remote-addr":    r.RemoteAddr,
@@ -63,20 +63,20 @@ func (srv *Server) middleware(n httprouter.Handle) httprouter.Handle {
 			}).Debugf("Request to PProf Address failed, PProf disabled")
 			w.WriteHeader(http.StatusForbidden)
 
-			srv.stats.Srv.WithLabelValues(r.URL.Path).Observe(float64(time.Since(now).Milliseconds()))
+			srv.stats.Srv.WithLabelValues(r.URL.EscapedPath()).Observe(float64(time.Since(now).Milliseconds()))
 			return
 		}
 
 		// Call registered handler
 		n(w, r, ps)
-		srv.stats.Srv.WithLabelValues(r.URL.Path).Observe(float64(time.Since(now).Milliseconds()))
+		srv.stats.Srv.WithLabelValues(r.URL.EscapedPath()).Observe(float64(time.Since(now).Milliseconds()))
 		srv.log.WithFields(logrus.Fields{
 			"method":         r.Method,
 			"remote-addr":    r.RemoteAddr,
 			"http-protocol":  r.Proto,
 			"content-length": r.ContentLength,
 			"duration":       time.Since(now).Milliseconds(),
-		}).Debugf("HTTP Request to %s complete", r.URL)
+		}).Debugf("HTTP Request to %s complete", r.URL.EscapedPath())
 	}
 }
 
@@ -91,7 +91,7 @@ func (srv *Server) handlerWrapper(h http.Handler) httprouter.Handle {
 // specified module and create an execution environment for that module.
 func (srv *Server) WASMHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Find Function
-	function, err := srv.funcCfg.RouteLookup(fmt.Sprintf("http:%s:%s", r.Method, r.URL.Path))
+	function, err := srv.funcCfg.RouteLookup(fmt.Sprintf("http:%s:%s", r.Method, r.URL.EscapedPath()))
 	if err == config.ErrRouteNotFound {
 		function = "default"
 	}
