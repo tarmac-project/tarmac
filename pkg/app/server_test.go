@@ -2,6 +2,7 @@ package app
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
 	"os"
@@ -237,6 +238,67 @@ func TestFullService(t *testing.T) {
 				}
 			})
 
+		})
+	}
+}
+
+type InitFuncTestCase struct {
+	name   string
+	cfg    *viper.Viper
+	config []byte
+	err    bool
+}
+
+func TestInitFuncs(t *testing.T) {
+	var tt []InitFuncTestCase
+
+	tc := InitFuncTestCase{name: "Default", cfg: viper.New()}
+	tc.cfg.Set("disable_logging", false)
+	tc.cfg.Set("debug", true)
+	tc.cfg.Set("listen_addr", "localhost:9001")
+	tc.cfg.Set("kvstore_type", "in-memory")
+	tc.cfg.Set("enable_kvstore", true)
+	tc.config = []byte(`{"services":{"test-service":{"name":"test-service","functions":{"default":{"filepath":"/testdata/default/tarmac.wasm","pool_size":1}},"routes":[{"type":"init","function":"default"}]}}}`)
+	tt = append(tt, tc)
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			// Write the config to a temp file
+			fh, err := os.CreateTemp("", "*.json")
+			if err != nil {
+				t.Fatalf("Unexpected error creating temp file - %s", err)
+			}
+			defer os.Remove(fh.Name())
+			fh.Write(tc.config)
+			fh.Close()
+			tc.cfg.Set("wasm_function_config", fh.Name())
+
+			// Create the server
+			srv := New(tc.cfg)
+			defer srv.Stop()
+
+			// Time out after 2 seconds
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+			go func() {
+				<-ctx.Done()
+				if ctx.Err() == context.DeadlineExceeded && tc.err {
+					t.Fatalf("Timeout waiting for server to start")
+				}
+			}()
+
+			// Start the server
+			err = srv.Run()
+			if err != nil && err != ErrShutdown {
+				if tc.err {
+					return
+				}
+				t.Errorf("Run unexpectedly stopped - %s", err)
+			}
+
+			if ctx.Err() == context.DeadlineExceeded && tc.err {
+				t.Fatalf("Server did not fail as expected")
+			}
 		})
 	}
 }
