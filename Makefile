@@ -10,6 +10,7 @@ build-testdata:
 	$(MAKE) -C testdata/sql build
 	$(MAKE) -C testdata/logger build
 	$(MAKE) -C testdata/function build
+	$(MAKE) -C testdata/successafter5 build
 
 tests: build tests-nobuild
 tests-nobuild: tests-base tests-redis tests-cassandra tests-mysql tests-postgres tests-boltdb tests-inmemory

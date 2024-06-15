@@ -261,6 +261,25 @@ func TestInitFuncs(t *testing.T) {
 	tc.config = []byte(`{"services":{"test-service":{"name":"test-service","functions":{"default":{"filepath":"/testdata/default/tarmac.wasm","pool_size":1}},"routes":[{"type":"init","function":"default"}]}}}`)
 	tt = append(tt, tc)
 
+	tc = InitFuncTestCase{name: "Fails", cfg: viper.New()}
+	tc.cfg.Set("disable_logging", false)
+	tc.cfg.Set("debug", true)
+	tc.cfg.Set("listen_addr", "localhost:9001")
+	tc.cfg.Set("kvstore_type", "in-memory")
+	tc.cfg.Set("enable_kvstore", true)
+	tc.config = []byte(`{"services":{"test-service":{"name":"test-service","functions":{"fail":{"filepath":"/testdata/fail/tarmac.wasm","pool_size":1}},"routes":[{"type":"init","function":"fail"}]}}}`)
+	tc.err = true
+	tt = append(tt, tc)
+
+	tc = InitFuncTestCase{name: "Success After 5 Retries", cfg: viper.New()}
+	tc.cfg.Set("disable_logging", false)
+	tc.cfg.Set("debug", true)
+	tc.cfg.Set("listen_addr", "localhost:9001")
+	tc.cfg.Set("kvstore_type", "in-memory")
+	tc.cfg.Set("enable_kvstore", true)
+	tc.config = []byte(`{"services":{"test-service":{"name":"test-service","functions":{"successafter5":{"filepath":"/testdata/successafter5/tarmac.wasm","pool_size":1}},"routes":[{"type":"init","retries":10,"function":"successafter5"}]}}}`)
+	tt = append(tt, tc)
+
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			// Write the config to a temp file
@@ -282,6 +301,7 @@ func TestInitFuncs(t *testing.T) {
 			defer cancel()
 			go func() {
 				<-ctx.Done()
+				defer srv.Stop()
 				if ctx.Err() == context.DeadlineExceeded && tc.err {
 					t.Fatalf("Timeout waiting for server to start")
 				}
