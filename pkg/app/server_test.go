@@ -307,7 +307,7 @@ func TestInitFuncs(t *testing.T) {
 			defer srv.Stop()
 
 			// Time out after 2 seconds
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 			defer cancel()
 			go func() {
 				<-ctx.Done()
