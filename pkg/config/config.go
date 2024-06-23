@@ -73,7 +73,7 @@ type Route struct {
 	// If no frequency is defined, an error will occur.
 	//
 	// When defined as an init route, frequency is used to define the interval in seconds between retries.
-	// As the number of retries increases, the interval between retries will increase exponentially.
+	// As the number of retries increases, the interval will be multiplied by the retry number.
 	// If no frequency is defined, the default value is 1 second.
 	Frequency int `json:"frequency,omitempty"`
 

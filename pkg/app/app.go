@@ -693,7 +693,7 @@ func (srv *Server) Run() error {
 					if err != nil {
 						srv.log.Errorf("Error executing Init Function %s - %s", r.Function, err)
 						retries++
-						// Wait exponentially longer between retries
+						// Wait longer between retries
 						<-time.After(time.Duration(retries*r.Frequency) * time.Second)
 						continue
 					}
