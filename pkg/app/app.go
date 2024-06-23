@@ -619,13 +619,13 @@ func (srv *Server) Run() error {
 			funcRoutes := make(map[string]string)
 			initRoutes := []config.Route{}
 			for _, r := range svcCfg.Routes {
-				// Copy init functions for later execution
-				if r.Type == "init" {
+				switch r.Type {
+				case "init":
+					// Copy init functions for later execution
 					initRoutes = append(initRoutes, r)
-				}
 
-				// Register HTTP based functions with the HTTP router
-				if r.Type == "http" {
+				case "http":
+					// Register HTTP based functions with the HTTP router
 					for _, m := range r.Methods {
 						key := fmt.Sprintf("%s:%s:%s", r.Type, m, r.Path)
 						srv.log.WithFields(logrus.Fields{
@@ -638,11 +638,9 @@ func (srv *Server) Run() error {
 						funcRoutes[key] = r.Function
 						srv.httpRouter.Handle(m, r.Path, srv.middleware(srv.WASMHandler))
 					}
-				}
 
-				// Schedule tasks for scheduled functions
-				if r.Type == "scheduled_task" {
-					// Capture function name to avoid scope issues
+				case "scheduled_task":
+					// Schedule tasks for scheduled functions
 					fname := r.Function
 					srv.log.Infof("Scheduling custom task for function %s with interval of %d", r.Function, r.Frequency)
 					id, err := srv.scheduler.Add(&tasks.Task{
@@ -662,15 +660,12 @@ func (srv *Server) Run() error {
 					if err != nil {
 						srv.log.Errorf("Error scheduling scheduled task %s - %s", r.Function, err)
 					}
-
 					// Clean up Task on Shutdown
 					defer srv.scheduler.Del(id)
-				}
 
-				// Setup callbacks for function to function calls
-				if r.Type == "function" {
+				case "function":
+					// Setup callbacks for function to function calls
 					srv.log.Infof("Registering Function to Function callback for %s", r.Function)
-					// Capture r in local values to avoid scope issues
 					fname := r.Function
 					f := func(b []byte) ([]byte, error) {
 						srv.log.Infof("Executing Function to Function callback for %s", fname)
