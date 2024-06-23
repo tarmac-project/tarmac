@@ -315,7 +315,7 @@ func TestInitFuncs(t *testing.T) {
 				<-ctx.Done()
 				defer srv.Stop()
 				if ctx.Err() == context.DeadlineExceeded && tc.err {
-					t.Fatalf("Timeout waiting for server to start")
+					t.Errorf("Timeout waiting for server to start")
 				}
 			}()
 
