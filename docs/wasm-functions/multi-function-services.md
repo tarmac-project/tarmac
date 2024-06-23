@@ -101,7 +101,7 @@ You can define a scheduled task route by adding a route object with the followin
 
 - `type` (required): For Schedule Tasks, set to `scheduled_task`.
 - `function` (required): The function to call when the task is executed.
-- `frequency` (required): The frequency in seconds to  execute the function.
+- `frequency` (required): The frequency in seconds to execute the function.
 
 Here is an example of a route object that defines a scheduled task that executes the default function every 15 seconds:
 
@@ -123,6 +123,8 @@ You can define an init function route by adding a route object with the followin
 
 - `type` (required): For Init Functions, set to `init`.
 - `function` (required): The function to call when the service is initialized.
+- `retries` (optional): The number of times to retry the function if it fails. Defaults to 0.
+- `frequency` (optional): The frequency in seconds to retry the function if it fails. Multiplied by the retry count. Defaults to 1.
 
 Here is an example of a route object that defines an init function that executes the default function when the service is initialized:
 
@@ -141,6 +143,7 @@ Tarmac supports the ability for Functions to call other Functions using the Func
 
 You can define a function route by adding a route object with the following properties to the route array.
 
+- `type` (required): For Function to Function routes, set to `function`.
 - `function` (required): The function to call when executed.
 
 Here is an example of a route object that defines the "function1" function.
