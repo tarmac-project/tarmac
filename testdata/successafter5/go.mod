@@ -1,6 +1,6 @@
 module github.com/tarmac-project/tarmac/testdata/successafter5
 
-go 1.22.3
+go 1.22
 
 require github.com/tarmac-project/tarmac/pkg/sdk v0.5.0
 
