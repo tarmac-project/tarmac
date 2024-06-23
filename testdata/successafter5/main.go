@@ -51,7 +51,7 @@ func Handler(payload []byte) ([]byte, error) {
 
 	// If the counter is less than 5, return an error
 	if counterInt < 5 {
-		return []byte(""), fmt.Errorf(`Counter is less than 6`)
+		return []byte(""), fmt.Errorf(`Counter is less than 5`)
 	}
 
 	return []byte("Counter is greater than 5"), nil

@@ -298,7 +298,9 @@ func TestInitFuncs(t *testing.T) {
 				t.Fatalf("Unexpected error creating temp file - %s", err)
 			}
 			defer os.Remove(fh.Name())
-			fh.Write(tc.config)
+			if _, err := fh.Write(tc.config); err != nil {
+				t.Fatalf("Unexpected error writing to temp file - %s", err)
+			}
 			fh.Close()
 			tc.cfg.Set("wasm_function_config", fh.Name())
 
@@ -326,7 +328,7 @@ func TestInitFuncs(t *testing.T) {
 				t.Errorf("Run unexpectedly stopped - %s", err)
 			}
 
-			if ctx.Err() == context.DeadlineExceeded && tc.err {
+			if ctx.Err() == context.DeadlineExceeded && !tc.err {
 				t.Fatalf("Server did not fail as expected")
 			}
 		})

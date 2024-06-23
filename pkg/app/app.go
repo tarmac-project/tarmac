@@ -687,14 +687,16 @@ func (srv *Server) Run() error {
 			for _, r := range initRoutes {
 				srv.log.Infof("Executing Init Function %s", r.Function)
 				var success, retries int
+				delay = r.Frequency
 				for success == 0 && retries <= r.Retries {
 					// Execute the function
 					_, err := srv.runWASM(r.Function, "handler", []byte(""))
 					if err != nil {
 						srv.log.Errorf("Error executing Init Function %s - %s", r.Function, err)
 						retries++
-						// Wait longer between retries
-						<-time.After(time.Duration(retries*r.Frequency) * time.Second)
+						// Wait exponentially longer between retries
+						<-time.After(time.Duration(delay) * time.Second)
+						delay *= delay
 						continue
 					}
 					success = 1

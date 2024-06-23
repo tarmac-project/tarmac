@@ -124,7 +124,7 @@ You can define an init function route by adding a route object with the followin
 - `type` (required): For Init Functions, set to `init`.
 - `function` (required): The function to call when the service is initialized.
 - `retries` (optional): The number of times to retry the function if it fails. Defaults to 0.
-- `frequency` (optional): The frequency in seconds to retry the function if it fails. Multiplied by the retry count. Defaults to 1.
+- `frequency` (optional): The frequency in seconds to retry the function if it fails. Exponential backoff is used. Defaults to 1.
 
 Here is an example of a route object that defines an init function that executes the default function when the service is initialized:
 
