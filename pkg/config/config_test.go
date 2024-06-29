@@ -11,10 +11,9 @@ type TestCase struct {
 	valid bool
 }
 
-// TestParserFile is a unit test for the Parse function
 func TestParserFile(t *testing.T) {
 	// Define the JSON data that will be used to create the temporary file
-	data := []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"http","path":"/example","methods":["GET"],"function":"example"}]}}}`)
+	data := []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm","pool_size":10},"example-defaults":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"http","path":"/example","methods":["GET"],"function":"example"},{"type":"scheduled_task","function":"example","frequency":15},{"type":"init","function":"example","retries":15,"frequency":50},{"type":"init","function":"example-defaults"},{"type":"function","function":"function1"}]}}}`)
 
 	// Create a temporary file in the /tmp directory
 	fh, err := os.CreateTemp("/tmp", "")
@@ -51,6 +50,104 @@ func TestParserFile(t *testing.T) {
 		t.Errorf("could not parse file: %s", err)
 	}
 
+	// Validate Correct Values
+	t.Run("Validate Correct Values", func(t *testing.T) {
+		t.Run("Validate Service Name", func(t *testing.T) {
+			if cfg.Services["example"].Name != "example" {
+				t.Errorf("Unexpected Service Name - %s", cfg.Services["example"].Name)
+			}
+		})
+
+		t.Run("Validate Function Filepath", func(t *testing.T) {
+			if cfg.Services["example"].Functions["example"].Filepath != "./functions/example.wasm" {
+				t.Errorf("Unexpected Function Filepath - %s", cfg.Services["example"].Functions["example"].Filepath)
+			}
+		})
+
+		t.Run("Validate Function Pool Size", func(t *testing.T) {
+			if cfg.Services["example"].Functions["example"].PoolSize != 10 {
+				t.Errorf("Unexpected Function Pool Size - %d", cfg.Services["example"].Functions["example"].PoolSize)
+			}
+		})
+
+		t.Run("Validate Default Pool Size", func(t *testing.T) {
+			if cfg.Services["example"].Functions["example-defaults"].PoolSize != 100 {
+				t.Errorf("Unexpected Default Pool Size - %d", cfg.Services["example"].Functions["example-defaults"].PoolSize)
+			}
+		})
+
+		t.Run("Validate Route Type", func(t *testing.T) {
+			if cfg.Services["example"].Routes[0].Type != "http" {
+				t.Errorf("Unexpected Route Type - %s", cfg.Services["example"].Routes[0].Type)
+			}
+
+			if cfg.Services["example"].Routes[1].Type != "scheduled_task" {
+				t.Errorf("Unexpected Route Type - %s", cfg.Services["example"].Routes[1].Type)
+			}
+
+			if cfg.Services["example"].Routes[2].Type != "init" {
+				t.Errorf("Unexpected Route Type - %s", cfg.Services["example"].Routes[2].Type)
+			}
+
+			if cfg.Services["example"].Routes[3].Type != "init" {
+				t.Errorf("Unexpected Route Type - %s", cfg.Services["example"].Routes[3].Type)
+			}
+
+			if cfg.Services["example"].Routes[4].Type != "function" {
+				t.Errorf("Unexpected Route Type - %s", cfg.Services["example"].Routes[4].Type)
+			}
+		})
+
+		t.Run("Validate Route Path", func(t *testing.T) {
+			if cfg.Services["example"].Routes[0].Path != "/example" {
+				t.Errorf("Unexpected Route Path - %s", cfg.Services["example"].Routes[0].Path)
+			}
+		})
+
+		t.Run("Validate Route Methods", func(t *testing.T) {
+			if cfg.Services["example"].Routes[0].Methods[0] != "GET" {
+				t.Errorf("Unexpected Route Method - %s", cfg.Services["example"].Routes[0].Methods[0])
+			}
+		})
+
+		t.Run("Validate Route Function", func(t *testing.T) {
+			if cfg.Services["example"].Routes[0].Function != "example" {
+				t.Errorf("Unexpected Route Function - %s", cfg.Services["example"].Routes[0].Function)
+			}
+		})
+
+		t.Run("Validate Scheduled Task Frequency", func(t *testing.T) {
+			if cfg.Services["example"].Routes[1].Frequency != 15 {
+				t.Errorf("Unexpected Scheduled Task Frequency - %d", cfg.Services["example"].Routes[1].Frequency)
+			}
+		})
+
+		t.Run("Validate Init Retries", func(t *testing.T) {
+			if cfg.Services["example"].Routes[2].Retries != 15 {
+				t.Errorf("Unexpected Init Retries - %d", cfg.Services["example"].Routes[2].Retries)
+			}
+		})
+
+		t.Run("Validate Init Frequency", func(t *testing.T) {
+			if cfg.Services["example"].Routes[2].Frequency != 50 {
+				t.Errorf("Unexpected Init Frequency - %d", cfg.Services["example"].Routes[2].Frequency)
+			}
+		})
+
+		t.Run("Validate Default Init Frequency", func(t *testing.T) {
+			if cfg.Services["example"].Routes[3].Frequency != 1 {
+				t.Errorf("Unexpected Default Init Frequency - %d", cfg.Services["example"].Routes[3].Frequency)
+			}
+		})
+
+		t.Run("Validate Function Name", func(t *testing.T) {
+			if cfg.Services["example"].Routes[4].Function != "function1" {
+				t.Errorf("Unexpected Function Name - %s", cfg.Services["example"].Routes[4].Function)
+			}
+		})
+
+	})
+
 	// Validate RouteLookup
 	t.Run("Validate RouteLookup with Valid Route", func(t *testing.T) {
 		_, err := cfg.RouteLookup("http:GET:/example")
@@ -74,7 +171,6 @@ func TestMissingFile(t *testing.T) {
 	}
 }
 
-// This is a unit test function for the Parse function
 func TestConfigParser(t *testing.T) {
 	// Define an array of test cases
 	tt := []TestCase{
@@ -92,6 +188,61 @@ func TestConfigParser(t *testing.T) {
 			name:  "Valid JSON",
 			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"http","path":"/example","methods":["GET"],"function":"example"}]}}}`),
 			valid: true,
+		},
+		{
+			name:  "Missing Frequency for scheduled_task",
+			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"scheduled_task","function":"default"},{"type":"init","function":"default"},{"type":"function","function":"function1"}]}}}`),
+			valid: false,
+		},
+		{
+			name:  "Missing Function for scheduled_task",
+			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"scheduled_task","frequency":15},{"type":"init","function":"default"},{"type":"function","function":"function1"}]}}}`),
+			valid: false,
+		},
+		{
+			name:  "Missing Function for init",
+			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"scheduled_task","function":"default","frequency":15},{"type":"init"},{"type":"function","function":"function1"}]}}}`),
+			valid: false,
+		},
+		{
+			name:  "Missing Function for function",
+			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"scheduled_task","function":"default","frequency":15},{"type":"init","function":"default"},{"type":"function"}]}}}`),
+			valid: false,
+		},
+		{
+			name:  "Missing Service Name",
+			data:  []byte(`{"services":{"example":{"functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"scheduled_task","function":"default","frequency":15},{"type":"init","function":"default"},{"type":"function","function":"function1"}]}}}`),
+			valid: false,
+		},
+		{
+			name:  "Missing Function Name",
+			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"scheduled_task","function":"default","frequency":15},{"type":"init","function":"default"},{"type":"function"}]}}}`),
+			valid: false,
+		},
+		{
+			name:  "Missing Function Filepath",
+			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{},"routes":[{"type":"scheduled_task","function":"default","frequency":15},{"type":"init","function":"default"},{"type":"function","function":"function1"}]}}}}`),
+			valid: false,
+		},
+		{
+			name:  "Missing Route Type",
+			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"path":"/example","methods":["GET"],"function":"example"}]}}}`),
+			valid: false,
+		},
+		{
+			name:  "Missing Route Path",
+			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"http","methods":["GET"],"function":"example"}]}}}`),
+			valid: false,
+		},
+		{
+			name:  "Missing Route Methods",
+			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"http","path":"/example","function":"example"}]}}}`),
+			valid: false,
+		},
+		{
+			name:  "Missing Route Function",
+			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"http","path":"/example","methods":["GET"]}]}}}`),
+			valid: false,
 		},
 	}
 
