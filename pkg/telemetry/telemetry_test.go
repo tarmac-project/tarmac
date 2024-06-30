@@ -30,6 +30,10 @@ func TestNewTelemetry(t *testing.T) {
 			wasmLabels := prometheus.Labels{"route": "/wasm"}
 			tm.Wasm.With(wasmLabels).Observe(0.3)
 
+			routeLabels := prometheus.Labels{"service": "service1", "type": "http"}
+			tm.Routes.With(routeLabels).Inc()
+			tm.Routes.With(routeLabels).Dec()
+
 		})
 	}
 }

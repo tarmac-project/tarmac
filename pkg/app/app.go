@@ -587,12 +587,21 @@ func (srv *Server) Run() error {
 		srv.httpRouter.PUT("/", srv.middleware(srv.WASMHandler))
 		srv.httpRouter.DELETE("/", srv.middleware(srv.WASMHandler))
 		srv.httpRouter.HEAD("/", srv.middleware(srv.WASMHandler))
+
+		// Measure Routes
+		srv.stats.Routes.WithLabelValues("default", "http").Inc()
 	}
 
 	// Load Functions from Config
 	if err == nil {
 		srv.log.Infof("Loading Services from wasm_function_config %s", srv.cfg.GetString("wasm_function_config"))
 
+		routesCounter := map[string]int{
+			"init":           0,
+			"http":           0,
+			"scheduled_task": 0,
+			"function":       0,
+		}
 		for svcName, svcCfg := range srv.funcCfg.Services {
 			// Load WASM Functions
 			srv.log.Infof("Loading Functions from Service %s", svcName)
@@ -623,6 +632,8 @@ func (srv *Server) Run() error {
 				case "init":
 					// Copy init functions for later execution
 					initRoutes = append(initRoutes, r)
+					routesCounter["init"]++
+					srv.stats.Routes.WithLabelValues(svcName, r.Type).Inc()
 
 				case "http":
 					// Register HTTP based functions with the HTTP router
@@ -637,6 +648,8 @@ func (srv *Server) Run() error {
 						}).Infof("Registering Route %s for function %s", key, r.Function)
 						funcRoutes[key] = r.Function
 						srv.httpRouter.Handle(m, r.Path, srv.middleware(srv.WASMHandler))
+						routesCounter["http"]++
+						srv.stats.Routes.WithLabelValues(svcName, r.Type).Inc()
 					}
 
 				case "scheduled_task":
@@ -662,6 +675,8 @@ func (srv *Server) Run() error {
 					}
 					// Clean up Task on Shutdown
 					defer srv.scheduler.Del(id)
+					routesCounter["scheduled_task"]++
+					srv.stats.Routes.WithLabelValues(svcName, r.Type).Inc()
 
 				case "function":
 					// Setup callbacks for function to function calls
@@ -680,6 +695,8 @@ func (srv *Server) Run() error {
 					if err != nil {
 						return fmt.Errorf("error registering callback for function %s - %s", fname, err)
 					}
+					routesCounter["function"]++
+					srv.stats.Routes.WithLabelValues(svcName, r.Type).Inc()
 				}
 			}
 
@@ -705,6 +722,14 @@ func (srv *Server) Run() error {
 					return fmt.Errorf("init function %s exceeded retries", r.Function)
 				}
 			}
+
+		}
+
+		srv.log.Infof("Loaded %d init functions, %d http routes, %d scheduled tasks, and %d function to function routes", routesCounter["init"], routesCounter["http"], routesCounter["scheduled_task"], routesCounter["function"])
+		// If No Service Routes are loaded, exit application
+		if routesCounter["http"] == 0 && routesCounter["scheduled_task"] == 0 && srv.cfg.GetString("wasm_function_config") != "" {
+			srv.log.Infof("No Service Routes loaded, exiting application")
+			return ErrShutdown
 		}
 	}
 
