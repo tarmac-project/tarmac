@@ -21,6 +21,9 @@ type Telemetry struct {
 
 	// Wasm is a summary metric of the WASM guest module executions.
 	Wasm *prometheus.SummaryVec
+
+	// Routes is a gauge metric of the configured service routes.
+	Routes *prometheus.GaugeVec
 }
 
 // New creates and returns an initialized Telemetry instance with default metrics.
@@ -59,6 +62,13 @@ func New() *Telemetry {
 		[]string{"route"},
 	)
 
+	m.Routes = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "service_routes",
+		Help: "Number of configured service routes",
+	},
+		[]string{"service", "type"},
+	)
+
 	return m
 }
 
@@ -68,4 +78,5 @@ func (t *Telemetry) Close() {
 	_ = prometheus.Unregister(t.Srv)
 	_ = prometheus.Unregister(t.Callbacks)
 	_ = prometheus.Unregister(t.Wasm)
+	_ = prometheus.Unregister(t.Routes)
 }

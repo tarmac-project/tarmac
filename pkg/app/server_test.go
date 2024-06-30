@@ -327,10 +327,14 @@ func TestInitFuncs(t *testing.T) {
 				}
 				t.Errorf("Run unexpectedly stopped - %s", err)
 			}
+			if err == ErrShutdown && ctx.Err() == context.DeadlineExceeded && !tc.err {
+				t.Errorf("Server did not start and shutdown as expected")
+			}
 
 			if ctx.Err() == context.DeadlineExceeded && tc.err {
 				t.Fatalf("Server did not fail as expected")
 			}
+
 		})
 	}
 }
