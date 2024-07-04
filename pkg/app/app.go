@@ -129,7 +129,7 @@ func (srv *Server) Run() error {
 	srv.scheduler = tasks.New()
 	defer srv.scheduler.Stop()
 
-	// Initalization Log Message
+	// Startup Log Message
 	srv.log.WithFields(logrus.Fields{
 		"run_mode":       srv.cfg.GetString("run_mode"),
 		"use_consul":     srv.cfg.GetBool("use_consul"),
