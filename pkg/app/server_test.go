@@ -258,6 +258,7 @@ func TestInitFuncs(t *testing.T) {
 	tc.cfg.Set("listen_addr", "localhost:9001")
 	tc.cfg.Set("kvstore_type", "in-memory")
 	tc.cfg.Set("enable_kvstore", true)
+	tc.cfg.Set("run_mode", "job")
 	tc.config = []byte(`{"services":{"test-service":{"name":"test-service","functions":{"default":{"filepath":"/testdata/default/tarmac.wasm","pool_size":1}},"routes":[{"type":"init","function":"default"}]}}}`)
 	tt = append(tt, tc)
 
@@ -267,6 +268,7 @@ func TestInitFuncs(t *testing.T) {
 	tc.cfg.Set("listen_addr", "localhost:9001")
 	tc.cfg.Set("kvstore_type", "in-memory")
 	tc.cfg.Set("enable_kvstore", true)
+	tc.cfg.Set("run_mode", "job")
 	tc.config = []byte(`{"services":{"test-service":{"name":"test-service","functions":{"fail":{"filepath":"/testdata/fail/tarmac.wasm","pool_size":1}},"routes":[{"type":"init","function":"fail"}]}}}`)
 	tc.err = true
 	tt = append(tt, tc)
@@ -277,6 +279,7 @@ func TestInitFuncs(t *testing.T) {
 	tc.cfg.Set("listen_addr", "localhost:9001")
 	tc.cfg.Set("kvstore_type", "in-memory")
 	tc.cfg.Set("enable_kvstore", true)
+	tc.cfg.Set("run_mode", "job")
 	tc.config = []byte(`{"services":{"test-service":{"name":"test-service","functions":{"successafter5":{"filepath":"/testdata/successafter5/tarmac.wasm","pool_size":1}},"routes":[{"type":"init","retries":10,"function":"successafter5"}]}}}`)
 	tt = append(tt, tc)
 
@@ -286,6 +289,7 @@ func TestInitFuncs(t *testing.T) {
 	tc.cfg.Set("listen_addr", "localhost:9001")
 	tc.cfg.Set("kvstore_type", "in-memory")
 	tc.cfg.Set("enable_kvstore", true)
+	tc.cfg.Set("run_mode", "job")
 	tc.config = []byte(`{"services":{"test-service":{"name":"test-service","functions":{"fail":{"filepath":"/testdata/fail/tarmac.wasm","pool_size":1}},"routes":[{"type":"init","retries":10,"function":"fail"}]}}}`)
 	tc.err = true
 	tt = append(tt, tc)
@@ -327,10 +331,14 @@ func TestInitFuncs(t *testing.T) {
 				}
 				t.Errorf("Run unexpectedly stopped - %s", err)
 			}
+			if err == ErrShutdown && ctx.Err() == context.DeadlineExceeded && !tc.err {
+				t.Errorf("Server did not start and shutdown as expected")
+			}
 
 			if ctx.Err() == context.DeadlineExceeded && tc.err {
 				t.Fatalf("Server did not fail as expected")
 			}
+
 		})
 	}
 }
