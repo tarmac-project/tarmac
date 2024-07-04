@@ -49,6 +49,18 @@ var (
 const (
 	// DefaultNamespace is the default namespace for callback functions.
 	DefaultNamespace = "tarmac"
+
+	// RouteTypeInit is the route type for init functions.
+	RouteTypeInit = "init"
+
+	// RouteTypeHTTP is the route type for HTTP functions.
+	RouteTypeHTTP = "http"
+
+	// RouteTypeScheduledTask is the route type for scheduled tasks.
+	RouteTypeScheduledTask = "scheduled_task"
+
+	// RouteTypeFunction is the route type for function to function calls.
+	RouteTypeFunction = "function"
 )
 
 // Server represents the main server structure.
@@ -607,10 +619,10 @@ func (srv *Server) Run() error {
 		srv.log.Infof("Loading Services from wasm_function_config %s", srv.cfg.GetString("wasm_function_config"))
 
 		routesCounter := map[string]int{
-			"init":           0,
-			"http":           0,
-			"scheduled_task": 0,
-			"function":       0,
+			RouteTypeInit:          0,
+			RouteTypeHTTP:          0,
+			RouteTypeScheduledTask: 0,
+			RouteTypeFunction:      0,
 		}
 		for svcName, svcCfg := range srv.funcCfg.Services {
 			// Load WASM Functions
@@ -639,13 +651,13 @@ func (srv *Server) Run() error {
 			initRoutes := []config.Route{}
 			for _, r := range svcCfg.Routes {
 				switch r.Type {
-				case "init":
+				case RouteTypeInit:
 					// Copy init functions for later execution
 					initRoutes = append(initRoutes, r)
-					routesCounter["init"]++
+					routesCounter[RouteTypeInit]++
 					srv.stats.Routes.WithLabelValues(svcName, r.Type).Inc()
 
-				case "http":
+				case RouteTypeHTTP:
 					// Register HTTP based functions with the HTTP router
 					for _, m := range r.Methods {
 						key := fmt.Sprintf("%s:%s:%s", r.Type, m, r.Path)
@@ -658,11 +670,11 @@ func (srv *Server) Run() error {
 						}).Infof("Registering Route %s for function %s", key, r.Function)
 						funcRoutes[key] = r.Function
 						srv.httpRouter.Handle(m, r.Path, srv.middleware(srv.WASMHandler))
-						routesCounter["http"]++
+						routesCounter[RouteTypeHTTP]++
 						srv.stats.Routes.WithLabelValues(svcName, r.Type).Inc()
 					}
 
-				case "scheduled_task":
+				case RouteTypeScheduledTask:
 					// Schedule tasks for scheduled functions
 					fname := r.Function
 					srv.log.Infof("Scheduling custom task for function %s with interval of %d", r.Function, r.Frequency)
@@ -685,10 +697,10 @@ func (srv *Server) Run() error {
 					}
 					// Clean up Task on Shutdown
 					defer srv.scheduler.Del(id)
-					routesCounter["scheduled_task"]++
+					routesCounter[RouteTypeScheduledTask]++
 					srv.stats.Routes.WithLabelValues(svcName, r.Type).Inc()
 
-				case "function":
+				case RouteTypeFunction:
 					// Setup callbacks for function to function calls
 					srv.log.Infof("Registering Function to Function callback for %s", r.Function)
 					fname := r.Function
@@ -705,7 +717,7 @@ func (srv *Server) Run() error {
 					if err != nil {
 						return fmt.Errorf("error registering callback for function %s - %s", fname, err)
 					}
-					routesCounter["function"]++
+					routesCounter[RouteTypeFunction]++
 					srv.stats.Routes.WithLabelValues(svcName, r.Type).Inc()
 				}
 			}
@@ -737,10 +749,10 @@ func (srv *Server) Run() error {
 
 		// Log information about loaded functions and routes
 		srv.log.WithFields(logrus.Fields{
-			"init":           routesCounter["init"],
-			"http":           routesCounter["http"],
-			"scheduled_task": routesCounter["scheduled_task"],
-			"function":       routesCounter["function"],
+			"init":           routesCounter[RouteTypeInit],
+			"http":           routesCounter[RouteTypeHTTP],
+			"scheduled_task": routesCounter[RouteTypeScheduledTask],
+			"function":       routesCounter[RouteTypeFunction],
 		}).Info("Loaded Functions and Routes")
 
 		// If run-mode is jobs, exit cleanly
