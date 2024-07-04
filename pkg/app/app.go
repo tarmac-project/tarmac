@@ -129,6 +129,16 @@ func (srv *Server) Run() error {
 	srv.scheduler = tasks.New()
 	defer srv.scheduler.Stop()
 
+	// Initalization Log Message
+	srv.log.WithFields(logrus.Fields{
+		"run_mode":       srv.cfg.GetString("run_mode"),
+		"use_consul":     srv.cfg.GetBool("use_consul"),
+		"enable_kvstore": srv.cfg.GetBool("enable_kvstore"),
+		"enable_sql":     srv.cfg.GetBool("enable_sql"),
+		"enable_tls":     srv.cfg.GetBool("enable_tls"),
+		"enable_metrics": srv.cfg.GetBool("enable_metrics"),
+	}).Info("Starting Tarmac")
+
 	// Config Reload
 	if srv.cfg.GetInt("config_watch_interval") > 0 && srv.cfg.GetBool("use_consul") {
 		_, err := srv.scheduler.Add(&tasks.Task{
@@ -725,10 +735,17 @@ func (srv *Server) Run() error {
 
 		}
 
-		srv.log.Infof("Loaded %d init functions, %d http routes, %d scheduled tasks, and %d function to function routes", routesCounter["init"], routesCounter["http"], routesCounter["scheduled_task"], routesCounter["function"])
-		// If No Service Routes are loaded, exit application
-		if routesCounter["http"] == 0 && routesCounter["scheduled_task"] == 0 && srv.cfg.GetString("wasm_function_config") != "" {
-			srv.log.Infof("No Service Routes loaded, exiting application")
+		// Log information about loaded functions and routes
+		srv.log.WithFields(logrus.Fields{
+			"init":           routesCounter["init"],
+			"http":           routesCounter["http"],
+			"scheduled_task": routesCounter["scheduled_task"],
+			"function":       routesCounter["function"],
+		}).Info("Loaded Functions and Routes")
+
+		// If run-mode is jobs, exit cleanly
+		if srv.cfg.GetString("run_mode") == "job" {
+			srv.log.Infof("Run mode is job, exiting after init function execution")
 			return ErrShutdown
 		}
 	}

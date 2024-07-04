@@ -28,6 +28,7 @@ func main() {
 	cfg.SetDefault("boltdb_permissions", 0600)
 	cfg.SetDefault("boltdb_timeout", 5)
 	cfg.SetDefault("grpc_socket_path", "/grpc.sock")
+  cfg.SetDefault("run_mode", "daemon")
 
 	// Load Config
 	cfg.AddConfigPath("./conf")

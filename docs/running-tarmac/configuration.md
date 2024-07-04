@@ -32,6 +32,7 @@ When using Environment Variables, all configurations are prefixed with `APP_`. T
 | `APP_KVSTORE_TYPE` | `kvstore_type` | `string` | Select KV Store to use (Options: `redis`, `cassandra`, `boltdb`, `in-memory`, `internal`)|
 | `APP_ENABLE_SQL` | `enable_sql` | `bool` | Enable the SQL Store |
 | `APP_SQL_TYPE` | `sql_type` | `string` | Select SQL Store to use (Options: `postgres`, `mysql`)|
+| `APP_RUN_MODE` | `run_mode` | `string` | Select the run mode for Tarmac (Options: `daemon`, `job`). Default: `daemon`. The `job` option will cause Tarmac to exit after init functions are executed. |
 
 ## Consul Format
 
