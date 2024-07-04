@@ -10,6 +10,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/sirupsen/logrus"
 	"github.com/tarmac-project/tarmac/pkg/config"
+	"github.com/tarmac-project/tarmac/pkg/sanitize"
 )
 
 // isPProf is a regex that validates if the given path is used for PProf
@@ -50,7 +51,7 @@ func (srv *Server) middleware(n httprouter.Handle) httprouter.Handle {
 			"remote-addr":    r.RemoteAddr,
 			"http-protocol":  r.Proto,
 			"content-length": r.ContentLength,
-		}).Debugf("HTTP Request to %s received", r.URL.EscapedPath())
+		}).Debugf("HTTP Request to %s received", sanitize.String(r.URL.EscapedPath()))
 
 		// Verify if PProf
 		if isPProf.MatchString(r.URL.EscapedPath()) && !srv.cfg.GetBool("enable_pprof") {
@@ -76,7 +77,7 @@ func (srv *Server) middleware(n httprouter.Handle) httprouter.Handle {
 			"http-protocol":  r.Proto,
 			"content-length": r.ContentLength,
 			"duration":       time.Since(now).Milliseconds(),
-		}).Debugf("HTTP Request to %s complete", r.URL.EscapedPath())
+		}).Debugf("HTTP Request to %s complete", sanitize.String(r.URL.EscapedPath()))
 	}
 }
 
