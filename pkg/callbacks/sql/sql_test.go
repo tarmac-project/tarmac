@@ -171,8 +171,8 @@ func TestSQLQuery(t *testing.T) {
 
 			// Parse returned SQL Data
 			type rowData struct {
-				ID   []byte `json:"id"`
-				Name []byte `json:"name"`
+				ID   []uint8 `json:"id"`
+				Name []byte  `json:"name"`
 			}
 
 			var records []rowData
