@@ -25,6 +25,12 @@ func (srv *Server) Health(w http.ResponseWriter, _ *http.Request, _ httprouter.P
 // Ready is used to handle HTTP Ready requests to this service. Use this for readiness
 // probes or any checks that validate the service is ready to accept traffic.
 func (srv *Server) Ready(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
+	// Check if maintence mode is enabled and return 503
+	if srv.cfg.GetBool("enable_maintenance_mode") {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		return
+	}
+
 	// Check other stuff here like KV connectivity, health of dependent services, etc.
 	if srv.cfg.GetBool("enable_kvstore") {
 		err := srv.kv.HealthCheck()
