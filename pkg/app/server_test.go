@@ -90,6 +90,39 @@ func TestBasicFunction(t *testing.T) {
 
 }
 
+func TestMaintenanceMode(t *testing.T) {
+	cfg := viper.New()
+	cfg.Set("disable_logging", false)
+	cfg.Set("debug", true)
+	cfg.Set("listen_addr", "localhost:9001")
+	cfg.Set("wasm_function", "/testdata/default/tarmac.wasm")
+	cfg.Set("enable_maintenance_mode", true)
+
+	srv := New(cfg)
+	go func() {
+		err := srv.Run()
+		if err != nil && err != ErrShutdown {
+			t.Errorf("Run unexpectedly stopped - %s", err)
+		}
+	}()
+	// Clean up
+	defer srv.Stop()
+
+	// Wait for Server to start
+	time.Sleep(2 * time.Second)
+
+	t.Run("Check Readiness", func(t *testing.T) {
+		r, err := http.Get("http://localhost:9001/ready")
+		if err != nil {
+			t.Fatalf("Unexpected error when making HTTP request - %s", err)
+		}
+		defer r.Body.Close()
+		if r.StatusCode != 503 {
+			t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
+		}
+	})
+}
+
 type FullServiceTestCase struct {
 	name string
 	cfg  *viper.Viper
