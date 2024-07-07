@@ -23,8 +23,8 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/madflojo/hord"
 	"github.com/pquerna/ffjson/ffjson"
+	"github.com/tarmac-project/hord"
 	"github.com/tarmac-project/tarmac"
 )
 
@@ -32,7 +32,7 @@ import (
 // within KVStore provided all of the logic and error handlings of accessing and interacting with a key:value
 // database. Users will send the specified JSON request and receive an appropriate JSON response.
 type KVStore struct {
-	// KV is the user-provided Key:Value store instance using the github.com/madflojo/hord package. This package by
+	// KV is the user-provided Key:Value store instance using the github.com/tarmac-project/hord package. This package by
 	// itself does not manage database connections but rather relies on the hord.Database interface. Users must
 	// supply an initiated hord.Database to work with.
 	kv hord.Database
@@ -41,7 +41,7 @@ type KVStore struct {
 // Config is provided to users to configure the Host Callback. All Tarmac Callbacks follow the same configuration
 // format; each Config struct gives the specific Host Callback unique functionality.
 type Config struct {
-	// KV is the user-provided Key:Value store instance using the github.com/madflojo/hord package. This package by
+	// KV is the user-provided Key:Value store instance using the github.com/tarmac-project/hord package. This package by
 	// itself does not manage database connections but rather relies on the hord.Database interface. Users must
 	// supply an initiated hord.Database to work with.
 	KV hord.Database
