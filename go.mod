@@ -6,13 +6,18 @@ require (
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/lib/pq v1.10.9
-	github.com/madflojo/hord v0.3.0
 	github.com/madflojo/tasks v1.2.0
 	github.com/madflojo/testcerts v1.2.0
 	github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7
 	github.com/prometheus/client_golang v1.19.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.19.0
+	github.com/tarmac-project/hord v0.6.0
+	github.com/tarmac-project/hord/drivers/bbolt v0.6.0
+	github.com/tarmac-project/hord/drivers/cassandra v0.6.0
+	github.com/tarmac-project/hord/drivers/hashmap v0.6.0
+	github.com/tarmac-project/hord/drivers/mock v0.6.0
+	github.com/tarmac-project/hord/drivers/redis v0.6.0
 	github.com/tarmac-project/wapc-toolkit v0.1.2
 	github.com/wapc/wapc-go v0.7.0
 )
@@ -82,7 +87,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/tetratelabs/wazero v1.7.3 // indirect
-	go.etcd.io/bbolt v1.3.9 // indirect
+	go.etcd.io/bbolt v1.3.10 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.12 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.12 // indirect
 	go.etcd.io/etcd/client/v2 v2.305.12 // indirect

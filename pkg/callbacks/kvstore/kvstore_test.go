@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/madflojo/hord/drivers/mock"
 	"github.com/pquerna/ffjson/ffjson"
+	"github.com/tarmac-project/hord/drivers/mock"
 	"github.com/tarmac-project/tarmac"
 )
 
