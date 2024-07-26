@@ -18,7 +18,8 @@ require (
 	github.com/tarmac-project/hord/drivers/hashmap v0.6.0
 	github.com/tarmac-project/hord/drivers/mock v0.6.0
 	github.com/tarmac-project/hord/drivers/redis v0.6.0
-	github.com/tarmac-project/wapc-toolkit v0.1.2
+	github.com/tarmac-project/wapc-toolkit/callbacks v0.2.0
+	github.com/tarmac-project/wapc-toolkit/engine v0.2.0
 	github.com/wapc/wapc-go v0.7.0
 )
 
