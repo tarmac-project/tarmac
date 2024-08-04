@@ -24,6 +24,9 @@ import (
 
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/tarmac-project/tarmac"
+
+	"github.com/tarmac-project/tarmac/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
 // Database provides access to Host Callbacks that interface with a SQL database within Tarmac. The callbacks
@@ -57,6 +60,109 @@ func New(cfg Config) (*Database, error) {
 // of data are all handled via this function. Note, this function expects the SQLQueryJSON type as input
 // and will return a SQLQueryResponse JSON.
 func (db *Database) Query(b []byte) ([]byte, error) {
+	msg := &proto.SQLQuery{}
+	err := pb.Unmarshal(b, msg)
+	if err != nil {
+		// Fallback to JSON if proto fails
+		return db.queryJSON(b)
+	}
+
+	r := proto.SQLQueryResponse{}
+	r.Status = &proto.Status{Code: 200, Status: "OK"}
+
+	if len(msg.Query) < 1 {
+		r.Status.Code = 400
+		r.Status.Status = "SQL Query must be defined"
+	}
+
+	if r.Status.Code == 200 {
+		rows, err := db.db.Query(msg.Query)
+		if err != nil {
+			r.Status.Code = 500
+			r.Status.Status = fmt.Sprintf("Unable to execute query - %s", err)
+		}
+		defer rows.Close()
+
+		if r.Status.Code == 200 {
+
+			// Set last insert ID
+			lastID, err := rows.LastInsertId()
+			if err != nil {
+				r.Status.Code = 500
+				r.Status.Status = fmt.Sprintf("Unable to get last insert ID - %s", err)
+			}
+
+			if r.Status.Code == 200 {
+				r.LastInsertID = lastID
+			}
+
+			// Set number of rows affected
+			rowsAffected, err := rows.RowsAffected()
+			if err != nil {
+				r.Status.Code = 500
+				r.Status.Status = fmt.Sprintf("Unable to get rows affected - %s", err)
+			}
+
+			if r.Status.Code == 200 {
+				r.RowsAffected = rowsAffected
+			}
+
+			// Grab Colummns
+			columns, err := rows.Columns()
+			if err != nil {
+				r.Status.Code = 500
+				r.Status.Status = fmt.Sprintf("Unable to process query results - %s", err)
+			}
+			r.Columns = columns
+
+			// Loop through results
+			if len(columns) > 0 {
+				pbRows := []*proto.Row{}
+				for rows.Next() {
+					pbRow := proto.Row{}
+					data := make(map[string][]byte)
+					rawdata := make([]*sql.RawBytes, len(columns))
+					for i := range columns {
+						rawdata[i] = new(sql.RawBytes)
+					}
+
+					err := rows.Scan(rawdata...)
+					if err != nil {
+						r.Status.Code = 500
+						r.Status.Status = fmt.Sprintf("Unable to process query results - %s", err)
+					}
+
+					for i, raw := range rawdata {
+						if raw != nil {
+							data[columns[i]] = *raw
+						}
+					}
+
+					if r.Status.Code == 200 {
+						pbRow.Data = data
+						pbRows = append(pbRows, &pbRow)
+					}
+				}
+				r.Rows = pbRows
+			}
+		}
+
+		// Marshal a resposne
+		rsp, err := pb.Marshal(&r)
+		if err != nil {
+			return []byte(""), fmt.Errorf("unable to marshal database:query response")
+		}
+
+		// Return response to caller
+		if r.Status.Code == 200 {
+			return rsp, nil
+		}
+		return rsp, fmt.Errorf("%s", r.Status.Status)
+	}
+}
+
+// queryJSON retains the JSON interface for backwards compatibility with the Tarmac Host Callback interface.
+func (db *Database) queryJSON(b []byte) ([]byte, error) {
 	// Start Response Message assuming everything is good
 	r := tarmac.SQLQueryResponse{}
 	r.Status.Code = 200

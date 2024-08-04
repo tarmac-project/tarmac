@@ -11,6 +11,9 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/tarmac-project/tarmac"
+
+	"github.com/tarmac-project/tarmac/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
 type TestCase struct {
@@ -62,12 +65,215 @@ func TestSQLQuery(t *testing.T) {
 		q:    `1234e213423ewqw`,
 	})
 
-	t.Run("Unhappy Path", func(t *testing.T) {
-		for _, c := range tc {
-			t.Run(c.name, func(t *testing.T) {
-				r, err := db.Query([]byte(fmt.Sprintf(`{"query":"%s"}`, base64.StdEncoding.EncodeToString([]byte(c.q)))))
-				if err == nil {
-					t.Fatalf("Unexepected success with failure test case")
+	t.Run("Protobuf Based Queries", func(t *testing.T) {
+
+		t.Run("Unhappy Path", func(t *testing.T) {
+			for _, c := range tc {
+				t.Run(c.name, func(t *testing.T) {
+					query := &proto.SQLQuery{Query: []byte(c.q)}
+					qMsg, err := pb.Marshal(query)
+					if err != nil {
+						t.Fatalf("Unable to marshal query message")
+					}
+
+					r, err := db.Query(qMsg)
+					if err == nil {
+						t.Fatalf("Unexepected success with failure test case")
+					}
+
+					// Unmarshal the Tarmac Response
+					var rsp proto.SQLQueryResponse
+					err = pb.Unmarshal(r, &rsp)
+					if err != nil {
+						t.Fatalf("Error parsing returned query response")
+					}
+
+					// Check Status Codes
+					if rsp.Status.Code == 200 {
+						t.Fatalf("Unexpected Success with unhappy path test - %v", rsp)
+					}
+				})
+			}
+		})
+
+		t.Run("Happy Path", func(t *testing.T) {
+			t.Run("Create Table", func(t *testing.T) {
+				query := &proto.SQLQuery{Query: []byte(`CREATE TABLE IF NOT EXISTS testpkg ( id int NOT NULL, name varchar(255), PRIMARY KEY (id) );`)}
+				qMsg, err := pb.Marshal(query)
+				if err != nil {
+					t.Fatalf("Unable to marshal query message")
+				}
+
+				r, err := db.Query(qMsg)
+				if err != nil {
+					t.Fatalf("Unable to execute table creation query - %s", err)
+				}
+
+				// Unmarshal the Tarmac Response
+				var rsp proto.SQLQueryResponse
+				err = pb.Unmarshal(r, &rsp)
+				if err != nil {
+					t.Fatalf("Error parsing returned query response")
+				}
+
+				// Check Status Codes
+				if rsp.Status.Code != 200 {
+					t.Fatalf("Callback execution did not work, returned %d - %s", rsp.Status.Code, rsp.Status.Status)
+				}
+			})
+
+			t.Run("Insert Data", func(t *testing.T) {
+				query := &proto.SQLQuery{Query: []byte(`INSERT INTO testpkg (id, name)  VALUES (1, "John Smith");`)}
+				qMsg, err := pb.Marshal(query)
+				if err != nil {
+					t.Fatalf("Unable to marshal query message")
+				}
+
+				r, err := db.Query(qMsg)
+				if err != nil {
+					t.Errorf("Unable to execute table creation query - %s", err)
+				}
+
+				// Unmarshal the Tarmac Response
+				var rsp proto.SQLQueryResponse
+				err = pb.Unmarshal(r, &rsp)
+				if err != nil {
+					t.Fatalf("Error parsing returned query response")
+				}
+
+				// Check Status Codes
+				if rsp.Status.Code != 200 {
+					t.Fatalf("Callback execution did not work, returned %d - %s", rsp.Status.Code, rsp.Status.Status)
+				}
+
+				// Check Rows Affected
+				if rsp.RowsAffected != 1 {
+					t.Fatalf("Unexpected rows affected - %d", rsp.RowsAffected)
+				}
+
+				// Check Last Insert ID
+				if rsp.LastInsertId != 1 {
+					t.Fatalf("Unexpected last insert ID - %d", rsp.LastInsertId)
+				}
+
+			})
+
+			t.Run("Select Data", func(t *testing.T) {
+				query := &proto.SQLQuery{Query: []byte(`SELECT * from testpkg;`)}
+				qMsg, err := pb.Marshal(query)
+				if err != nil {
+					t.Fatalf("Unable to marshal query message")
+				}
+
+				r, err := db.Query(qMsg)
+				if err != nil {
+					t.Errorf("Unable to execute table creation query - %s", err)
+				}
+
+				// Unmarshal the Tarmac Response
+				var rsp proto.SQLQueryResponse
+				err = pb.Unmarshal(r, &rsp)
+				if err != nil {
+					t.Fatalf("Error parsing returned query response")
+				}
+
+				// Check Status Codes
+				if rsp.Status.Code != 200 {
+					t.Fatalf("Callback execution did not work, returned %d - %s", rsp.Status.Code, rsp.Status.Status)
+				}
+
+				// Verify Columns
+				if len(rsp.Columns) != 1 {
+					t.Fatalf("Unexpected number of columns returned - %d", len(rsp.Columns))
+				}
+
+				// Verify Rows
+				if len(rsp.Rows) != 1 {
+					t.Fatalf("Unexpected number of rows returned - %d", len(rsp.Rows))
+				}
+
+				// Verify Data
+				if string(rsp.Rows[0].Data["id"]) != "1" && string(rsp.Rows[0].Data["name"]) != "John Smith" {
+					t.Fatalf("Unexpected data returned - %v", rsp.Rows[0].Data)
+				}
+
+			})
+
+			t.Run("Delete Table", func(t *testing.T) {
+				query := &proto.SQLQuery{Query: []byte(`DROP TABLE IF EXISTS testpkg;`)}
+				qMsg, err := pb.Marshal(query)
+				if err != nil {
+					t.Fatalf("Unable to marshal query message")
+				}
+
+				r, err := db.Query(qMsg)
+				if err != nil {
+					t.Errorf("Unable to execute table creation query - %s", err)
+				}
+
+				// Unmarshal the Tarmac Response
+				var rsp proto.SQLQueryResponse
+				err = pb.Unmarshal(r, &rsp)
+				if err != nil {
+					t.Fatalf("Error parsing returned query response")
+				}
+
+				// Check Status Codes
+				if rsp.Status.Code != 200 {
+					t.Fatalf("Callback execution did not work, returned %d - %s", rsp.Status.Code, rsp.Status.Status)
+				}
+			})
+
+		})
+	})
+
+	// Test the JSON Interface for Backwards Compatibility
+	t.Run("JSON Based Queries", func(t *testing.T) {
+
+		t.Run("Unhappy Path", func(t *testing.T) {
+			for _, c := range tc {
+				t.Run(c.name, func(t *testing.T) {
+					r, err := db.Query([]byte(fmt.Sprintf(`{"query":"%s"}`, base64.StdEncoding.EncodeToString([]byte(c.q)))))
+					if err == nil {
+						t.Fatalf("Unexepected success with failure test case")
+					}
+
+					// Unmarshal the Tarmac Response
+					var rsp tarmac.SQLQueryResponse
+					err = ffjson.Unmarshal(r, &rsp)
+					if err != nil {
+						t.Fatalf("Error parsing returned query response")
+					}
+
+					// Check Status Codes
+					if rsp.Status.Code == 200 {
+						t.Fatalf("Unexpected Success with unhappy path test - %v", rsp)
+					}
+				})
+			}
+		})
+
+		t.Run("Bad JSON", func(t *testing.T) {
+			_, err := db.Query([]byte(`{asdfas`))
+			if err == nil {
+				t.Fatalf("Unexpected success with bad input")
+			}
+		})
+
+		t.Run("Bad Base64", func(t *testing.T) {
+			_, err := db.Query([]byte(`{"query": "my bologna has a first name it's this is not base64...."}`))
+			if err == nil {
+				t.Fatalf("Unexpected success with bad input")
+			}
+		})
+
+		t.Run("Happy Path", func(t *testing.T) {
+			t.Run("Create Table", func(t *testing.T) {
+				q := base64.StdEncoding.EncodeToString([]byte(`CREATE TABLE IF NOT EXISTS testpkg ( id int NOT NULL, name varchar(255), PRIMARY KEY (id) );`))
+				j := fmt.Sprintf(`{"query":"%s"}`, q)
+				r, err := db.Query([]byte(j))
+				if err != nil {
+					t.Fatalf("Unable to execute table creation query - %s", err)
 				}
 
 				// Unmarshal the Tarmac Response
@@ -78,139 +284,101 @@ func TestSQLQuery(t *testing.T) {
 				}
 
 				// Check Status Codes
-				if rsp.Status.Code == 200 {
-					t.Fatalf("Unexpected Success with unhappy path test - %v", rsp)
+				if rsp.Status.Code != 200 {
+					t.Fatalf("Callback execution did not work, returned %d - %s", rsp.Status.Code, rsp.Status.Status)
 				}
-				t.Logf("Returned Status %d - %s", rsp.Status.Code, rsp.Status.Status)
 			})
-		}
-	})
 
-	t.Run("Bad JSON", func(t *testing.T) {
-		_, err := db.Query([]byte(`{asdfas`))
-		if err == nil {
-			t.Fatalf("Unexpected success with bad input")
-		}
-	})
+			t.Run("Insert Data", func(t *testing.T) {
+				q := base64.StdEncoding.EncodeToString([]byte(`INSERT INTO testpkg (id, name)  VALUES (1, "John Smith");`))
+				j := fmt.Sprintf(`{"query":"%s"}`, q)
+				r, err := db.Query([]byte(j))
+				if err != nil {
+					t.Errorf("Unable to execute table creation query - %s", err)
+				}
 
-	t.Run("Bad Base64", func(t *testing.T) {
-		_, err := db.Query([]byte(`{"query": "my bologna has a first name it's this is not base64...."}`))
-		if err == nil {
-			t.Fatalf("Unexpected success with bad input")
-		}
-	})
+				// Unmarshal the Tarmac Response
+				var rsp tarmac.SQLQueryResponse
+				err = ffjson.Unmarshal(r, &rsp)
+				if err != nil {
+					t.Fatalf("Error parsing returned query response")
+				}
 
-	t.Run("Happy Path", func(t *testing.T) {
-		t.Run("Create Table", func(t *testing.T) {
-			q := base64.StdEncoding.EncodeToString([]byte(`CREATE TABLE IF NOT EXISTS testpkg ( id int NOT NULL, name varchar(255), PRIMARY KEY (id) );`))
-			j := fmt.Sprintf(`{"query":"%s"}`, q)
-			r, err := db.Query([]byte(j))
-			if err != nil {
-				t.Fatalf("Unable to execute table creation query - %s", err)
-			}
+				// Check Status Codes
+				if rsp.Status.Code != 200 {
+					t.Fatalf("Callback execution did not work, returned %d - %s", rsp.Status.Code, rsp.Status.Status)
+				}
+			})
 
-			// Unmarshal the Tarmac Response
-			var rsp tarmac.SQLQueryResponse
-			err = ffjson.Unmarshal(r, &rsp)
-			if err != nil {
-				t.Fatalf("Error parsing returned query response")
-			}
+			t.Run("Select Data", func(t *testing.T) {
+				q := base64.StdEncoding.EncodeToString([]byte(`SELECT * from testpkg;`))
+				j := fmt.Sprintf(`{"query":"%s"}`, q)
+				r, err := db.Query([]byte(j))
+				if err != nil {
+					t.Errorf("Unable to execute table creation query - %s", err)
+				}
 
-			// Check Status Codes
-			if rsp.Status.Code != 200 {
-				t.Fatalf("Callback execution did not work, returned %d - %s", rsp.Status.Code, rsp.Status.Status)
-			}
-		})
+				// Unmarshal the Tarmac Response
+				var rsp tarmac.SQLQueryResponse
+				err = ffjson.Unmarshal(r, &rsp)
+				if err != nil {
+					t.Fatalf("Error parsing returned query response")
+				}
 
-		t.Run("Insert Data", func(t *testing.T) {
-			q := base64.StdEncoding.EncodeToString([]byte(`INSERT INTO testpkg (id, name)  VALUES (1, "John Smith");`))
-			j := fmt.Sprintf(`{"query":"%s"}`, q)
-			r, err := db.Query([]byte(j))
-			if err != nil {
-				t.Errorf("Unable to execute table creation query - %s", err)
-			}
+				// Check Status Codes
+				if rsp.Status.Code != 200 {
+					t.Fatalf("Callback execution did not work, returned %d - %s", rsp.Status.Code, rsp.Status.Status)
+				}
 
-			// Unmarshal the Tarmac Response
-			var rsp tarmac.SQLQueryResponse
-			err = ffjson.Unmarshal(r, &rsp)
-			if err != nil {
-				t.Fatalf("Error parsing returned query response")
-			}
+				// Verify query response
+				data, err := base64.StdEncoding.DecodeString(rsp.Data)
+				if err != nil {
+					t.Fatalf("Callback returned undecodable response - %s", err)
+				}
 
-			// Check Status Codes
-			if rsp.Status.Code != 200 {
-				t.Fatalf("Callback execution did not work, returned %d - %s", rsp.Status.Code, rsp.Status.Status)
-			}
-		})
+				// Parse returned SQL Data
+				type rowData struct {
+					ID   []byte `json:"id"`
+					Name []byte `json:"name"`
+				}
 
-		t.Run("Select Data", func(t *testing.T) {
-			q := base64.StdEncoding.EncodeToString([]byte(`SELECT * from testpkg;`))
-			j := fmt.Sprintf(`{"query":"%s"}`, q)
-			r, err := db.Query([]byte(j))
-			if err != nil {
-				t.Errorf("Unable to execute table creation query - %s", err)
-			}
+				var records []rowData
+				err = ffjson.Unmarshal(data, &records)
+				if err != nil {
+					t.Fatalf("Unable to unmarshal SQL response - %s", err)
+				}
 
-			// Unmarshal the Tarmac Response
-			var rsp tarmac.SQLQueryResponse
-			err = ffjson.Unmarshal(r, &rsp)
-			if err != nil {
-				t.Fatalf("Error parsing returned query response")
-			}
+				id, err := strconv.Atoi(string(records[0].ID))
+				if err != nil {
+					t.Fatalf("Unable to convert ID to integer - %s", err)
+				}
 
-			// Check Status Codes
-			if rsp.Status.Code != 200 {
-				t.Fatalf("Callback execution did not work, returned %d - %s", rsp.Status.Code, rsp.Status.Status)
-			}
+				if id != 1 {
+					t.Fatalf("Unexpected value from Database got %d", id)
+				}
 
-			// Verify query response
-			data, err := base64.StdEncoding.DecodeString(rsp.Data)
-			if err != nil {
-				t.Fatalf("Callback returned undecodable response - %s", err)
-			}
+			})
 
-			// Parse returned SQL Data
-			type rowData struct {
-				ID   []byte `json:"id"`
-				Name []byte `json:"name"`
-			}
+			t.Run("Delete Table", func(t *testing.T) {
+				q := base64.StdEncoding.EncodeToString([]byte(`DROP TABLE IF EXISTS testpkg;`))
+				j := fmt.Sprintf(`{"query":"%s"}`, q)
+				r, err := db.Query([]byte(j))
+				if err != nil {
+					t.Errorf("Unable to execute table creation query - %s", err)
+				}
 
-			var records []rowData
-			err = ffjson.Unmarshal(data, &records)
-			if err != nil {
-				t.Fatalf("Unable to unmarshal SQL response - %s", err)
-			}
+				// Unmarshal the Tarmac Response
+				var rsp tarmac.SQLQueryResponse
+				err = ffjson.Unmarshal(r, &rsp)
+				if err != nil {
+					t.Fatalf("Error parsing returned query response")
+				}
 
-			id, err := strconv.Atoi(string(records[0].ID))
-			if err != nil {
-				t.Fatalf("Unable to convert ID to integer - %s", err)
-			}
-
-			if id != 1 {
-				t.Fatalf("Unexpected value from Database got %d", id)
-			}
-
-		})
-
-		t.Run("Delete Table", func(t *testing.T) {
-			q := base64.StdEncoding.EncodeToString([]byte(`DROP TABLE IF EXISTS testpkg;`))
-			j := fmt.Sprintf(`{"query":"%s"}`, q)
-			r, err := db.Query([]byte(j))
-			if err != nil {
-				t.Errorf("Unable to execute table creation query - %s", err)
-			}
-
-			// Unmarshal the Tarmac Response
-			var rsp tarmac.SQLQueryResponse
-			err = ffjson.Unmarshal(r, &rsp)
-			if err != nil {
-				t.Fatalf("Error parsing returned query response")
-			}
-
-			// Check Status Codes
-			if rsp.Status.Code != 200 {
-				t.Fatalf("Callback execution did not work, returned %d - %s", rsp.Status.Code, rsp.Status.Status)
-			}
+				// Check Status Codes
+				if rsp.Status.Code != 200 {
+					t.Fatalf("Callback execution did not work, returned %d - %s", rsp.Status.Code, rsp.Status.Status)
+				}
+			})
 		})
 	})
 }
