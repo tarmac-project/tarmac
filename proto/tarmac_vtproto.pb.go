@@ -6,12 +6,11 @@ package proto
 
 import (
 	fmt "fmt"
-	io "io"
-	unsafe "unsafe"
-
 	protohelpers "github.com/planetscale/vtprotobuf/protohelpers"
 	proto "google.golang.org/protobuf/proto"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	io "io"
+	unsafe "unsafe"
 )
 
 const (
