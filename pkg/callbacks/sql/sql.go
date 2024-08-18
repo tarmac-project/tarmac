@@ -56,6 +56,53 @@ func New(cfg Config) (*Database, error) {
 	return db, nil
 }
 
+// Exec will execute the supplied query against the supplied database. Error handling, processing results, and base64 encoding
+// of data are all handled via this function. Note, this function expects the SQLExec type as input
+// and will return a SQLExecResponse JSON.
+func (db *Database) Exec(b []byte) ([]byte, error) {
+	msg := &proto.SQLExec{}
+	err := pb.Unmarshal(b, msg)
+	if err != nil {
+		return []byte(""), fmt.Errorf("unable to unmarshal database:exec request")
+	}
+
+	r := &proto.SQLExecResponse{}
+	r.Status = &proto.Status{Code: 200, Status: "OK"}
+
+	if len(msg.Query) < 1 {
+		r.Status.Code = 400
+		r.Status.Status = "SQL Query must be defined"
+	}
+
+	var results sql.Result
+	if r.Status.Code == 200 {
+		results, err = db.exec(msg.Query)
+		if err != nil {
+			r.Status.Code = 500
+			r.Status.Status = fmt.Sprintf("Unable to execute query - %s", err)
+		}
+	}
+
+	// Set Row Count
+	r.RowsAffected, err = results.RowsAffected()
+	if err != nil {
+		r.RowsAffected = 0
+	}
+
+	// Set Last Insert ID
+	r.LastInsertId, err = results.LastInsertId()
+	if err != nil {
+		r.LastInsertId = 0
+	}
+
+	rsp, err := pb.Marshal(r)
+	if err != nil {
+		return []byte(""), fmt.Errorf("unable to marshal database:exec response")
+	}
+
+	return rsp, nil
+}
+
 // Query will execute the supplied query against the supplied database. Error handling, processing results, and base64 encoding
 // of data are all handled via this function. Note, this function expects the SQLQueryJSON type as input
 // and will return a SQLQueryResponse JSON.
@@ -161,7 +208,7 @@ func (db *Database) queryJSON(b []byte) ([]byte, error) {
 	return rsp, fmt.Errorf("%s", r.Status.Status)
 }
 
-// Query will execute the supplied query against the database and return
+// query will execute the supplied query against the database and return
 // the rows as a list of maps. The keys in the map are the column names
 // and the values are the column values.
 func (db *Database) query(qry []byte) ([]string, []map[string]any, error) {
@@ -206,6 +253,7 @@ func (db *Database) query(qry []byte) ([]string, []map[string]any, error) {
 	return columns, results, nil
 }
 
+// exec will execute the supplied query against the database and return the result.
 func (db *Database) exec(qry []byte) (sql.Result, error) {
-	return nil, fmt.Errorf("not implemented")
+	return db.db.Exec(fmt.Sprintf("%s", qry))
 }
