@@ -98,7 +98,7 @@ func TestSQLQuery(t *testing.T) {
 
 		t.Run("Happy Path", func(t *testing.T) {
 			t.Run("Create Table", func(t *testing.T) {
-				query := &proto.SQLExec{Query: []byte(`CREATE TABLE IF NOT EXISTS testpkg ( id int NOT NULL, name varchar(255), PRIMARY KEY (id) );`)}
+				query := &proto.SQLExec{Query: []byte(`CREATE TABLE IF NOT EXISTS testpkg ( id int NOT NULL AUTO_INCREMENT, name varchar(255), PRIMARY KEY (id) );`)}
 				qMsg, err := pb.Marshal(query)
 				if err != nil {
 					t.Fatalf("Unable to marshal query message")
@@ -123,13 +123,13 @@ func TestSQLQuery(t *testing.T) {
 			})
 
 			t.Run("Insert Data", func(t *testing.T) {
-				query := &proto.SQLExec{Query: []byte(`INSERT INTO testpkg (id, name)  VALUES (1, "John Smith");`)}
+				query := &proto.SQLExec{Query: []byte(`INSERT INTO testpkg (name)  VALUES ("John Smith");`)}
 				qMsg, err := pb.Marshal(query)
 				if err != nil {
 					t.Fatalf("Unable to marshal query message")
 				}
 
-				r, err := db.Query(qMsg)
+				r, err := db.Exec(qMsg)
 				if err != nil {
 					t.Errorf("Unable to execute table creation query - %s", err)
 				}
@@ -148,14 +148,13 @@ func TestSQLQuery(t *testing.T) {
 
 				// Check Rows Affected
 				if rsp.RowsAffected != 1 {
-					t.Fatalf("Unexpected rows affected - %d", rsp.RowsAffected)
+					t.Errorf("Unexpected rows affected - %d", rsp.RowsAffected)
 				}
 
 				// Check Last Insert ID
 				if rsp.LastInsertId != 1 {
-					t.Fatalf("Unexpected last insert ID - %d", rsp.LastInsertId)
+					t.Errorf("Unexpected last insert ID - %d", rsp.LastInsertId)
 				}
-
 			})
 
 			t.Run("Select Data", func(t *testing.T) {
@@ -183,8 +182,13 @@ func TestSQLQuery(t *testing.T) {
 				}
 
 				// Verify Columns
-				if len(rsp.Columns) != 1 {
+				if len(rsp.Columns) != 2 {
 					t.Fatalf("Unexpected number of columns returned - %d", len(rsp.Columns))
+				}
+
+				// Check Column Names
+				if rsp.Columns[0] != "id" && rsp.Columns[1] != "name" {
+					t.Fatalf("Unexpected column names returned - %v", rsp.Columns)
 				}
 
 				// Verify Data

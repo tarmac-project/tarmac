@@ -83,16 +83,24 @@ func (db *Database) Exec(b []byte) ([]byte, error) {
 		}
 	}
 
-	// Set Row Count
-	r.RowsAffected, err = results.RowsAffected()
-	if err != nil {
-		r.RowsAffected = 0
-	}
+	if r.Status.Code == 200 {
+		// Set Row Count
+		ra, err := results.RowsAffected()
+		if err != nil {
+			r.Status.Code = 206
+			r.Status.Status = fmt.Sprintf("Unable to get rows affected - %s", err)
+			r.RowsAffected = 0
+		}
+		r.RowsAffected = ra
 
-	// Set Last Insert ID
-	r.LastInsertId, err = results.LastInsertId()
-	if err != nil {
-		r.LastInsertId = 0
+		// Set Last Insert ID
+		id, err := results.LastInsertId()
+		if err != nil {
+			r.Status.Code = 206
+			r.Status.Status = fmt.Sprintf("Unable to get last insert ID - %s", err)
+			r.LastInsertId = 0
+		}
+		r.LastInsertId = id
 	}
 
 	rsp, err := pb.Marshal(r)
@@ -100,7 +108,11 @@ func (db *Database) Exec(b []byte) ([]byte, error) {
 		return []byte(""), fmt.Errorf("unable to marshal database:exec response")
 	}
 
-	return rsp, nil
+	if r.Status.Code == 200 {
+		return rsp, nil
+	}
+
+	return rsp, fmt.Errorf("%s", r.Status.Status)
 }
 
 // Query will execute the supplied query against the supplied database. Error handling, processing results, and base64 encoding
@@ -148,7 +160,11 @@ func (db *Database) Query(b []byte) ([]byte, error) {
 		return []byte(""), fmt.Errorf("unable to marshal database:query response")
 	}
 
-	return rsp, nil
+	if r.Status.Code == 200 {
+		return rsp, nil
+	}
+
+	return rsp, fmt.Errorf("%s", r.Status.Status)
 }
 
 // queryJSON retains the JSON interface for backwards compatibility with the Tarmac Host Callback interface.
