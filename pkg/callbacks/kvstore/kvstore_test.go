@@ -1,15 +1,339 @@
 package kvstore
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/tarmac-project/hord/drivers/mock"
 	"github.com/tarmac-project/tarmac"
+
+	"github.com/tarmac-project/tarmac/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
 type KVStoreCase struct {
+	err     bool
+	pass    bool
+	name    string
+	key     string
+	value   []byte
+	mockCfg mock.Config
+}
+
+func TestKVStore(t *testing.T) {
+	td := map[string][]byte{
+		"Happy Path Value":             []byte("somedata"),
+		"Integer Value":                {0x00, 0x00, 0x00, 0x64},
+		"String Value":                 []byte("Hello, World!"),
+		"Float Value":                  {0x40, 0x49, 0x0f, 0xdb},
+		"Boolean Value":                {0x01},
+		"JSON Object":                  []byte(`{"name":"Test","age":30}`),
+		"Binary Data":                  {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A},
+		"Special Characters in String": []byte("!@#$%^&*()_+"),
+	}
+
+	t.Run("Get", func(t *testing.T) {
+		// Predefined test cases
+		kc := []KVStoreCase{
+			{
+				err:   true,
+				pass:  false,
+				name:  "Key not found",
+				key:   "",
+				value: []byte(""),
+				mockCfg: mock.Config{
+					GetFunc: func(key string) ([]byte, error) {
+						return nil, fmt.Errorf("Key not found")
+					},
+				},
+			},
+		}
+
+		// Dynamically generate test cases from the td map
+		for k, v := range td {
+			kc = append(kc, KVStoreCase{
+				err:   false,
+				pass:  true,
+				name:  k,
+				key:   k,
+				value: v,
+				mockCfg: mock.Config{
+					GetFunc: func(key string) ([]byte, error) {
+						if key == k {
+							return v, nil
+						}
+						return nil, fmt.Errorf("Key not found")
+					},
+				},
+			})
+		}
+
+		// Execute each test case
+		for _, c := range kc {
+			t.Run(c.name, func(t *testing.T) {
+				kv, _ := mock.Dial(c.mockCfg)
+				store, err := New(Config{KV: kv})
+				if err != nil {
+					t.Fatalf("Failed to create KVStore instance: %v", err)
+				}
+
+				req := &proto.KVStoreGet{Key: c.key}
+				b, err := pb.Marshal(req)
+				if err != nil {
+					t.Fatalf("Failed to marshal request: %v", err)
+				}
+
+				rsp, err := store.Get(b)
+				if (err != nil) != c.err {
+					t.Fatalf("Unexpected error state: %v", err)
+				}
+
+				var response proto.KVStoreGetResponse
+				if err := pb.Unmarshal(rsp, &response); err != nil {
+					t.Fatalf("Failed to unmarshal response: %v", err)
+				}
+
+				if (response.Status.Code == 200) != c.pass {
+					t.Fatalf("Unexpected response status: %+v", response)
+				}
+
+				if c.pass && !bytes.Equal(response.Data, c.value) {
+					t.Fatalf("Unexpected response data: %+v", response)
+				}
+			})
+		}
+	})
+
+	t.Run("Set", func(t *testing.T) {
+		// Predefined test cases
+		kc := []KVStoreCase{
+			{
+				err:   true,
+				pass:  false,
+				name:  "No Data",
+				key:   "no-data",
+				value: []byte(""),
+				mockCfg: mock.Config{
+					SetFunc: func(key string, data []byte) error {
+						return nil
+					},
+				},
+			},
+			{
+				err:   true,
+				pass:  false,
+				name:  "No Key",
+				key:   "",
+				value: []byte("some data"),
+				mockCfg: mock.Config{
+					SetFunc: func(key string, data []byte) error {
+						return nil
+					},
+				},
+			},
+		}
+
+		// Dynamically generate test cases from the td map
+		for k, v := range td {
+			kc = append(kc, KVStoreCase{
+				err:   false,
+				pass:  true,
+				name:  k,
+				key:   k,
+				value: v,
+				mockCfg: mock.Config{
+					SetFunc: func(key string, data []byte) error {
+						if key == k && bytes.Equal(data, v) {
+							return nil
+						}
+						return fmt.Errorf("Error inserting data")
+					},
+				},
+			})
+		}
+
+		// Execute each test case
+		for _, c := range kc {
+			t.Run(c.name, func(t *testing.T) {
+				kv, _ := mock.Dial(c.mockCfg)
+				k, err := New(Config{KV: kv})
+				if err != nil {
+					t.Fatalf("Failed to create KVStore instance: %v", err)
+				}
+
+				req := &proto.KVStoreSet{Key: c.key, Data: c.value}
+				b, err := pb.Marshal(req)
+				if err != nil {
+					t.Fatalf("Failed to marshal request: %v", err)
+				}
+
+				rsp, err := k.Set(b)
+				if (err != nil) != c.err {
+					t.Fatalf("Unexpected error state: %v", err)
+				}
+
+				var response proto.KVStoreSetResponse
+				if err := pb.Unmarshal(rsp, &response); err != nil {
+					t.Fatalf("Failed to unmarshal response: %v", err)
+				}
+
+				if (response.Status.Code == 200) != c.pass {
+					t.Fatalf("Unexpected response status: %+v", response)
+				}
+			})
+		}
+	})
+
+	t.Run("Delete", func(t *testing.T) {
+		// Predefined test cases
+		kc := []KVStoreCase{
+			{
+				err:   true,
+				pass:  false,
+				name:  "Key not found",
+				key:   "",
+				value: []byte(""),
+				mockCfg: mock.Config{
+					DeleteFunc: func(key string) error {
+						return nil
+					},
+				},
+			},
+			{
+				err:  false,
+				pass: true,
+				name: "Happy Path",
+				key:  "testing-happy",
+				mockCfg: mock.Config{
+					DeleteFunc: func(key string) error {
+						if key == "testing-happy" {
+							return nil
+						}
+						return fmt.Errorf("Key not found")
+					},
+				},
+			},
+		}
+
+		// Execute each test case
+		for _, c := range kc {
+			t.Run(c.name, func(t *testing.T) {
+				kv, _ := mock.Dial(c.mockCfg)
+				k, err := New(Config{KV: kv})
+				if err != nil {
+					t.Fatalf("Failed to create KVStore instance: %v", err)
+				}
+
+				req := &proto.KVStoreDelete{Key: c.key}
+				b, err := pb.Marshal(req)
+				if err != nil {
+					t.Fatalf("Failed to marshal request: %v", err)
+				}
+
+				rsp, err := k.Delete(b)
+				if (err != nil) != c.err {
+					t.Fatalf("Unexpected error state: %v", err)
+				}
+
+				var response proto.KVStoreDeleteResponse
+				if err := pb.Unmarshal(rsp, &response); err != nil {
+					t.Fatalf("Failed to unmarshal response: %v", err)
+				}
+
+				if (response.Status.Code == 200) != c.pass {
+					t.Fatalf("Unexpected response status: %+v", response)
+				}
+			})
+		}
+	})
+
+	t.Run("Keys", func(t *testing.T) {
+		// Predefined test cases
+		kc := []KVStoreCase{
+			{
+				err:   true,
+				pass:  false,
+				name:  "Errored Keys",
+				key:   "",
+				value: []byte(""),
+				mockCfg: mock.Config{
+					KeysFunc: func() ([]string, error) {
+						return []string{}, fmt.Errorf("Forced Error")
+					},
+				},
+			},
+			{
+				err:   false,
+				pass:  true,
+				name:  "Happy Path",
+				key:   "",
+				value: []byte(""),
+				mockCfg: mock.Config{
+					KeysFunc: func() ([]string, error) {
+						return []string{"key1", "key2", "key3"}, nil
+					},
+				},
+			},
+			{
+				err:   false,
+				pass:  true,
+				name:  "Sooo Many Keys",
+				key:   "",
+				value: []byte(""),
+				mockCfg: mock.Config{
+					KeysFunc: func() ([]string, error) {
+						keys := make([]string, 100)
+						for i := 0; i < 100; i++ {
+							keys[i] = fmt.Sprintf("key%d", i)
+						}
+						return keys, nil
+					},
+				},
+			},
+			{
+				err:   false,
+				pass:  true,
+				name:  "No Keys",
+				key:   "",
+				value: []byte(""),
+				mockCfg: mock.Config{
+					KeysFunc: func() ([]string, error) {
+						return []string{}, nil
+					},
+				},
+			},
+		}
+
+		// Execute each test case
+		for _, c := range kc {
+			t.Run(c.name, func(t *testing.T) {
+				kv, _ := mock.Dial(c.mockCfg)
+				k, err := New(Config{KV: kv})
+				if err != nil {
+					t.Fatalf("Failed to create KVStore instance: %v", err)
+				}
+
+				rsp, err := k.Keys([]byte{})
+				if (err != nil) != c.err {
+					t.Fatalf("Unexpected error state: %v", err)
+				}
+
+				var response proto.KVStoreKeysResponse
+				if err := pb.Unmarshal(rsp, &response); err != nil {
+					t.Fatalf("Failed to unmarshal response: %v", err)
+				}
+
+				if (response.Status.Code == 200) != c.pass {
+					t.Fatalf("Unexpected response status: %+v", response)
+				}
+			})
+		}
+	})
+}
+
+type KVStoreCaseJSON struct {
 	err  bool
 	pass bool
 	name string
@@ -17,7 +341,7 @@ type KVStoreCase struct {
 	json string
 }
 
-func TestKVStore(t *testing.T) {
+func TestKVStoreJSON(t *testing.T) {
 	// Set DB as a Mocked Database
 	kv, _ := mock.Dial(mock.Config{
 		GetFunc: func(key string) ([]byte, error) {
@@ -50,10 +374,10 @@ func TestKVStore(t *testing.T) {
 		t.Errorf("Unable to create new KVStore Instance - %s", err)
 	}
 
-	var kc []KVStoreCase
+	var kc []KVStoreCaseJSON
 
 	// Create a collection of test cases
-	kc = append(kc, KVStoreCase{
+	kc = append(kc, KVStoreCaseJSON{
 		err:  false,
 		pass: true,
 		name: "Happy Path",
@@ -61,7 +385,7 @@ func TestKVStore(t *testing.T) {
 		json: `{"key":"testing-happy"}`,
 	})
 
-	kc = append(kc, KVStoreCase{
+	kc = append(kc, KVStoreCaseJSON{
 		err:  false,
 		pass: true,
 		name: "Happy Path",
@@ -69,7 +393,7 @@ func TestKVStore(t *testing.T) {
 		json: `{"key":"testing-happy","data":"QmVjYXVzZSBJJ20gSGFwcHk="}`,
 	})
 
-	kc = append(kc, KVStoreCase{
+	kc = append(kc, KVStoreCaseJSON{
 		err:  false,
 		pass: true,
 		name: "Happy Path",
@@ -77,7 +401,7 @@ func TestKVStore(t *testing.T) {
 		json: `{"key":"testing-happy"}`,
 	})
 
-	kc = append(kc, KVStoreCase{
+	kc = append(kc, KVStoreCaseJSON{
 		err:  true,
 		pass: false,
 		name: "Invalid Request JSON",
@@ -85,7 +409,7 @@ func TestKVStore(t *testing.T) {
 		json: `{"ke:"testing-happy"}`,
 	})
 
-	kc = append(kc, KVStoreCase{
+	kc = append(kc, KVStoreCaseJSON{
 		err:  true,
 		pass: false,
 		name: "Invalid Request JSON",
@@ -93,7 +417,7 @@ func TestKVStore(t *testing.T) {
 		json: `{"ke:"testing-happy","data":"QmVjYXVzZSBJJ20gSGFwcHk="}`,
 	})
 
-	kc = append(kc, KVStoreCase{
+	kc = append(kc, KVStoreCaseJSON{
 		err:  true,
 		pass: false,
 		name: "Invalid Request JSON",
@@ -101,7 +425,7 @@ func TestKVStore(t *testing.T) {
 		json: `{"ke:"testing-happy"}`,
 	})
 
-	kc = append(kc, KVStoreCase{
+	kc = append(kc, KVStoreCaseJSON{
 		err:  true,
 		pass: false,
 		name: "Payload Not Base64",
@@ -109,7 +433,7 @@ func TestKVStore(t *testing.T) {
 		json: `{"key":"testing-happy","data":"not base64"}`,
 	})
 
-	kc = append(kc, KVStoreCase{
+	kc = append(kc, KVStoreCaseJSON{
 		err:  true,
 		pass: false,
 		name: "Key not found",
@@ -117,7 +441,7 @@ func TestKVStore(t *testing.T) {
 		json: `{"key":""}`,
 	})
 
-	kc = append(kc, KVStoreCase{
+	kc = append(kc, KVStoreCaseJSON{
 		err:  true,
 		pass: false,
 		name: "Failing Call",
@@ -125,7 +449,7 @@ func TestKVStore(t *testing.T) {
 		json: `{"key": "invalid-key"}`,
 	})
 
-	kc = append(kc, KVStoreCase{
+	kc = append(kc, KVStoreCaseJSON{
 		err:  true,
 		pass: false,
 		name: "No Data",
@@ -133,7 +457,7 @@ func TestKVStore(t *testing.T) {
 		json: `{"key":"no-data"}`,
 	})
 
-	kc = append(kc, KVStoreCase{
+	kc = append(kc, KVStoreCaseJSON{
 		err:  true,
 		pass: false,
 		name: "Errored Keys",
