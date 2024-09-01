@@ -29,8 +29,8 @@ func TestKVStore(t *testing.T) {
 		"String Value":                 []byte("Hello, World!"),
 		"Float Value":                  {0x40, 0x49, 0x0f, 0xdb},
 		"Boolean Value":                {0x01},
-		"JSON Object":                  []byte(`{"name":"Test","age":30}`),
-		"Binary Data":                  {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A},
+		"JSON Object":                  []byte(`{"name":"Test","msg":"Hi!"}`),
+		"Binary Data":                  []byte{0x00, 0x01, 0x02, 0x03, 0x04},
 		"Special Characters in String": []byte("!@#$%^&*()_+"),
 	}
 
