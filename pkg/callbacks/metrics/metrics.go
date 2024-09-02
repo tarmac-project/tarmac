@@ -26,6 +26,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/tarmac-project/tarmac"
+
+	"github.com/tarmac-project/tarmac/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
 // Metrics stores and manages the user-defined metrics created via
@@ -67,9 +70,17 @@ func New(_ Config) (*Metrics, error) {
 	return m, nil
 }
 
-// Counter will create and increment a counter metric. The expected input for
-// this function is a MetricsCounter JSON.
 func (m *Metrics) Counter(b []byte) ([]byte, error) {
+	rq := &proto.MetricsCounter{}
+	err := pb.Unmarshal(b, rq)
+	if err != nil {
+		return m.jsonCounter(b)
+	}
+
+	return []byte(""), m.counter(rq.Name)
+}
+
+func (m *Metrics) jsonCounter(b []byte) ([]byte, error) {
 	// Parse incoming Request
 	var rq tarmac.MetricsCounter
 	err := ffjson.Unmarshal(b, &rq)
@@ -77,9 +88,13 @@ func (m *Metrics) Counter(b []byte) ([]byte, error) {
 		return []byte(""), fmt.Errorf("unable to parse input JSON - %s", err)
 	}
 
+	return []byte(""), m.counter(rq.Name)
+}
+
+func (m *Metrics) counter(name string) error {
 	// Verify Name Value
-	if !isMetricNameValid.MatchString(rq.Name) {
-		return []byte(""), ErrInvalidMetricName
+	if !isMetricNameValid.MatchString(name) {
+		return ErrInvalidMetricName
 	}
 
 	// Map Safety
@@ -87,28 +102,37 @@ func (m *Metrics) Counter(b []byte) ([]byte, error) {
 	defer m.Unlock()
 
 	// Check if counter already exists, if not create one
-	_, ok := m.counters[rq.Name]
+	_, ok := m.counters[name]
 	if !ok {
 		// Check if name is already used
-		_, ok2 := m.all[rq.Name]
+		_, ok2 := m.all[name]
 		if ok2 {
-			return []byte(""), fmt.Errorf("metric name in use")
+			return fmt.Errorf("metric name in use")
 		}
-		m.counters[rq.Name] = promauto.NewCounter(prometheus.CounterOpts{
-			Name: rq.Name,
+		m.counters[name] = promauto.NewCounter(prometheus.CounterOpts{
+			Name: name,
 		})
-		m.all[rq.Name] = "counter"
+		m.all[name] = "counter"
 	}
 
 	// Perform action
-	m.counters[rq.Name].Inc()
-	return []byte(""), nil
+	m.counters[name].Inc()
+	return nil
 }
 
-// Gauge will create a gauge metric and either increment or decrement the value
-// based on the provided input. The expected input for this function is a
-// MetricsGauge JSON.
+// Gauge will create a gauge metric and perform the provided action.
 func (m *Metrics) Gauge(b []byte) ([]byte, error) {
+	// Parse incoming Request
+	rq := &proto.MetricsGauge{}
+	err := pb.Unmarshal(b, rq)
+	if err != nil {
+		return m.jsonGauge(b)
+	}
+
+	return []byte(""), m.gauge(rq.Name, rq.Action)
+}
+
+func (m *Metrics) jsonGauge(b []byte) ([]byte, error) {
 	// Parse incoming Request
 	var rq tarmac.MetricsGauge
 	err := ffjson.Unmarshal(b, &rq)
@@ -116,9 +140,17 @@ func (m *Metrics) Gauge(b []byte) ([]byte, error) {
 		return []byte(""), fmt.Errorf("unable to parse input JSON - %s", err)
 	}
 
+	return []byte(""), m.gauge(rq.Name, rq.Action)
+}
+
+func (m *Metrics) gauge(name string, action string) error {
 	// Verify Name Value
-	if !isMetricNameValid.MatchString(rq.Name) {
-		return []byte(""), ErrInvalidMetricName
+	if !isMetricNameValid.MatchString(name) {
+		return ErrInvalidMetricName
+	}
+
+	if action != "inc" && action != "dec" {
+		return fmt.Errorf("invalid action")
 	}
 
 	// Map Safety
@@ -126,36 +158,45 @@ func (m *Metrics) Gauge(b []byte) ([]byte, error) {
 	defer m.Unlock()
 
 	// Check if gauge already exists, if not create one
-	_, ok := m.gauges[rq.Name]
+	_, ok := m.gauges[name]
 	if !ok {
 		// Check if name is already used
-		_, ok2 := m.all[rq.Name]
+		_, ok2 := m.all[name]
 		if ok2 {
-			return []byte(""), fmt.Errorf("metric name in use")
+			return fmt.Errorf("metric name in use")
 		}
-		m.gauges[rq.Name] = promauto.NewGauge(prometheus.GaugeOpts{
-			Name: rq.Name,
+		m.gauges[name] = promauto.NewGauge(prometheus.GaugeOpts{
+			Name: name,
 		})
-		m.all[rq.Name] = "gauge"
+		m.all[name] = "gauge"
 	}
 
 	// Perform action
-	switch rq.Action {
+	switch action {
 	case "inc":
-		m.gauges[rq.Name].Inc()
+		m.gauges[name].Inc()
 	case "dec":
-		m.gauges[rq.Name].Dec()
+		m.gauges[name].Dec()
 	default:
-		return []byte(""), fmt.Errorf("invalid action")
+		return fmt.Errorf("invalid action")
 	}
 
-	return []byte(""), nil
+	return nil
 }
 
-// Histogram will create a histogram or summary metric and observe the
-// provided values. The expected input for this function is a
-// MetricsHistogram JSON.
+// Histogram will create a histogram metric and perform the provided action.
 func (m *Metrics) Histogram(b []byte) ([]byte, error) {
+	// Parse incoming Request
+	rq := &proto.MetricsHistogram{}
+	err := pb.Unmarshal(b, rq)
+	if err != nil {
+		return m.jsonHistogram(b)
+	}
+
+	return []byte(""), m.histogram(rq.Name, rq.Value)
+}
+
+func (m *Metrics) jsonHistogram(b []byte) ([]byte, error) {
 	// Parse incoming Request
 	var rq tarmac.MetricsHistogram
 	err := ffjson.Unmarshal(b, &rq)
@@ -163,9 +204,13 @@ func (m *Metrics) Histogram(b []byte) ([]byte, error) {
 		return []byte(""), fmt.Errorf("unable to parse input JSON - %s", err)
 	}
 
+	return []byte(""), m.histogram(rq.Name, rq.Value)
+}
+
+func (m *Metrics) histogram(name string, value float64) error {
 	// Verify Name Value
-	if !isMetricNameValid.MatchString(rq.Name) {
-		return []byte(""), ErrInvalidMetricName
+	if !isMetricNameValid.MatchString(name) {
+		return ErrInvalidMetricName
 	}
 
 	// Map Safety
@@ -173,22 +218,21 @@ func (m *Metrics) Histogram(b []byte) ([]byte, error) {
 	defer m.Unlock()
 
 	// Check if histogram already exists, if not create one
-	_, ok := m.histograms[rq.Name]
+	_, ok := m.histograms[name]
 	if !ok {
 		// Check if name is already used
-		_, ok2 := m.all[rq.Name]
+		_, ok2 := m.all[name]
 		if ok2 {
-			return []byte(""), fmt.Errorf("metric name in use")
+			return fmt.Errorf("metric name in use")
 		}
-		m.histograms[rq.Name] = promauto.NewSummary(prometheus.SummaryOpts{
-			Name:       rq.Name,
+		m.histograms[name] = promauto.NewSummary(prometheus.SummaryOpts{
+			Name:       name,
 			Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
 		})
-		m.all[rq.Name] = "histogram"
+		m.all[name] = "histogram"
 	}
 
 	// Perform action
-	m.histograms[rq.Name].Observe(rq.Value)
-
-	return []byte(""), nil
+	m.histograms[name].Observe(value)
+	return nil
 }
