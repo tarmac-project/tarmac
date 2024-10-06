@@ -196,7 +196,7 @@ func TestKVStore(t *testing.T) {
 				key:   "",
 				value: []byte(""),
 				mockCfg: mock.Config{
-					DeleteFunc: func(key string) error {
+					DeleteFunc: func(_ string) error {
 						return nil
 					},
 				},
