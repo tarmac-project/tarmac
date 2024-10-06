@@ -17,57 +17,57 @@ tests-nobuild: tests-base tests-redis tests-cassandra tests-mysql tests-postgres
 
 tests-base:
 	@echo "Launching Tests in Docker Compose"
-	docker-compose -f dev-compose.yml up -d consul consulator
-	docker-compose -f dev-compose.yml up --exit-code-from tests-base --build tests-base
-	docker-compose -f dev-compose.yml down
+	docker compose -f dev-compose.yml up -d consul consulator
+	docker compose -f dev-compose.yml up --exit-code-from tests-base --build tests-base
+	docker compose -f dev-compose.yml down
 
 tests-boltdb:
 	@echo "Launching Tests in Docker Compose"
-	docker-compose -f dev-compose.yml up --exit-code-from tests-boltdb tests-boltdb
-	docker-compose -f dev-compose.yml down
+	docker compose -f dev-compose.yml up --exit-code-from tests-boltdb tests-boltdb
+	docker compose -f dev-compose.yml down
 
 tests-inmemory:
 	@echo "Launching Tests in Docker Compose"
-	docker-compose -f dev-compose.yml up --exit-code-from tests-inmemory tests-inmemory
-	docker-compose -f dev-compose.yml down
+	docker compose -f dev-compose.yml up --exit-code-from tests-inmemory tests-inmemory
+	docker compose -f dev-compose.yml down
 
 tests-redis:
 	@echo "Launching Tests in Docker Compose"
-	docker-compose -f dev-compose.yml up --exit-code-from tests-redis tests-redis
-	docker-compose -f dev-compose.yml down
+	docker compose -f dev-compose.yml up --exit-code-from tests-redis tests-redis
+	docker compose -f dev-compose.yml down
 
 tests-cassandra:
 	@echo "Launching Tests in Docker Compose"
-	docker-compose -f dev-compose.yml up -d cassandra-primary cassandra
-	docker-compose -f dev-compose.yml up --exit-code-from tests-cassandra tests-cassandra
-	docker-compose -f dev-compose.yml down
+	docker compose -f dev-compose.yml up -d cassandra-primary cassandra
+	docker compose -f dev-compose.yml up --exit-code-from tests-cassandra tests-cassandra
+	docker compose -f dev-compose.yml down
 
 tests-mysql:
 	@echo "Launching Tests in Docker Compose"
-	docker-compose -f dev-compose.yml up -d mysql
-	docker-compose -f dev-compose.yml up --exit-code-from tests-mysql tests-mysql
-	docker-compose -f dev-compose.yml down
+	docker compose -f dev-compose.yml up -d mysql
+	docker compose -f dev-compose.yml up --exit-code-from tests-mysql tests-mysql
+	docker compose -f dev-compose.yml down
 
 tests-postgres:
 	@echo "Launching Tests in Docker Compose"
-	docker-compose -f dev-compose.yml up -d postgres
-	docker-compose -f dev-compose.yml up --exit-code-from tests-postgres tests-postgres
-	docker-compose -f dev-compose.yml down
+	docker compose -f dev-compose.yml up -d postgres
+	docker compose -f dev-compose.yml up --exit-code-from tests-postgres tests-postgres
+	docker compose -f dev-compose.yml down
 
 benchmarks:
 	@echo "Launching Tests in Docker Compose"
-	docker-compose -f dev-compose.yml up -d cassandra-primary cassandra mysql
+	docker compose -f dev-compose.yml up -d cassandra-primary cassandra mysql
 	sleep 120
-	docker-compose -f dev-compose.yml up --build benchmarks
+	docker compose -f dev-compose.yml up --build benchmarks
 
 clean:
 	@echo "Cleaning up build junk"
-	-docker-compose -f dev-compose.yml down
+	-docker compose -f dev-compose.yml down
 
 tarmac:
 	@echo "Starting Application"
-	docker-compose -f dev-compose.yml up --build tarmac
+	docker compose -f dev-compose.yml up --build tarmac
 
 tarmac-performance: build
 	@echo "Starting Application"
-	docker-compose -f dev-compose.yml up -d tarmac-performance
+	docker compose -f dev-compose.yml up -d tarmac-performance
