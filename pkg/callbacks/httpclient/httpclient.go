@@ -125,7 +125,7 @@ func (hc *HTTPClient) Call(b []byte) ([]byte, error) {
 	return rsp, fmt.Errorf("%s", r.Status.Status)
 }
 
-func (he *HTTPClient) callJSON(b []byte) ([]byte, error) {
+func (hc *HTTPClient) callJSON(b []byte) ([]byte, error) {
 	// Start Response Message assuming everything is good
 	r := tarmac.HTTPClientResponse{}
 	r.Status.Code = 200
