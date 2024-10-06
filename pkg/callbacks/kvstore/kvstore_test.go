@@ -44,7 +44,7 @@ func TestKVStore(t *testing.T) {
 				key:   "",
 				value: []byte(""),
 				mockCfg: mock.Config{
-					GetFunc: func(key string) ([]byte, error) {
+					GetFunc: func(_ string) ([]byte, error) {
 						return nil, fmt.Errorf("Key not found")
 					},
 				},
@@ -116,7 +116,7 @@ func TestKVStore(t *testing.T) {
 				key:   "no-data",
 				value: []byte(""),
 				mockCfg: mock.Config{
-					SetFunc: func(key string, data []byte) error {
+					SetFunc: func(_ string, _ []byte) error {
 						return nil
 					},
 				},
@@ -128,7 +128,7 @@ func TestKVStore(t *testing.T) {
 				key:   "",
 				value: []byte("some data"),
 				mockCfg: mock.Config{
-					SetFunc: func(key string, data []byte) error {
+					SetFunc: func(_ string, _ []byte) error {
 						return nil
 					},
 				},
