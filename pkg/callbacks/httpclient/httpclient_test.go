@@ -297,23 +297,24 @@ func Test(t *testing.T) {
 
 					// Tarmac Response
 					if rsp.Status.Code == 200 && !c.pass {
-						t.Fatalf(" Callback Set returned an unexpected success - %+v", rsp)
+						t.Fatalf(" Callback Set returned an unexpected success - %d", rsp.Status.Code)
 					}
 
 					if rsp.Status.Code != 200 && c.pass {
-						t.Fatalf(" Callback Set returned an unexpected failure - %+v", rsp)
+						t.Fatalf(" Callback Set returned an unexpected failure - %d", rsp.Status.Code)
+
 					}
 
 					// HTTP Response
 					if rsp.Code != int32(c.httpCode) {
-						t.Fatalf(" returned an unexpected response code - %+v", rsp)
+						t.Fatalf(" returned an unexpected response code - %d", rsp.Code)
 						return
 					}
 
 					// Validate Response Header
 					v, ok := rsp.Headers["server"]
 					if (!ok || v != "tarmac") && rsp.Code == 200 {
-						t.Errorf(" returned an unexpected header - %+v", rsp)
+						t.Errorf(" returned an unexpected header - %s", v)
 					}
 
 					// Validate Payload

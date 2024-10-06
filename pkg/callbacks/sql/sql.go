@@ -230,7 +230,7 @@ func (db *Database) queryJSON(b []byte) ([]byte, error) {
 // and the values are the column values.
 func (db *Database) query(qry []byte) ([]string, []map[string]any, error) {
 
-	rows, err := db.db.Query(fmt.Sprintf("%s", qry))
+	rows, err := db.db.Query(string(qry))
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to execute query - %s", err)
 	}
@@ -272,5 +272,5 @@ func (db *Database) query(qry []byte) ([]string, []map[string]any, error) {
 
 // exec will execute the supplied query against the database and return the result.
 func (db *Database) exec(qry []byte) (sql.Result, error) {
-	return db.db.Exec(fmt.Sprintf("%s", qry))
+	return db.db.Exec(string(qry))
 }

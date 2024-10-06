@@ -346,7 +346,7 @@ func (k *KVStore) Keys(b []byte) ([]byte, error) {
 	return m, fmt.Errorf("%s", rsp.Status.Status)
 }
 
-func (k *KVStore) keysJSON(b []byte) ([]byte, error) {
+func (k *KVStore) keysJSON(_ []byte) ([]byte, error) {
 	// Start Response Message assuming everything is good
 	r := tarmac.KVStoreKeysResponse{}
 	r.Status.Code = 200

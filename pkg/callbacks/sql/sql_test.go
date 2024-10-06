@@ -90,7 +90,7 @@ func TestSQLQuery(t *testing.T) {
 
 					// Check Status Codes
 					if rsp.Status.Code == 200 {
-						t.Fatalf("Unexpected Success with unhappy path test - %v", rsp)
+						t.Fatalf("Unexpected Success with unhappy path test - %d", rsp.Status.Code)
 					}
 				})
 			}

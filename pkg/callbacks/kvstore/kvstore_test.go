@@ -96,11 +96,11 @@ func TestKVStore(t *testing.T) {
 				}
 
 				if (response.Status.Code == 200) != c.pass {
-					t.Fatalf("Unexpected response status: %+v", response)
+					t.Fatalf("Unexpected response status: %d", response.Status.Code)
 				}
 
 				if c.pass && !bytes.Equal(response.Data, c.value) {
-					t.Fatalf("Unexpected response data: %+v", response)
+					t.Fatalf("Unexpected response data: %v", response.Data)
 				}
 			})
 		}
@@ -180,7 +180,7 @@ func TestKVStore(t *testing.T) {
 				}
 
 				if (response.Status.Code == 200) != c.pass {
-					t.Fatalf("Unexpected response status: %+v", response)
+					t.Fatalf("Unexpected response status: %d", response.Status.Code)
 				}
 			})
 		}
@@ -243,7 +243,7 @@ func TestKVStore(t *testing.T) {
 				}
 
 				if (response.Status.Code == 200) != c.pass {
-					t.Fatalf("Unexpected response status: %+v", response)
+					t.Fatalf("Unexpected response status: %d", response.Status.Code)
 				}
 			})
 		}
@@ -332,7 +332,7 @@ func TestKVStore(t *testing.T) {
 				}
 
 				if (response.Status.Code == 200) != c.pass {
-					t.Fatalf("Unexpected response status: %+v", response)
+					t.Fatalf("Unexpected response status: %d", response.Status.Code)
 				}
 			})
 		}
