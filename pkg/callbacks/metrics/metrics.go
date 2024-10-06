@@ -27,7 +27,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/tarmac-project/tarmac"
 
-	"github.com/tarmac-project/tarmac/proto"
+	proto "github.com/tarmac-project/protobuf-go/sdk/metrics"
 	pb "google.golang.org/protobuf/proto"
 )
 

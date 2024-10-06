@@ -12,7 +12,7 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/tarmac-project/tarmac"
 
-	"github.com/tarmac-project/tarmac/proto"
+	proto "github.com/tarmac-project/protobuf-go/sdk/sql"
 	pb "google.golang.org/protobuf/proto"
 )
 

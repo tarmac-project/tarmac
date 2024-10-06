@@ -3,7 +3,7 @@ package metrics
 import (
 	"testing"
 
-	"github.com/tarmac-project/tarmac/proto"
+	proto "github.com/tarmac-project/protobuf-go/sdk/metrics"
 	pb "google.golang.org/protobuf/proto"
 )
 

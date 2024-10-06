@@ -28,7 +28,9 @@ import (
 
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/tarmac-project/tarmac"
-	"github.com/tarmac-project/tarmac/proto"
+
+	"github.com/tarmac-project/protobuf-go/sdk"
+	proto "github.com/tarmac-project/protobuf-go/sdk/http"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -62,7 +64,7 @@ func (hc *HTTPClient) Call(b []byte) ([]byte, error) {
 
 	// Create HTTPClientResponse
 	r := &proto.HTTPClientResponse{}
-	r.Status = &proto.Status{Code: 200, Status: "OK"}
+	r.Status = &sdk.Status{Code: 200, Status: "OK"}
 
 	// Create HTTP Client
 	var request *http.Request

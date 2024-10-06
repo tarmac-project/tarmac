@@ -27,7 +27,8 @@ import (
 	"github.com/tarmac-project/hord"
 	"github.com/tarmac-project/tarmac"
 
-	"github.com/tarmac-project/tarmac/proto"
+	"github.com/tarmac-project/protobuf-go/sdk"
+	proto "github.com/tarmac-project/protobuf-go/sdk/kvstore"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -75,7 +76,7 @@ func (k *KVStore) Get(b []byte) ([]byte, error) {
 	}
 
 	rsp := &proto.KVStoreGetResponse{
-		Status: &proto.Status{
+		Status: &sdk.Status{
 			Code:   200,
 			Status: "OK",
 		},
@@ -157,7 +158,7 @@ func (k *KVStore) Set(b []byte) ([]byte, error) {
 	}
 
 	rsp := &proto.KVStoreSetResponse{
-		Status: &proto.Status{
+		Status: &sdk.Status{
 			Code:   200,
 			Status: "OK",
 		},
@@ -246,7 +247,7 @@ func (k *KVStore) Delete(b []byte) ([]byte, error) {
 	}
 
 	rsp := &proto.KVStoreDeleteResponse{
-		Status: &proto.Status{
+		Status: &sdk.Status{
 			Code:   200,
 			Status: "OK",
 		},
@@ -320,7 +321,7 @@ func (k *KVStore) Keys(b []byte) ([]byte, error) {
 	}
 
 	rsp := &proto.KVStoreKeysResponse{
-		Status: &proto.Status{
+		Status: &sdk.Status{
 			Code:   200,
 			Status: "OK",
 		},

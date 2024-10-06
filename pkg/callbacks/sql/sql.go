@@ -25,7 +25,8 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/tarmac-project/tarmac"
 
-	"github.com/tarmac-project/tarmac/proto"
+	"github.com/tarmac-project/protobuf-go/sdk"
+	proto "github.com/tarmac-project/protobuf-go/sdk/sql"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -67,7 +68,7 @@ func (db *Database) Exec(b []byte) ([]byte, error) {
 	}
 
 	r := &proto.SQLExecResponse{}
-	r.Status = &proto.Status{Code: 200, Status: "OK"}
+	r.Status = &sdk.Status{Code: 200, Status: "OK"}
 
 	if len(msg.Query) < 1 {
 		r.Status.Code = 400
@@ -128,7 +129,7 @@ func (db *Database) Query(b []byte) ([]byte, error) {
 
 	// Create a new SQLQueryResponse
 	r := &proto.SQLQueryResponse{}
-	r.Status = &proto.Status{Code: 200, Status: "OK"}
+	r.Status = &sdk.Status{Code: 200, Status: "OK"}
 
 	if len(msg.Query) < 1 {
 		r.Status.Code = 400

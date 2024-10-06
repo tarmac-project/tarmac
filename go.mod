@@ -1,6 +1,6 @@
 module github.com/tarmac-project/tarmac
 
-go 1.22.3
+go 1.22.6
 
 require (
 	github.com/go-sql-driver/mysql v1.7.1
@@ -8,7 +8,6 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/madflojo/tasks v1.2.0
 	github.com/madflojo/testcerts v1.2.0
-	github.com/planetscale/vtprotobuf v0.6.0
 	github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7
 	github.com/prometheus/client_golang v1.19.1
 	github.com/sirupsen/logrus v1.9.3
@@ -19,10 +18,11 @@ require (
 	github.com/tarmac-project/hord/drivers/hashmap v0.6.0
 	github.com/tarmac-project/hord/drivers/mock v0.6.0
 	github.com/tarmac-project/hord/drivers/redis v0.6.0
+	github.com/tarmac-project/protobuf-go v0.0.0-20241006222441-51664fb11f56
 	github.com/tarmac-project/wapc-toolkit/callbacks v0.2.0
 	github.com/tarmac-project/wapc-toolkit/engine v0.2.0
 	github.com/wapc/wapc-go v0.7.0
-	google.golang.org/protobuf v1.33.0
+	google.golang.org/protobuf v1.34.2
 )
 
 require (
@@ -77,6 +77,7 @@ require (
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/planetscale/vtprotobuf v0.6.0 // indirect
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.48.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
