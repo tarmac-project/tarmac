@@ -96,7 +96,7 @@ func (k *KVStore) Get(b []byte) ([]byte, error) {
 		rsp.Data = data
 	}
 
-	m, err = pb.Marshal(rsp)
+	m, err := pb.Marshal(rsp)
 	if err != nil {
 		return nil, fmt.Errorf("unable to marshal kvstore:get response")
 	}
@@ -181,7 +181,7 @@ func (k *KVStore) Set(b []byte) ([]byte, error) {
 		}
 	}
 
-	m, err = pb.Marshal(rsp)
+	m, err := pb.Marshal(rsp)
 	if err != nil {
 		return nil, fmt.Errorf("unable to marshal kvstore:set response")
 	}
@@ -265,7 +265,7 @@ func (k *KVStore) Delete(b []byte) ([]byte, error) {
 		}
 	}
 
-	m, err = pb.Marshal(rsp)
+	m, err := pb.Marshal(rsp)
 	if err != nil {
 		return nil, fmt.Errorf("unable to marshal kvstore:delete response")
 	}
