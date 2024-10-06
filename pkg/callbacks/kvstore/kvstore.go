@@ -315,7 +315,7 @@ func (k *KVStore) deleteJSON(b []byte) ([]byte, error) {
 }
 
 func (k *KVStore) Keys(b []byte) ([]byte, error) {
-	if len(b) > 0 {
+	if len(b) == 0 {
 		return k.keysJSON(b)
 	}
 
