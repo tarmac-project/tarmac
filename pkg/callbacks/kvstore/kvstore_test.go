@@ -315,7 +315,13 @@ func TestKVStore(t *testing.T) {
 					t.Fatalf("Failed to create KVStore instance: %v", err)
 				}
 
-				rsp, err := k.Keys([]byte{})
+				req := &proto.KVStoreKeys{ReturnProto: true}
+				b, err := pb.Marshal(req)
+				if err != nil {
+					t.Fatalf("Failed to marshal request: %v", err)
+				}
+
+				rsp, err := k.Keys(b)
 				if (err != nil) != c.err {
 					t.Fatalf("Unexpected error state: %v", err)
 				}
