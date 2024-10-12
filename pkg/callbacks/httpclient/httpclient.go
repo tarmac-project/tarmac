@@ -82,6 +82,12 @@ func (hc *HTTPClient) Call(b []byte) ([]byte, error) {
 	if err != nil {
 		r.Status.Code = 400
 		r.Status.Status = fmt.Sprintf("Unable to create HTTP request - %s", err)
+		// Marshal a response to return to caller
+		rsp, err := pb.Marshal(r)
+		if err != nil {
+			return []byte(""), fmt.Errorf("unable to marshal HTTPClient:call response")
+		}
+		return rsp, fmt.Errorf("%s", r.Status.Status)
 	}
 
 	// Set user-supplied headers
@@ -94,6 +100,12 @@ func (hc *HTTPClient) Call(b []byte) ([]byte, error) {
 	if err != nil {
 		r.Status.Code = 500
 		r.Status.Status = fmt.Sprintf("Unable to execute HTTP request - %s", err)
+		// Marshal a response to return to caller
+		rsp, err := pb.Marshal(r)
+		if err != nil {
+			return []byte(""), fmt.Errorf("unable to marshal HTTPClient:call response")
+		}
+		return rsp, fmt.Errorf("%s", r.Status.Status)
 	}
 
 	// Populate Response with Response
