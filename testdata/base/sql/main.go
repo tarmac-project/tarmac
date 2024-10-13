@@ -8,7 +8,6 @@ import (
 	wapc "github.com/wapc/wapc-guest-tinygo"
 
 	"github.com/tarmac-project/protobuf-go/sdk/sql"
-	pb "google.golang.org/protobuf/proto"
 )
 
 var tarmac *sdk.Tarmac
@@ -26,7 +25,7 @@ func main() {
 func Handler(payload []byte) ([]byte, error) {
 	// Create SQL Request
 	query := &sql.SQLQuery{Query: []byte(`CREATE TABLE IF NOT EXISTS wasmguest ( id int NOT NULL, name varchar(255), PRIMARY KEY (id) );`)}
-	q, err := pb.Marshal(query)
+	q, err := query.MarshalVT()
 	if err != nil {
 		tarmac.Logger.Error(fmt.Sprintf("Unable to marshal SQL query - %s", err))
 		return []byte(""), fmt.Errorf(`Failed to marshal SQL query - %s`, err)
@@ -41,7 +40,7 @@ func Handler(payload []byte) ([]byte, error) {
 
 	// Unmarshal the response
 	var response sql.SQLQueryResponse
-	err = pb.Unmarshal(rsp, &response)
+	err = response.UnmarshalVT(rsp)
 	if err != nil {
 		tarmac.Logger.Error(fmt.Sprintf("Unable to unmarshal SQL response - %s", err))
 		return []byte(""), fmt.Errorf(`Failed to unmarshal SQL response - %s`, err)
