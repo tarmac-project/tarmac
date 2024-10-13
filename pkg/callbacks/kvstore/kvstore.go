@@ -21,6 +21,7 @@ package kvstore
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 
 	"github.com/pquerna/ffjson/ffjson"
@@ -53,7 +54,7 @@ type Config struct {
 
 var (
 	// ErrNilKey is returned when the key is nil
-	ErrNilKey = fmt.Errorf("key cannot be nil")
+	ErrNilKey = errors.New("key cannot be nil")
 )
 
 // New will create and return a new KVStore instance that users can register as a Tarmac Host Callback function. Users

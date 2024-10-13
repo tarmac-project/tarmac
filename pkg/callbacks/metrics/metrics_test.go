@@ -408,7 +408,7 @@ func TestMetricsCallbackJSON(t *testing.T) {
 		Callback: "histogram",
 		Exists:   false,
 		Key:      "json_happy_path",
-		JSON:     `{"name":"json_happy_path","Value":0.11231}`,
+		JSON:     `{"name":"json_happy_path","value":0.11231}`,
 	})
 
 	tc = append(tc, MetricsCaseJSON{
@@ -417,7 +417,7 @@ func TestMetricsCallbackJSON(t *testing.T) {
 		Callback: "histogram",
 		Exists:   true,
 		Key:      "json_happy_path_histo",
-		JSON:     `{"name":"json_happy_path_histo","Value":0.11231}`,
+		JSON:     `{"name":"json_happy_path_histo","value":0.11231}`,
 	})
 
 	tc = append(tc, MetricsCaseJSON{

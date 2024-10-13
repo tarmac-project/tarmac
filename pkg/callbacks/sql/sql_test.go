@@ -131,7 +131,7 @@ func TestSQLQuery(t *testing.T) {
 
 				r, err := db.Exec(qMsg)
 				if err != nil {
-					t.Errorf("Unable to execute table creation query - %s", err)
+					t.Errorf("Unable to execute INSERT query - %s", err)
 				}
 
 				// Unmarshal the Tarmac Response
@@ -166,7 +166,7 @@ func TestSQLQuery(t *testing.T) {
 
 				r, err := db.Query(qMsg)
 				if err != nil {
-					t.Errorf("Unable to execute table creation query - %s", err)
+					t.Errorf("Unable to execute SELECT query - %s", err)
 				}
 
 				// Unmarshal the Tarmac Response
@@ -207,7 +207,7 @@ func TestSQLQuery(t *testing.T) {
 
 				r, err := db.Query(qMsg)
 				if err != nil {
-					t.Errorf("Unable to execute table creation query - %s", err)
+					t.Errorf("Unable to execute DELETE TABLE query - %s", err)
 				}
 
 				// Unmarshal the Tarmac Response

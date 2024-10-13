@@ -257,7 +257,8 @@ func (db *Database) query(qry []byte) ([]string, []map[string]any, error) {
 
 		m := make(map[string]any)
 		for i, c := range columns {
-			m[c] = data[i]
+      val := *data[i].(*interface{})
+			m[c] = val
 		}
 
 		results = append(results, m)
