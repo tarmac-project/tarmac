@@ -21,11 +21,16 @@ package kvstore
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/tarmac-project/hord"
 	"github.com/tarmac-project/tarmac"
+
+	"github.com/tarmac-project/protobuf-go/sdk"
+	proto "github.com/tarmac-project/protobuf-go/sdk/kvstore"
+	pb "google.golang.org/protobuf/proto"
 )
 
 // KVStore provides access to Host Callbacks that interact with the key:value datastores within Tarmac. The callbacks
@@ -47,6 +52,11 @@ type Config struct {
 	KV hord.Database
 }
 
+var (
+	// ErrNilKey is returned when the key is nil
+	ErrNilKey = errors.New("key cannot be nil")
+)
+
 // New will create and return a new KVStore instance that users can register as a Tarmac Host Callback function. Users
 // can provide any custom KVStore configurations using the configuration options supplied.
 func New(cfg Config) (*KVStore, error) {
@@ -58,10 +68,51 @@ func New(cfg Config) (*KVStore, error) {
 	return k, nil
 }
 
-// Get will fetch the stored data using the key specified within the incoming JSON. Logging, error handling, and
-// base64 encoding of data are all handled via this function. Note, this function expects the KVStoreGetRequest
-// JSON type as input and will return a KVStoreGetResponse JSON.
+// Get will fetch data from the key:value datastore using the key specified.
 func (k *KVStore) Get(b []byte) ([]byte, error) {
+	msg := &proto.KVStoreGet{}
+	err := pb.Unmarshal(b, msg)
+	if err != nil {
+		return k.getJSON(b)
+	}
+
+	rsp := &proto.KVStoreGetResponse{
+		Status: &sdk.Status{
+			Code:   200,
+			Status: "OK",
+		},
+	}
+
+	if msg.Key == "" {
+		rsp.Status.Code = 400
+		rsp.Status.Status = ErrNilKey.Error()
+	}
+
+	if rsp.Status.Code == 200 {
+		data, err := k.kv.Get(msg.Key)
+		if err != nil {
+			rsp.Status.Code = 404
+			rsp.Status.Status = fmt.Sprintf("Unable to fetch key %s", err)
+		}
+
+		rsp.Data = data
+	}
+
+	m, err := pb.Marshal(rsp)
+	if err != nil {
+		return nil, fmt.Errorf("unable to marshal kvstore:get response")
+	}
+
+	if rsp.Status.Code == 200 {
+		return m, nil
+	}
+
+	return m, fmt.Errorf("%s", rsp.Status.Status)
+}
+
+// getJSON retains the JSON based Get function for backwards compatibility. This function will be removed in future
+// versions of Tarmac.
+func (k *KVStore) getJSON(b []byte) ([]byte, error) {
 	// Start Response Message assuming everything is good
 	r := tarmac.KVStoreGetResponse{}
 	r.Status.Code = 200
@@ -99,10 +150,54 @@ func (k *KVStore) Get(b []byte) ([]byte, error) {
 	return rsp, fmt.Errorf("%s", r.Status.Status)
 }
 
-// Set will store data within the key:value datastore using the key specified within the incoming JSON. Logging, error
-// handling, and base64 decoding of data are all handled via this function. Note, this function expects the
-// KVStoreSetRequest JSON type as input and will return a KVStoreSetResponse JSON.
+// Set will store data within the key:value datastore using the key specified.
 func (k *KVStore) Set(b []byte) ([]byte, error) {
+	msg := &proto.KVStoreSet{}
+	err := pb.Unmarshal(b, msg)
+	if err != nil {
+		return k.setJSON(b)
+	}
+
+	rsp := &proto.KVStoreSetResponse{
+		Status: &sdk.Status{
+			Code:   200,
+			Status: "OK",
+		},
+	}
+
+	if msg.Key == "" {
+		rsp.Status.Code = 400
+		rsp.Status.Status = ErrNilKey.Error()
+	}
+
+	if msg.Data == nil {
+		rsp.Status.Code = 400
+		rsp.Status.Status = "Data cannot be nil"
+	}
+
+	if rsp.Status.Code == 200 {
+		err = k.kv.Set(msg.Key, msg.Data)
+		if err != nil {
+			rsp.Status.Code = 500
+			rsp.Status.Status = fmt.Sprintf("Unable to store data - %s", err)
+		}
+	}
+
+	m, err := pb.Marshal(rsp)
+	if err != nil {
+		return nil, fmt.Errorf("unable to marshal kvstore:set response")
+	}
+
+	if rsp.Status.Code == 200 {
+		return m, nil
+	}
+
+	return m, fmt.Errorf("%s", rsp.Status.Status)
+}
+
+// setJSON retains the JSON based Set function for backwards compatibility. This function will be removed in future
+// versions of Tarmac.
+func (k *KVStore) setJSON(b []byte) ([]byte, error) {
 	// Start Response Message assuming everything is good
 	r := tarmac.KVStoreSetResponse{}
 	r.Status.Code = 200
@@ -144,10 +239,49 @@ func (k *KVStore) Set(b []byte) ([]byte, error) {
 	return rsp, fmt.Errorf("%s", r.Status.Status)
 }
 
-// Delete will remove the key and data stored within the key:value datastore using the key specified within the incoming
-// JSON. Logging and error handling are all handled via this callback function. Note, this function expects the
-// KVStoreDeleteRequest JSON type as input and will return a KVStoreDeleteResponse JSON.
+// Delete will remove data from the key:value datastore using the key specified.
 func (k *KVStore) Delete(b []byte) ([]byte, error) {
+	msg := &proto.KVStoreDelete{}
+	err := pb.Unmarshal(b, msg)
+	if err != nil {
+		return k.deleteJSON(b)
+	}
+
+	rsp := &proto.KVStoreDeleteResponse{
+		Status: &sdk.Status{
+			Code:   200,
+			Status: "OK",
+		},
+	}
+
+	if msg.Key == "" {
+		rsp.Status.Code = 400
+		rsp.Status.Status = ErrNilKey.Error()
+	}
+
+	if rsp.Status.Code == 200 {
+		err = k.kv.Delete(msg.Key)
+		if err != nil {
+			rsp.Status.Code = 404
+			rsp.Status.Status = fmt.Sprintf("Unable to delete key %s", err)
+		}
+	}
+
+	m, err := pb.Marshal(rsp)
+	if err != nil {
+		return nil, fmt.Errorf("unable to marshal kvstore:delete response")
+	}
+
+	if rsp.Status.Code == 200 {
+		return m, nil
+	}
+
+	return m, fmt.Errorf("%s", rsp.Status.Status)
+}
+
+// deleteJSON retains the JSON based Delete function for backwards compatibility. This function will be removed in future
+// versions of Tarmac.
+func (k *KVStore) deleteJSON(b []byte) ([]byte, error) {
 	// Start Response Message assuming everything is good
 	r := tarmac.KVStoreDeleteResponse{}
 	r.Status.Code = 200
@@ -182,9 +316,38 @@ func (k *KVStore) Delete(b []byte) ([]byte, error) {
 	return rsp, fmt.Errorf("%s", r.Status.Status)
 }
 
-// Keys will return a list of all keys stored within the key:value datastore. Logging and error handling are
-// all handled via this callback function. Note, this function will return a KVStoreKeysResponse JSON.
-func (k *KVStore) Keys([]byte) ([]byte, error) {
+func (k *KVStore) Keys(b []byte) ([]byte, error) {
+	if len(b) == 0 {
+		return k.keysJSON(b)
+	}
+
+	rsp := &proto.KVStoreKeysResponse{
+		Status: &sdk.Status{
+			Code:   200,
+			Status: "OK",
+		},
+	}
+
+	keys, err := k.kv.Keys()
+	if err != nil {
+		rsp.Status.Code = 500
+		rsp.Status.Status = fmt.Sprintf("Unable to fetch keys - %s", err)
+	}
+	rsp.Keys = keys
+
+	m, err := pb.Marshal(rsp)
+	if err != nil {
+		return nil, fmt.Errorf("unable to marshal kvstore:keys response")
+	}
+
+	if rsp.Status.Code == 200 {
+		return m, nil
+	}
+
+	return m, fmt.Errorf("%s", rsp.Status.Status)
+}
+
+func (k *KVStore) keysJSON(_ []byte) ([]byte, error) {
 	// Start Response Message assuming everything is good
 	r := tarmac.KVStoreKeysResponse{}
 	r.Status.Code = 200

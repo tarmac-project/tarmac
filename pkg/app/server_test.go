@@ -26,7 +26,7 @@ func TestBasicFunction(t *testing.T) {
 	cfg.Set("disable_logging", false)
 	cfg.Set("debug", true)
 	cfg.Set("listen_addr", "localhost:9001")
-	cfg.Set("wasm_function", "/testdata/default/tarmac.wasm")
+	cfg.Set("wasm_function", "/testdata/base/default/tarmac.wasm")
 
 	srv := New(cfg)
 	go func() {
@@ -95,7 +95,7 @@ func TestMaintenanceMode(t *testing.T) {
 	cfg.Set("disable_logging", false)
 	cfg.Set("debug", true)
 	cfg.Set("listen_addr", "localhost:9001")
-	cfg.Set("wasm_function", "/testdata/default/tarmac.wasm")
+	cfg.Set("wasm_function", "/testdata/base/default/tarmac.wasm")
 	cfg.Set("enable_maintenance_mode", true)
 
 	srv := New(cfg)
@@ -200,6 +200,25 @@ func TestFullService(t *testing.T) {
 	tc.cfg.Set("wasm_function_config", "/testdata/tarmac.json")
 	tt = append(tt, tc)
 
+	tc = FullServiceTestCase{name: "In-Memory SDKv1", cfg: viper.New()}
+	tc.cfg.Set("disable_logging", false)
+	tc.cfg.Set("debug", true)
+	tc.cfg.Set("listen_addr", "localhost:9001")
+	tc.cfg.Set("kvstore_type", "in-memory")
+	tc.cfg.Set("enable_kvstore", true)
+	tc.cfg.Set("wasm_function_config", "/testdata/sdkv1/tarmac.json")
+	tt = append(tt, tc)
+
+	tc = FullServiceTestCase{name: "MySQL SDKv1", cfg: viper.New()}
+	tc.cfg.Set("disable_logging", false)
+	tc.cfg.Set("debug", true)
+	tc.cfg.Set("listen_addr", "localhost:9001")
+	tc.cfg.Set("enable_sql", true)
+	tc.cfg.Set("sql_type", "mysql")
+	tc.cfg.Set("sql_dsn", "root:example@tcp(mysql:3306)/example")
+	tc.cfg.Set("wasm_function_config", "/testdata/sdkv1/tarmac.json")
+	tt = append(tt, tc)
+
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			srv := New(tc.cfg)
@@ -292,7 +311,7 @@ func TestInitFuncs(t *testing.T) {
 	tc.cfg.Set("kvstore_type", "in-memory")
 	tc.cfg.Set("enable_kvstore", true)
 	tc.cfg.Set("run_mode", "job")
-	tc.config = []byte(`{"services":{"test-service":{"name":"test-service","functions":{"default":{"filepath":"/testdata/default/tarmac.wasm","pool_size":1}},"routes":[{"type":"init","function":"default"}]}}}`)
+	tc.config = []byte(`{"services":{"test-service":{"name":"test-service","functions":{"default":{"filepath":"/testdata/base/default/tarmac.wasm","pool_size":1}},"routes":[{"type":"init","function":"default"}]}}}`)
 	tt = append(tt, tc)
 
 	tc = InitFuncTestCase{name: "Fails", cfg: viper.New()}
@@ -302,7 +321,7 @@ func TestInitFuncs(t *testing.T) {
 	tc.cfg.Set("kvstore_type", "in-memory")
 	tc.cfg.Set("enable_kvstore", true)
 	tc.cfg.Set("run_mode", "job")
-	tc.config = []byte(`{"services":{"test-service":{"name":"test-service","functions":{"fail":{"filepath":"/testdata/fail/tarmac.wasm","pool_size":1}},"routes":[{"type":"init","function":"fail"}]}}}`)
+	tc.config = []byte(`{"services":{"test-service":{"name":"test-service","functions":{"fail":{"filepath":"/testdata/base/fail/tarmac.wasm","pool_size":1}},"routes":[{"type":"init","function":"fail"}]}}}`)
 	tc.err = true
 	tt = append(tt, tc)
 
@@ -313,7 +332,7 @@ func TestInitFuncs(t *testing.T) {
 	tc.cfg.Set("kvstore_type", "in-memory")
 	tc.cfg.Set("enable_kvstore", true)
 	tc.cfg.Set("run_mode", "job")
-	tc.config = []byte(`{"services":{"test-service":{"name":"test-service","functions":{"successafter5":{"filepath":"/testdata/successafter5/tarmac.wasm","pool_size":1}},"routes":[{"type":"init","retries":10,"function":"successafter5"}]}}}`)
+	tc.config = []byte(`{"services":{"test-service":{"name":"test-service","functions":{"successafter5":{"filepath":"/testdata/base/successafter5/tarmac.wasm","pool_size":1}},"routes":[{"type":"init","retries":10,"function":"successafter5"}]}}}`)
 	tt = append(tt, tc)
 
 	tc = InitFuncTestCase{name: "Fail After 10 Retries", cfg: viper.New()}
@@ -323,7 +342,7 @@ func TestInitFuncs(t *testing.T) {
 	tc.cfg.Set("kvstore_type", "in-memory")
 	tc.cfg.Set("enable_kvstore", true)
 	tc.cfg.Set("run_mode", "job")
-	tc.config = []byte(`{"services":{"test-service":{"name":"test-service","functions":{"fail":{"filepath":"/testdata/fail/tarmac.wasm","pool_size":1}},"routes":[{"type":"init","retries":10,"function":"fail"}]}}}`)
+	tc.config = []byte(`{"services":{"test-service":{"name":"test-service","functions":{"fail":{"filepath":"/testdata/base/fail/tarmac.wasm","pool_size":1}},"routes":[{"type":"init","retries":10,"function":"fail"}]}}}`)
 	tc.err = true
 	tt = append(tt, tc)
 
@@ -381,7 +400,7 @@ func TestWASMRunner(t *testing.T) {
 	cfg.Set("disable_logging", false)
 	cfg.Set("debug", true)
 	cfg.Set("listen_addr", "localhost:9001")
-	cfg.Set("wasm_function", "/testdata/default/tarmac.wasm")
+	cfg.Set("wasm_function", "/testdata/base/default/tarmac.wasm")
 	srv := New(cfg)
 	go func() {
 		err := srv.Run()
