@@ -4,7 +4,7 @@
       "name": "test-service",
       "functions": {
         "fail": {
-          "filepath": "/testdata/fail/tarmac.wasm"
+          "filepath": "/testdata/base/fail/tarmac.wasm"
         }
       },
       "routes": [

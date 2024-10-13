@@ -4,13 +4,16 @@
 build: build-testdata
 
 build-testdata:
-	$(MAKE) -C testdata/default build
-	$(MAKE) -C testdata/fail build
-	$(MAKE) -C testdata/kv build
-	$(MAKE) -C testdata/sql build
-	$(MAKE) -C testdata/logger build
-	$(MAKE) -C testdata/function build
-	$(MAKE) -C testdata/successafter5 build
+	$(MAKE) -C testdata/sdkv1/kv build
+	$(MAKE) -C testdata/sdkv1/sql build
+	$(MAKE) -C testdata/sdkv1/logger build
+	$(MAKE) -C testdata/base/default build
+	$(MAKE) -C testdata/base/fail build
+	$(MAKE) -C testdata/base/kv build
+	$(MAKE) -C testdata/base/sql build
+	$(MAKE) -C testdata/base/logger build
+	$(MAKE) -C testdata/base/function build
+	$(MAKE) -C testdata/base/successafter5 build
 
 tests: build tests-nobuild
 tests-nobuild: tests-base tests-redis tests-cassandra tests-mysql tests-postgres tests-boltdb tests-inmemory
