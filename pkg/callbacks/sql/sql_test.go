@@ -187,7 +187,7 @@ func TestSQLQuery(t *testing.T) {
 				}
 
 				// Check Column Names
-				if rsp.Columns[0] != "id" && rsp.Columns[1] != "name" {
+				if rsp.Columns[0] != "id" || rsp.Columns[1] != "name" {
 					t.Fatalf("Unexpected column names returned - %v", rsp.Columns)
 				}
 
