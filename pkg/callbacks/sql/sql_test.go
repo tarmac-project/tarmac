@@ -78,7 +78,7 @@ func TestSQLQuery(t *testing.T) {
 
 					r, err := db.Query(qMsg)
 					if err == nil {
-						t.Fatalf("Unexepected success with failure test case")
+						t.Fatalf("Unexpected success with failure test case")
 					}
 
 					// Unmarshal the Tarmac Response
