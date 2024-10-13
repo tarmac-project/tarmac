@@ -3,7 +3,7 @@ module github.com/tarmac-project/tarmac
 go 1.22.6
 
 require (
-	github.com/go-sql-driver/mysql v1.7.1
+	github.com/go-sql-driver/mysql v1.8.1
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/lib/pq v1.10.9
 	github.com/madflojo/tasks v1.2.1
@@ -30,6 +30,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	cloud.google.com/go/firestore v1.15.0 // indirect
 	cloud.google.com/go/longrunning v0.5.5 // indirect
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/FZambia/sentinel v1.1.1 // indirect
 	github.com/Workiva/go-datastructures v1.1.5 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
