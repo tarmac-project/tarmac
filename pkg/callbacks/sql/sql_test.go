@@ -234,7 +234,7 @@ func TestSQLQuery(t *testing.T) {
 				t.Run(c.name, func(t *testing.T) {
 					r, err := db.Query([]byte(fmt.Sprintf(`{"query":"%s"}`, base64.StdEncoding.EncodeToString([]byte(c.q)))))
 					if err == nil {
-						t.Fatalf("Unexepected success with failure test case")
+						t.Fatalf("Unexpected success with failure test case")
 					}
 
 					// Unmarshal the Tarmac Response
