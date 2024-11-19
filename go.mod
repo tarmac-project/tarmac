@@ -22,7 +22,7 @@ require (
 	github.com/tarmac-project/wapc-toolkit/callbacks v0.2.0
 	github.com/tarmac-project/wapc-toolkit/engine v0.2.0
 	github.com/wapc/wapc-go v0.7.0
-	google.golang.org/protobuf v1.35.1
+	google.golang.org/protobuf v1.35.2
 )
 
 require (
