@@ -1,6 +1,8 @@
 module github.com/tarmac-project/tarmac
 
-go 1.22.6
+go 1.23.0
+
+toolchain go1.23.2
 
 require (
 	github.com/go-sql-driver/mysql v1.7.1
@@ -21,7 +23,7 @@ require (
 	github.com/tarmac-project/protobuf-go v0.0.0-20241006222441-51664fb11f56
 	github.com/tarmac-project/wapc-toolkit/callbacks v0.2.0
 	github.com/tarmac-project/wapc-toolkit/engine v0.2.0
-	github.com/wapc/wapc-go v0.7.0
+	github.com/wapc/wapc-go v0.7.1
 	google.golang.org/protobuf v1.36.0
 )
 
