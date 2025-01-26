@@ -24,6 +24,7 @@ require (
 	github.com/tarmac-project/wapc-toolkit/callbacks v0.2.0
 	github.com/tarmac-project/wapc-toolkit/engine v0.2.0
 	github.com/wapc/wapc-go v0.7.1
+	github.com/wapc/wapc-go/engines/wazero v0.0.0-20250121123328-6bf9cae9d28d
 	google.golang.org/protobuf v1.36.0
 )
 
@@ -92,7 +93,7 @@ require (
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/tetratelabs/wazero v1.7.3 // indirect
+	github.com/tetratelabs/wazero v1.8.2 // indirect
 	go.etcd.io/bbolt v1.3.10 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.12 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.12 // indirect
