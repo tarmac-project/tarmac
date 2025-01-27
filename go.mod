@@ -1,6 +1,7 @@
 module github.com/tarmac-project/tarmac
 
 go 1.22.6
+toolchain go1.23.5
 
 require (
 	github.com/go-sql-driver/mysql v1.7.1
@@ -21,7 +22,8 @@ require (
 	github.com/tarmac-project/protobuf-go v0.0.0-20241006222441-51664fb11f56
 	github.com/tarmac-project/wapc-toolkit/callbacks v0.2.0
 	github.com/tarmac-project/wapc-toolkit/engine v0.2.0
-	github.com/wapc/wapc-go v0.7.0
+	github.com/wapc/wapc-go v0.7.1
+	github.com/wapc/wapc-go/engines/wazero v0.0.0-20250127021005-12bc348ee9f6
 	google.golang.org/protobuf v1.36.0
 )
 
@@ -90,7 +92,7 @@ require (
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/tetratelabs/wazero v1.7.3 // indirect
+	github.com/tetratelabs/wazero v1.8.2 // indirect
 	go.etcd.io/bbolt v1.3.10 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.12 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.12 // indirect
