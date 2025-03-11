@@ -1,7 +1,8 @@
 package main
 
 import (
-	"github.com/sirupsen/logrus"
+	"log/slog"
+	"os"
 	"github.com/spf13/viper"
 	_ "github.com/spf13/viper/remote"
 	"github.com/tarmac-project/tarmac/pkg/app"
@@ -9,7 +10,9 @@ import (
 
 func main() {
 	// Initiate a simple logger
-	log := logrus.New()
+	log := slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}))
 
 	// Setup Config
 	cfg := viper.New()
@@ -29,6 +32,7 @@ func main() {
 	cfg.SetDefault("boltdb_timeout", 5)
 	cfg.SetDefault("grpc_socket_path", "/grpc.sock")
 	cfg.SetDefault("run_mode", "daemon")
+	cfg.SetDefault("text_log_format", false)
 
 	// Load Config
 	cfg.AddConfigPath("./conf")
@@ -39,27 +43,32 @@ func main() {
 	if err != nil {
 		switch err.(type) {
 		case viper.ConfigFileNotFoundError:
-			log.Warnf("No Config file found, loaded config from Environment - Default path ./conf")
+			log.Warn("No Config file found, loaded config from Environment - Default path ./conf")
 		default:
-			log.Fatalf("Error when Fetching Configuration - %s", err)
+			log.Error("Error when Fetching Configuration: "+err.Error(), "error", err)
+				os.Exit(1)
 		}
 	}
 
 	// Load Config from Consul
 	if cfg.GetBool("use_consul") {
-		log.Infof("Setting up Consul Config source - %s/%s", cfg.GetString("consul_addr"), cfg.GetString("consul_keys_prefix"))
+		log.Info("Setting up Consul Config source", 
+			"consul_addr", cfg.GetString("consul_addr"), 
+			"consul_keys_prefix", cfg.GetString("consul_keys_prefix"))
 		err = cfg.AddRemoteProvider("consul", cfg.GetString("consul_addr"), cfg.GetString("consul_keys_prefix"))
 		if err != nil {
-			log.Fatalf("Error adding Consul as a remote Configuration Provider - %s", err)
+			log.Error("Error adding Consul as a remote Configuration Provider: "+err.Error(), "error", err)
+				os.Exit(1)
 		}
 		cfg.SetConfigType("json")
 		err = cfg.ReadRemoteConfig()
 		if err != nil {
-			log.Fatalf("Error when Fetching Configuration from Consul - %s", err)
+			log.Error("Error when Fetching Configuration from Consul: "+err.Error(), "error", err)
+				os.Exit(1)
 		}
 
 		if cfg.GetBool("from_consul") {
-			log.Infof("Successfully loaded configuration from consul")
+			log.Info("Successfully loaded configuration from consul")
 		}
 	}
 
@@ -68,7 +77,8 @@ func main() {
 	defer srv.Stop()
 	err = srv.Run()
 	if err != nil && err != app.ErrShutdown {
-		log.Fatalf("Service stopped - %s", err)
+		log.Error("Service stopped: "+err.Error(), "error", err)
+		os.Exit(1)
 	}
-	log.Infof("Service shutdown - %s", err)
+	log.Info("Service shutdown", "error", err)
 }

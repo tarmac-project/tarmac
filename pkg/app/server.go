@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/sirupsen/logrus"
 	"github.com/tarmac-project/tarmac/pkg/config"
 	"github.com/tarmac-project/tarmac/pkg/sanitize"
 )
@@ -52,22 +51,21 @@ func (srv *Server) middleware(n httprouter.Handle) httprouter.Handle {
 		w.Header().Set("Server", "tarmac")
 
 		// Log the basics
-		srv.log.WithFields(logrus.Fields{
-			"method":         r.Method,
-			"remote-addr":    r.RemoteAddr,
-			"http-protocol":  r.Proto,
-			"content-length": r.ContentLength,
-		}).Debugf("HTTP Request to %s received", sanitize.String(r.URL.EscapedPath()))
+		srv.log.Debug("HTTP Request received",
+			"method", r.Method,
+			"remote-addr", r.RemoteAddr,
+			"http-protocol", r.Proto,
+			"content-length", r.ContentLength,
+			"path", sanitize.String(r.URL.EscapedPath()))
 
 		// Verify if PProf
 		if isPProf.MatchString(r.URL.EscapedPath()) && !srv.cfg.GetBool("enable_pprof") {
-			srv.log.WithFields(logrus.Fields{
-				"method":         r.Method,
-				"remote-addr":    r.RemoteAddr,
-				"http-protocol":  r.Proto,
-				"content-length": r.ContentLength,
-				"duration":       time.Since(now).Milliseconds(),
-			}).Debugf("Request to PProf Address failed, PProf disabled")
+			srv.log.Debug("Request to PProf Address failed, PProf disabled",
+				"method", r.Method,
+				"remote-addr", r.RemoteAddr,
+				"http-protocol", r.Proto,
+				"content-length", r.ContentLength,
+				"duration", time.Since(now).Milliseconds())
 			w.WriteHeader(http.StatusForbidden)
 
 			srv.stats.Srv.WithLabelValues(r.URL.EscapedPath()).Observe(float64(time.Since(now).Milliseconds()))
@@ -77,13 +75,13 @@ func (srv *Server) middleware(n httprouter.Handle) httprouter.Handle {
 		// Call registered handler
 		n(w, r, ps)
 		srv.stats.Srv.WithLabelValues(r.URL.EscapedPath()).Observe(float64(time.Since(now).Milliseconds()))
-		srv.log.WithFields(logrus.Fields{
-			"method":         r.Method,
-			"remote-addr":    r.RemoteAddr,
-			"http-protocol":  r.Proto,
-			"content-length": r.ContentLength,
-			"duration":       time.Since(now).Milliseconds(),
-		}).Debugf("HTTP Request to %s complete", sanitize.String(r.URL.EscapedPath()))
+		srv.log.Debug("HTTP Request complete",
+			"method", r.Method,
+			"remote-addr", r.RemoteAddr,
+			"http-protocol", r.Proto,
+			"content-length", r.ContentLength,
+			"duration", time.Since(now).Milliseconds(),
+			"path", sanitize.String(r.URL.EscapedPath()))
 	}
 }
 
@@ -108,12 +106,12 @@ func (srv *Server) WASMHandler(w http.ResponseWriter, r *http.Request, _ httprou
 	if r.Method == "POST" || r.Method == "PUT" {
 		payload, err = io.ReadAll(r.Body)
 		if err != nil {
-			srv.log.WithFields(logrus.Fields{
-				"method":         r.Method,
-				"remote-addr":    r.RemoteAddr,
-				"http-protocol":  r.Proto,
-				"content-length": r.ContentLength,
-			}).Debugf("Error reading HTTP payload - %s", err)
+			srv.log.Debug("Error reading HTTP payload: "+err.Error(),
+				"method", r.Method,
+				"remote-addr", r.RemoteAddr,
+				"http-protocol", r.Proto,
+				"content-length", r.ContentLength,
+				"error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -122,12 +120,12 @@ func (srv *Server) WASMHandler(w http.ResponseWriter, r *http.Request, _ httprou
 	// Execute WASM Module
 	rsp, err := srv.runWASM(function, "handler", payload)
 	if err != nil {
-		srv.log.WithFields(logrus.Fields{
-			"method":         r.Method,
-			"remote-addr":    r.RemoteAddr,
-			"http-protocol":  r.Proto,
-			"content-length": r.ContentLength,
-		}).Debugf("Error executing WASM module - %s", err)
+		srv.log.Debug("Error executing WASM module: "+err.Error(),
+			"method", r.Method,
+			"remote-addr", r.RemoteAddr,
+			"http-protocol", r.Proto,
+			"content-length", r.ContentLength,
+			"error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -157,10 +155,9 @@ func (srv *Server) runWASM(module, handler string, rq []byte) ([]byte, error) {
 
 	// Return results
 	srv.stats.Wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(float64(time.Since(now).Milliseconds()))
-	srv.log.WithFields(logrus.Fields{
-		"module":   module,
-		"handler":  handler,
-		"duration": time.Since(now).Milliseconds(),
-	}).Debugf("WASM Module Executed")
+	srv.log.Debug("WASM Module Executed successfully",
+		"module", module,
+		"handler", handler,
+		"duration", time.Since(now).Milliseconds())
 	return rsp, nil
 }

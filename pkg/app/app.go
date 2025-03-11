@@ -7,6 +7,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"net/http"
 	pprof "net/http/pprof"
 	"os"
@@ -22,7 +23,6 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/madflojo/tasks"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/tarmac-project/hord"
 	"github.com/tarmac-project/hord/drivers/bbolt"
@@ -87,7 +87,7 @@ type Server struct {
 	kv hord.Database
 
 	// log is used across the app package for logging.
-	log *logrus.Logger
+	log *slog.Logger
 
 	// runCancel is a global context cancelFunc used to trigger the shutdown of applications.
 	runCancel context.CancelFunc
@@ -111,18 +111,56 @@ func New(cfg *viper.Viper) *Server {
 	// Create App Context
 	srv.runCtx, srv.runCancel = context.WithCancel(context.Background())
 
-	// Initiate a new logger
-	srv.log = logrus.New()
+	// Create a dynamic level variable for runtime log level changes
+	// This allows us to change log levels without recreating handlers
+	logLevel := new(slog.LevelVar)
+	
+	// Set initial log level
+	logLevel.Set(slog.LevelInfo)
 	if srv.cfg.GetBool("debug") {
-		srv.log.Level = logrus.DebugLevel
+		logLevel.Set(slog.LevelDebug)
+	}
+	if srv.cfg.GetBool("trace") {
+		// Use our custom trace level
+		logLevel.Set(LevelTrace)
+	}
+	if srv.cfg.GetBool("disable_logging") {
+		logLevel.Set(slog.LevelError + 4) // Higher than Error to disable most logging
+	}
+
+	// Create handler options with our dynamic level var and custom level names
+	handlerOpts := &slog.HandlerOptions{
+		Level: logLevel,
+		// Replace the level attribute to use our custom level names
+		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+			if a.Key == slog.LevelKey {
+				level := a.Value.Any().(slog.Level)
+				// Check if we have a custom name for this level
+				if levelName, exists := LevelNames[level]; exists {
+					a.Value = slog.StringValue(levelName)
+				}
+			}
+			return a
+		},
+	}
+
+	// Create handler based on format preference
+	var handler slog.Handler
+	if srv.cfg.GetBool("text_log_format") {
+		handler = slog.NewTextHandler(os.Stderr, handlerOpts)
+	} else {
+		handler = slog.NewJSONHandler(os.Stderr, handlerOpts)
+	}
+
+	// Initialize the logger
+	srv.log = slog.New(handler)
+
+	// Log the log level settings
+	if srv.cfg.GetBool("debug") {
 		srv.log.Debug("Enabling Debug Logging")
 	}
 	if srv.cfg.GetBool("trace") {
-		srv.log.Level = logrus.TraceLevel
 		srv.log.Debug("Enabling Trace Logging")
-	}
-	if srv.cfg.GetBool("disable_logging") {
-		srv.log.Level = logrus.FatalLevel
 	}
 
 	return srv
@@ -142,14 +180,14 @@ func (srv *Server) Run() error {
 	defer srv.scheduler.Stop()
 
 	// Startup Log Message
-	srv.log.WithFields(logrus.Fields{
-		"run_mode":       srv.cfg.GetString("run_mode"),
-		"use_consul":     srv.cfg.GetBool("use_consul"),
-		"enable_kvstore": srv.cfg.GetBool("enable_kvstore"),
-		"enable_sql":     srv.cfg.GetBool("enable_sql"),
-		"enable_tls":     srv.cfg.GetBool("enable_tls"),
-		"enable_metrics": srv.cfg.GetBool("enable_metrics"),
-	}).Info("Starting Tarmac")
+	srv.log.Info("Starting Tarmac",
+		"run_mode", srv.cfg.GetString("run_mode"),
+		"use_consul", srv.cfg.GetBool("use_consul"),
+		"enable_kvstore", srv.cfg.GetBool("enable_kvstore"),
+		"enable_sql", srv.cfg.GetBool("enable_sql"),
+		"enable_tls", srv.cfg.GetBool("enable_tls"),
+		"enable_metrics", srv.cfg.GetBool("enable_metrics"),
+	)
 
 	// Config Reload
 	if srv.cfg.GetInt("config_watch_interval") > 0 && srv.cfg.GetBool("use_consul") {
@@ -162,33 +200,96 @@ func (srv *Server) Run() error {
 					return err
 				}
 
-				// Support hot enable/disable of debug logging
-				if srv.cfg.GetBool("debug") {
-					srv.log.Level = logrus.DebugLevel
+				// Get the current handler to extract its LevelVar
+				h := srv.log.Handler()
+				
+				// Extract the LevelVar if possible using type assertion
+				if lh, ok := h.(interface{ Level() slog.Leveler }); ok {
+					if lv, ok := lh.Level().(*slog.LevelVar); ok {
+						// We found the LevelVar, now update it based on config
+						
+						// Start with default info level
+						newLevel := slog.LevelInfo
+						
+						// Set appropriate level based on config
+						if srv.cfg.GetBool("debug") {
+							newLevel = slog.LevelDebug
+						}
+						if srv.cfg.GetBool("trace") {
+							// Use our custom trace level
+							newLevel = LevelTrace
+						}
+						if srv.cfg.GetBool("disable_logging") {
+							newLevel = slog.LevelError + 4
+						}
+						
+						// Update the level
+						lv.Set(newLevel)
+						
+						// Log the change
+						if srv.cfg.GetBool("debug") {
+							srv.log.Debug("Dynamic log level updated to debug")
+						} else if srv.cfg.GetBool("trace") {
+							srv.log.Debug("Dynamic log level updated to trace")
+						}
+					}
+				}
+				
+				// If log format preference changed, we need to create a new handler
+				// Extract the current level from existing handler
+				var currentLevel slog.Leveler
+				if lh, ok := h.(interface{ Level() slog.Leveler }); ok {
+					currentLevel = lh.Level()
+				} else {
+					// Fallback to info if we can't extract the level
+					currentLevel = slog.LevelInfo
+				}
+				
+				// Check format type of current handler against config
+				_, isTextHandler := h.(*slog.TextHandler)
+				configWantsText := srv.cfg.GetBool("text_log_format")
+				
+				// If format preference changed, create a new handler
+				if isTextHandler != configWantsText {
+					handlerOpts := &slog.HandlerOptions{
+						Level: currentLevel,
+						// Apply the same ReplaceAttr function to handle custom level names
+						ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+							if a.Key == slog.LevelKey {
+								level := a.Value.Any().(slog.Level)
+								// Check if we have a custom name for this level
+								if levelName, exists := LevelNames[level]; exists {
+									a.Value = slog.StringValue(levelName)
+								}
+							}
+							return a
+						},
+					}
+					
+					// Create handler based on format preference
+					var newHandler slog.Handler
+					if configWantsText {
+						newHandler = slog.NewTextHandler(os.Stderr, handlerOpts)
+					} else {
+						newHandler = slog.NewJSONHandler(os.Stderr, handlerOpts)
+					}
+					
+					// Update the logger
+					srv.log = slog.New(newHandler)
 				}
 
-				// Support hot enable/disable of trace logging
-				if srv.cfg.GetBool("trace") {
-					srv.log.Level = logrus.TraceLevel
-				}
-
-				// Support hot enable/disable of all logging
-				if srv.cfg.GetBool("disable_logging") {
-					srv.log.Level = logrus.FatalLevel
-				}
-
-				srv.log.Tracef("Config reloaded from Consul")
+				srv.logTrace("Config reloaded from Consul")
 				return nil
 			},
 		})
 		if err != nil {
-			srv.log.Errorf("Error scheduling Config watcher - %s", err)
+			srv.log.Error("Error scheduling Config watcher: "+err.Error(), "error", err)
 		}
 	}
 
 	// Setup the KV Connection
 	if srv.cfg.GetBool("enable_kvstore") {
-		srv.log.Infof("Connecting to KV Store")
+		srv.log.Info("Connecting to KV Store")
 		switch srv.cfg.GetString("kvstore_type") {
 		case "in-memory":
 			srv.kv, err = hashmap.Dial(hashmap.Config{})
@@ -262,11 +363,11 @@ func (srv *Server) Run() error {
 	}
 
 	if srv.kv == nil {
-		srv.log.Infof("KV Store not configured, skipping")
+		srv.log.Info("KV Store not configured, skipping")
 	}
 
 	if srv.cfg.GetBool("enable_sql") {
-		srv.log.Infof("Connecting to SQL DB")
+		srv.log.Info("Connecting to SQL DB")
 		switch srv.cfg.GetString("sql_type") {
 		case "mysql":
 			srv.db, err = sql.Open("mysql", srv.cfg.GetString("sql_dsn"))
@@ -283,7 +384,7 @@ func (srv *Server) Run() error {
 		}
 	}
 	if srv.db == nil {
-		srv.log.Infof("SQL DB not configured, skipping")
+		srv.log.Info("SQL DB not configured, skipping")
 	}
 
 	// Setup the HTTP Server
@@ -328,7 +429,7 @@ func (srv *Server) Run() error {
 
 		// Wait for a signal then action
 		s := <-trap
-		srv.log.Infof("Received shutdown signal %s", s)
+		srv.log.Info("Received shutdown signal", "signal", s)
 
 		defer srv.Stop()
 	}()
@@ -343,54 +444,82 @@ func (srv *Server) Run() error {
 	router, err := callbacks.New(callbacks.RouterConfig{
 		PreFunc: func(rq callbacks.CallbackRequest) ([]byte, error) {
 			// Debug logging of callback
-			srv.log.WithFields(logrus.Fields{
-				"namespace":           rq.Namespace,
-				"capability":          rq.Capability,
-				"operation":           rq.Operation,
-				"callback_start_time": rq.StartTime.String(),
-			}).Debugf("CallbackRouter called")
+			srv.log.Debug("CallbackRouter called",
+				"namespace", rq.Namespace,
+				"capability", rq.Capability,
+				"operation", rq.Operation,
+				"callback_start_time", rq.StartTime.String(),
+			)
 
 			// Trace logging of callback
-			srv.log.WithFields(logrus.Fields{
-				"namespace":           rq.Namespace,
-				"capability":          rq.Capability,
-				"operation":           rq.Operation,
-				"callback_start_time": rq.StartTime.String(),
-			}).Tracef("CallbackRouter called with payload - %s", rq.Input)
+			srv.logTrace("CallbackRouter called with payload",
+				"namespace", rq.Namespace,
+				"capability", rq.Capability,
+				"operation", rq.Operation,
+				"callback_start_time", rq.StartTime.String(),
+				"payload", string(rq.Input),
+			)
 			return []byte(""), nil
 		},
 		PostFunc: func(r callbacks.CallbackResult) {
 			// Measure Callback Execution time and counts
-			srv.stats.Callbacks.WithLabelValues(fmt.Sprintf("%s:%s", r.Namespace, r.Operation)).Observe(float64(r.EndTime.Sub(r.StartTime).Milliseconds()))
+			duration := r.EndTime.Sub(r.StartTime).Milliseconds()
+			srv.stats.Callbacks.WithLabelValues(fmt.Sprintf("%s:%s", r.Namespace, r.Operation)).Observe(float64(duration))
 
 			// Debug logging of callback results
-			srv.log.WithFields(logrus.Fields{
-				"namespace":  r.Namespace,
-				"capability": r.Capability,
-				"operation":  r.Operation,
-				"error":      r.Err,
-				"duration":   r.EndTime.Sub(r.StartTime).Milliseconds(),
-			}).Debugf("Callback returned result after %d milliseconds", r.EndTime.Sub(r.StartTime).Milliseconds())
+			if r.Err != nil {
+				srv.log.Debug("Callback returned result with error: "+r.Err.Error(),
+					"namespace", r.Namespace,
+					"capability", r.Capability,
+					"operation", r.Operation,
+					"error", r.Err,
+					"duration", duration,
+					"duration_ms", duration,
+				)
+			} else {
+				srv.log.Debug("Callback returned result successfully",
+					"namespace", r.Namespace,
+					"capability", r.Capability,
+					"operation", r.Operation,
+					"duration", duration,
+					"duration_ms", duration,
+				)
+			}
 
 			// Trace logging of callback results
-			srv.log.WithFields(logrus.Fields{
-				"namespace":  r.Namespace,
-				"capability": r.Capability,
-				"operation":  r.Operation,
-				"error":      r.Err,
-				"input":      r.Input,
-				"duration":   r.EndTime.Sub(r.StartTime).Milliseconds(),
-			}).Tracef("Callback returned result after %d milliseconds with output - %s", r.EndTime.Sub(r.StartTime).Milliseconds(), r.Output)
+			if r.Err != nil {
+				srv.logTrace("Callback returned result with error and output: "+r.Err.Error(),
+					"namespace", r.Namespace,
+					"capability", r.Capability,
+					"operation", r.Operation,
+					"error", r.Err,
+					"input", string(r.Input),
+					"duration", duration,
+					"duration_ms", duration,
+					"output", string(r.Output),
+				)
+			} else {
+				srv.logTrace("Callback returned result with output",
+					"namespace", r.Namespace,
+					"capability", r.Capability,
+					"operation", r.Operation,
+					"input", string(r.Input),
+					"duration", duration,
+					"duration_ms", duration,
+					"output", string(r.Output),
+				)
+			}
 
 			// Log Callback failures as warnings
 			if r.Err != nil {
-				srv.log.WithFields(logrus.Fields{
-					"namespace":  r.Namespace,
-					"capability": r.Capability,
-					"operation":  r.Operation,
-					"duration":   r.EndTime.Sub(r.StartTime).Milliseconds(),
-					"error":      r.Err,
-				}).Warnf("Callback call resulted in error after %d milliseconds - %s", r.EndTime.Sub(r.StartTime).Milliseconds(), r.Err)
+				srv.log.Warn("Callback call resulted in error: "+r.Err.Error(),
+					"namespace", r.Namespace,
+					"capability", r.Capability,
+					"operation", r.Operation,
+					"duration", duration,
+					"duration_ms", duration,
+					"error", r.Err,
+				)
 			}
 		},
 	})
@@ -493,8 +622,8 @@ func (srv *Server) Run() error {
 
 	// Setup Logger Callbacks
 	cbLogger, err := logging.New(logging.Config{
-		// Pass general logger into host callback
-		Log: srv.log,
+		// Pass general logger into host callback with adapter
+		Log: NewSlogAdapter(srv.log),
 	})
 	if err != nil {
 		return fmt.Errorf("unable to initialize callback logger for WASM functions - %s", err)
@@ -591,7 +720,9 @@ func (srv *Server) Run() error {
 	// Look for Functions Config
 	srv.funcCfg, err = config.Parse(srv.cfg.GetString("wasm_function_config"))
 	if err != nil {
-		srv.log.Infof("Could not load wasm_function_config (%s) starting with default function path - %s", srv.cfg.GetString("wasm_function_config"), err)
+		srv.log.Info("Could not load wasm_function_config starting with default function path", 
+			"config_path", srv.cfg.GetString("wasm_function_config"), 
+			"error", err)
 
 		// Load WASM Function using default path
 		err = srv.engine.LoadModule(engine.ModuleConfig{
@@ -616,7 +747,7 @@ func (srv *Server) Run() error {
 
 	// Load Functions from Config
 	if err == nil {
-		srv.log.Infof("Loading Services from wasm_function_config %s", srv.cfg.GetString("wasm_function_config"))
+		srv.log.Info("Loading Services from wasm_function_config", "config_path", srv.cfg.GetString("wasm_function_config"))
 
 		routesCounter := map[string]int{
 			RouteTypeInit:          0,
@@ -626,7 +757,7 @@ func (srv *Server) Run() error {
 		}
 		for svcName, svcCfg := range srv.funcCfg.Services {
 			// Load WASM Functions
-			srv.log.Infof("Loading Functions from Service %s", svcName)
+			srv.log.Info("Loading Functions from Service", "service", svcName)
 			for fName, fCfg := range svcCfg.Functions {
 				err := srv.engine.LoadModule(engine.ModuleConfig{
 					Name:     fName,
@@ -636,17 +767,15 @@ func (srv *Server) Run() error {
 				if err != nil {
 					return fmt.Errorf("could not load function %s from path %s - %s", fName, fCfg.Filepath, err)
 				}
-				srv.log.WithFields(logrus.Fields{
-					"function": fName,
-					"service":  svcName,
-					"filepath": fCfg.Filepath,
-				}).Infof("Loaded Function %s for Service %s with filepath of %s", fName, svcName, fCfg.Filepath)
+				srv.log.Info("Loaded Function for Service",
+					"function", fName,
+					"service", svcName,
+					"filepath", fCfg.Filepath)
 			}
 
 			// Register Routes
-			srv.log.WithFields(logrus.Fields{
-				"service": svcName,
-			}).Infof("Registering Routes from Service %s", svcName)
+			srv.log.Info("Registering Routes from Service", 
+				"service", svcName)
 			funcRoutes := make(map[string]string)
 			initRoutes := []config.Route{}
 			for _, r := range svcCfg.Routes {
@@ -661,13 +790,13 @@ func (srv *Server) Run() error {
 					// Register HTTP based functions with the HTTP router
 					for _, m := range r.Methods {
 						key := fmt.Sprintf("%s:%s:%s", r.Type, m, r.Path)
-						srv.log.WithFields(logrus.Fields{
-							"function":      r.Function,
-							"method":        m,
-							"path":          r.Path,
-							"function_type": r.Type,
-							"service":       svcName,
-						}).Infof("Registering Route %s for function %s", key, r.Function)
+						srv.log.Info("Registering Route for function",
+							"function", r.Function,
+							"method", m,
+							"path", r.Path,
+							"function_type", r.Type,
+							"service", svcName,
+							"route_key", key)
 						funcRoutes[key] = r.Function
 						srv.httpRouter.Handle(m, r.Path, srv.middleware(srv.WASMHandler))
 						routesCounter[RouteTypeHTTP]++
@@ -677,12 +806,14 @@ func (srv *Server) Run() error {
 				case RouteTypeScheduledTask:
 					// Schedule tasks for scheduled functions
 					fname := r.Function
-					srv.log.Infof("Scheduling custom task for function %s with interval of %d", r.Function, r.Frequency)
+					srv.log.Info("Scheduling custom task for function", 
+						"function", r.Function, 
+						"interval", r.Frequency)
 					id, err := srv.scheduler.Add(&tasks.Task{
 						Interval: time.Duration(r.Frequency) * time.Second,
 						TaskFunc: func() error {
 							now := time.Now()
-							srv.log.Tracef("Executing Scheduled Function %s", fname)
+							srv.log.Debug("Executing Scheduled Function", "level", "TRACE", "function", fname)
 							_, err := srv.runWASM(fname, "handler", []byte(""))
 							if err != nil {
 								srv.stats.Tasks.WithLabelValues(fname).Observe(float64(time.Since(now).Milliseconds()))
@@ -693,7 +824,7 @@ func (srv *Server) Run() error {
 						},
 					})
 					if err != nil {
-						srv.log.Errorf("Error scheduling scheduled task %s - %s", r.Function, err)
+						srv.log.Error("Error scheduling scheduled task: "+err.Error(), "function", r.Function, "error", err)
 					}
 					// Clean up Task on Shutdown
 					defer srv.scheduler.Del(id)
@@ -702,10 +833,10 @@ func (srv *Server) Run() error {
 
 				case RouteTypeFunction:
 					// Setup callbacks for function to function calls
-					srv.log.Infof("Registering Function to Function callback for %s", r.Function)
+					srv.log.Info("Registering Function to Function callback", "function", r.Function)
 					fname := r.Function
 					f := func(b []byte) ([]byte, error) {
-						srv.log.Infof("Executing Function to Function callback for %s", fname)
+						srv.log.Info("Executing Function to Function callback", "function", fname)
 						return srv.runWASM(fname, "handler", b)
 					}
 					err := router.RegisterCallback(callbacks.CallbackConfig{
@@ -724,14 +855,16 @@ func (srv *Server) Run() error {
 
 			// Execute init functions
 			for _, r := range initRoutes {
-				srv.log.Infof("Executing Init Function %s", r.Function)
+				srv.log.Info("Executing Init Function", "function", r.Function)
 				var success, retries int
 				delay := r.Frequency
 				for success == 0 && retries <= r.Retries {
 					// Execute the function
 					_, err := srv.runWASM(r.Function, "handler", []byte(""))
 					if err != nil {
-						srv.log.Errorf("Error executing Init Function %s - %s", r.Function, err)
+						srv.log.Error("Error executing Init Function: "+err.Error(), 
+							"function", r.Function, 
+							"error", err)
 						retries++
 						// Wait exponentially longer between retries
 						<-time.After(time.Duration(delay) * time.Second)
@@ -748,16 +881,15 @@ func (srv *Server) Run() error {
 		}
 
 		// Log information about loaded functions and routes
-		srv.log.WithFields(logrus.Fields{
-			"init":           routesCounter[RouteTypeInit],
-			"http":           routesCounter[RouteTypeHTTP],
-			"scheduled_task": routesCounter[RouteTypeScheduledTask],
-			"function":       routesCounter[RouteTypeFunction],
-		}).Info("Loaded Functions and Routes")
+		srv.log.Info("Loaded Functions and Routes",
+			"init", routesCounter[RouteTypeInit],
+			"http", routesCounter[RouteTypeHTTP],
+			"scheduled_task", routesCounter[RouteTypeScheduledTask],
+			"function", routesCounter[RouteTypeFunction])
 
 		// If run-mode is jobs, exit cleanly
 		if srv.cfg.GetString("run_mode") == "job" {
-			srv.log.Infof("Run mode is job, exiting after init function execution")
+			srv.log.Info("Run mode is job, exiting after init function execution")
 			return ErrShutdown
 		}
 	}
@@ -779,7 +911,7 @@ func (srv *Server) Run() error {
 	srv.httpRouter.GET("/debug/pprof/block", srv.handlerWrapper(pprof.Handler("block")))
 
 	// Start HTTP Listener
-	srv.log.Infof("Starting HTTP Listener on %s", srv.cfg.GetString("listen_addr"))
+	srv.log.Info("Starting HTTP Listener", "address", srv.cfg.GetString("listen_addr"))
 	if srv.cfg.GetBool("enable_tls") {
 		err := srv.httpServer.ListenAndServeTLS(srv.cfg.GetString("cert_file"), srv.cfg.GetString("key_file"))
 		if err != nil {
@@ -804,12 +936,33 @@ func (srv *Server) Run() error {
 	return nil
 }
 
+// Custom level below debug for TRACE logs
+const LevelTrace = slog.Level(-8)
+
+// LevelNames maps custom log levels to their string representations
+var LevelNames = map[slog.Leveler]string{
+	LevelTrace: "TRACE",
+}
+
+// logTrace logs a message at the TRACE level.
+// This uses the custom LevelTrace level.
+func (srv *Server) logTrace(msg string, attrs ...any) {
+	// Use the Log method with our custom level
+	srv.log.Log(context.Background(), LevelTrace, msg, attrs...)
+}
+
+// logWith creates a new logger with the provided key-value pairs.
+// This is a helper method to add structured context to log entries.
+func (srv *Server) logWith(attrs ...any) *slog.Logger {
+	return srv.log.With(attrs...)
+}
+
 // Stop is used to gracefully shutdown the server.
 func (srv *Server) Stop() {
 	srv.stats.Close()
 	err := srv.httpServer.Shutdown(context.Background())
 	if err != nil {
-		srv.log.Errorf("Unexpected error while shutting down HTTP server - %s", err)
+		srv.log.Error("Unexpected error while shutting down HTTP server: "+err.Error(), "error", err)
 	}
 	defer srv.runCancel()
 }
