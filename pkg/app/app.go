@@ -61,6 +61,12 @@ const (
 
 	// RouteTypeFunction is the route type for function to function calls.
 	RouteTypeFunction = "function"
+
+  // LevelTrace is a custom log level for trace logging.
+  LevelTrace = slog.LevelDebug - 4
+
+  // LevelDisabled is a custom log level for disabled logging.
+  LevelDisabled = slog.LevelError + 4
 )
 
 // Server represents the main server structure.
@@ -89,6 +95,9 @@ type Server struct {
 	// log is used across the app package for logging.
 	log *slog.Logger
 
+  // logLeveler is used to dynamically change the log level.
+  logLeveler slog.Leveler
+
 	// runCancel is a global context cancelFunc used to trigger the shutdown of applications.
 	runCancel context.CancelFunc
 
@@ -113,26 +122,26 @@ func New(cfg *viper.Viper) *Server {
 
 	// Create a dynamic level variable for runtime log level changes
 	// This allows us to change log levels without recreating handlers
-	logLevel := new(slog.LevelVar)
+  srv.logLeveler = slog.NewLevelVar(slog.LevelInfo)  
 
 	// Set initial log level
-	logLevel.Set(slog.LevelInfo)
 	if srv.cfg.GetBool("debug") {
-		logLevel.Set(slog.LevelDebug)
+    srv.logLeveler.Set(slog.LevelDebug)
 	}
-	if srv.cfg.GetBool("trace") {
-		// Use our custom trace level
-		logLevel.Set(LevelTrace)
-	}
+
+  if srv.cfg.GetBool("trace") {
+    srv.logLeveler.Set(LevelTrace)
+  }
+
 	if srv.cfg.GetBool("disable_logging") {
-		logLevel.Set(slog.LevelError + 4) // Higher than Error to disable most logging
+    srv.logLeveler.Set(LevelDisabled)
 	}
 
 	// Create handler options with our dynamic level var and custom level names
 	handlerOpts := &slog.HandlerOptions{
 		Level: logLevel,
 		// Replace the level attribute to use our custom level names
-		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+		ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
 			if a.Key == slog.LevelKey {
 				level := a.Value.Any().(slog.Level)
 				// Check if we have a custom name for this level
@@ -144,13 +153,11 @@ func New(cfg *viper.Viper) *Server {
 		},
 	}
 
-	// Create handler based on format preference
-	var handler slog.Handler
-	if srv.cfg.GetBool("text_log_format") {
-		handler = slog.NewTextHandler(os.Stderr, handlerOpts)
-	} else {
-		handler = slog.NewJSONHandler(os.Stderr, handlerOpts)
-	}
+  // Create a JSON or Text handler based on config
+  handler := slog.NewJSONHandler(os.Stdout, handlerOpts)
+  if srv.cfg.GetBool("text_log_format") {
+    handler = slog.NewTextHandler(os.Stdout, handlerOpts)
+  }
 
 	// Initialize the logger
 	srv.log = slog.New(handler)
@@ -159,6 +166,7 @@ func New(cfg *viper.Viper) *Server {
 	if srv.cfg.GetBool("debug") {
 		srv.log.Debug("Enabling Debug Logging")
 	}
+
 	if srv.cfg.GetBool("trace") {
 		srv.log.Debug("Enabling Trace Logging")
 	}
@@ -215,16 +223,18 @@ func (srv *Server) Run() error {
 						if srv.cfg.GetBool("debug") {
 							newLevel = slog.LevelDebug
 						}
+
 						if srv.cfg.GetBool("trace") {
 							// Use our custom trace level
 							newLevel = LevelTrace
 						}
+
 						if srv.cfg.GetBool("disable_logging") {
 							newLevel = slog.LevelError + 4
 						}
 
 						// Update the level
-						lv.Set(newLevel)
+            srv.logLeveler.Set(newLevel)
 
 						// Log the change
 						if srv.cfg.GetBool("debug") {
@@ -233,49 +243,6 @@ func (srv *Server) Run() error {
 							srv.log.Debug("Dynamic log level updated to trace")
 						}
 					}
-				}
-
-				// If log format preference changed, we need to create a new handler
-				// Extract the current level from existing handler
-				var currentLevel slog.Leveler
-				if lh, ok := h.(interface{ Level() slog.Leveler }); ok {
-					currentLevel = lh.Level()
-				} else {
-					// Fallback to info if we can't extract the level
-					currentLevel = slog.LevelInfo
-				}
-
-				// Check format type of current handler against config
-				_, isTextHandler := h.(*slog.TextHandler)
-				configWantsText := srv.cfg.GetBool("text_log_format")
-
-				// If format preference changed, create a new handler
-				if isTextHandler != configWantsText {
-					handlerOpts := &slog.HandlerOptions{
-						Level: currentLevel,
-						// Apply the same ReplaceAttr function to handle custom level names
-						ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-							if a.Key == slog.LevelKey {
-								level := a.Value.Any().(slog.Level)
-								// Check if we have a custom name for this level
-								if levelName, exists := LevelNames[level]; exists {
-									a.Value = slog.StringValue(levelName)
-								}
-							}
-							return a
-						},
-					}
-
-					// Create handler based on format preference
-					var newHandler slog.Handler
-					if configWantsText {
-						newHandler = slog.NewTextHandler(os.Stderr, handlerOpts)
-					} else {
-						newHandler = slog.NewJSONHandler(os.Stderr, handlerOpts)
-					}
-
-					// Update the logger
-					srv.log = slog.New(newHandler)
 				}
 
 				srv.logTrace("Config reloaded from Consul")
