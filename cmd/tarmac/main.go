@@ -1,11 +1,11 @@
 package main
 
 import (
-	"log/slog"
-	"os"
 	"github.com/spf13/viper"
 	_ "github.com/spf13/viper/remote"
 	"github.com/tarmac-project/tarmac/pkg/app"
+	"log/slog"
+	"os"
 )
 
 func main() {
@@ -46,25 +46,25 @@ func main() {
 			log.Warn("No Config file found, loaded config from Environment - Default path ./conf")
 		default:
 			log.Error("Error when Fetching Configuration: "+err.Error(), "error", err)
-				os.Exit(1)
+			os.Exit(1)
 		}
 	}
 
 	// Load Config from Consul
 	if cfg.GetBool("use_consul") {
-		log.Info("Setting up Consul Config source", 
-			"consul_addr", cfg.GetString("consul_addr"), 
+		log.Info("Setting up Consul Config source",
+			"consul_addr", cfg.GetString("consul_addr"),
 			"consul_keys_prefix", cfg.GetString("consul_keys_prefix"))
 		err = cfg.AddRemoteProvider("consul", cfg.GetString("consul_addr"), cfg.GetString("consul_keys_prefix"))
 		if err != nil {
 			log.Error("Error adding Consul as a remote Configuration Provider: "+err.Error(), "error", err)
-				os.Exit(1)
+			os.Exit(1)
 		}
 		cfg.SetConfigType("json")
 		err = cfg.ReadRemoteConfig()
 		if err != nil {
 			log.Error("Error when Fetching Configuration from Consul: "+err.Error(), "error", err)
-				os.Exit(1)
+			os.Exit(1)
 		}
 
 		if cfg.GetBool("from_consul") {

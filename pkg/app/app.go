@@ -114,7 +114,7 @@ func New(cfg *viper.Viper) *Server {
 	// Create a dynamic level variable for runtime log level changes
 	// This allows us to change log levels without recreating handlers
 	logLevel := new(slog.LevelVar)
-	
+
 	// Set initial log level
 	logLevel.Set(slog.LevelInfo)
 	if srv.cfg.GetBool("debug") {
@@ -202,15 +202,15 @@ func (srv *Server) Run() error {
 
 				// Get the current handler to extract its LevelVar
 				h := srv.log.Handler()
-				
+
 				// Extract the LevelVar if possible using type assertion
 				if lh, ok := h.(interface{ Level() slog.Leveler }); ok {
 					if lv, ok := lh.Level().(*slog.LevelVar); ok {
 						// We found the LevelVar, now update it based on config
-						
+
 						// Start with default info level
 						newLevel := slog.LevelInfo
-						
+
 						// Set appropriate level based on config
 						if srv.cfg.GetBool("debug") {
 							newLevel = slog.LevelDebug
@@ -222,10 +222,10 @@ func (srv *Server) Run() error {
 						if srv.cfg.GetBool("disable_logging") {
 							newLevel = slog.LevelError + 4
 						}
-						
+
 						// Update the level
 						lv.Set(newLevel)
-						
+
 						// Log the change
 						if srv.cfg.GetBool("debug") {
 							srv.log.Debug("Dynamic log level updated to debug")
@@ -234,7 +234,7 @@ func (srv *Server) Run() error {
 						}
 					}
 				}
-				
+
 				// If log format preference changed, we need to create a new handler
 				// Extract the current level from existing handler
 				var currentLevel slog.Leveler
@@ -244,11 +244,11 @@ func (srv *Server) Run() error {
 					// Fallback to info if we can't extract the level
 					currentLevel = slog.LevelInfo
 				}
-				
+
 				// Check format type of current handler against config
 				_, isTextHandler := h.(*slog.TextHandler)
 				configWantsText := srv.cfg.GetBool("text_log_format")
-				
+
 				// If format preference changed, create a new handler
 				if isTextHandler != configWantsText {
 					handlerOpts := &slog.HandlerOptions{
@@ -265,7 +265,7 @@ func (srv *Server) Run() error {
 							return a
 						},
 					}
-					
+
 					// Create handler based on format preference
 					var newHandler slog.Handler
 					if configWantsText {
@@ -273,7 +273,7 @@ func (srv *Server) Run() error {
 					} else {
 						newHandler = slog.NewJSONHandler(os.Stderr, handlerOpts)
 					}
-					
+
 					// Update the logger
 					srv.log = slog.New(newHandler)
 				}
@@ -720,8 +720,8 @@ func (srv *Server) Run() error {
 	// Look for Functions Config
 	srv.funcCfg, err = config.Parse(srv.cfg.GetString("wasm_function_config"))
 	if err != nil {
-		srv.log.Info("Could not load wasm_function_config starting with default function path", 
-			"config_path", srv.cfg.GetString("wasm_function_config"), 
+		srv.log.Info("Could not load wasm_function_config starting with default function path",
+			"config_path", srv.cfg.GetString("wasm_function_config"),
 			"error", err)
 
 		// Load WASM Function using default path
@@ -774,7 +774,7 @@ func (srv *Server) Run() error {
 			}
 
 			// Register Routes
-			srv.log.Info("Registering Routes from Service", 
+			srv.log.Info("Registering Routes from Service",
 				"service", svcName)
 			funcRoutes := make(map[string]string)
 			initRoutes := []config.Route{}
@@ -806,8 +806,8 @@ func (srv *Server) Run() error {
 				case RouteTypeScheduledTask:
 					// Schedule tasks for scheduled functions
 					fname := r.Function
-					srv.log.Info("Scheduling custom task for function", 
-						"function", r.Function, 
+					srv.log.Info("Scheduling custom task for function",
+						"function", r.Function,
 						"interval", r.Frequency)
 					id, err := srv.scheduler.Add(&tasks.Task{
 						Interval: time.Duration(r.Frequency) * time.Second,
@@ -862,8 +862,8 @@ func (srv *Server) Run() error {
 					// Execute the function
 					_, err := srv.runWASM(r.Function, "handler", []byte(""))
 					if err != nil {
-						srv.log.Error("Error executing Init Function: "+err.Error(), 
-							"function", r.Function, 
+						srv.log.Error("Error executing Init Function: "+err.Error(),
+							"function", r.Function,
 							"error", err)
 						retries++
 						// Wait exponentially longer between retries
