@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 )
@@ -42,5 +43,5 @@ func (l *SlogAdapter) Debug(args ...interface{}) {
 
 // Trace logs at debug level with a trace marker
 func (l *SlogAdapter) Trace(args ...interface{}) {
-	l.logger.Log(nil, LevelTrace, fmt.Sprint(args...))
+	l.logger.Log(context.Background(), LevelTrace, fmt.Sprint(args...))
 }
