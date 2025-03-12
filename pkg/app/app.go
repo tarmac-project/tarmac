@@ -48,7 +48,11 @@ var (
 
 // LevelNames maps custom log levels to their string representations
 var LevelNames = map[slog.Leveler]string{
-	LevelTrace: "TRACE",
+	LevelTrace:      "TRACE",
+	slog.LevelDebug: "DEBUG",
+	slog.LevelInfo:  "INFO",
+	slog.LevelWarn:  "WARN",
+	slog.LevelError: "ERROR",
 }
 
 const (
@@ -147,14 +151,17 @@ func New(cfg *viper.Viper) *Server {
 	handlerOpts := &slog.HandlerOptions{
 		Level: srv.logLeveler,
 		// Replace the level attribute to use our custom level names
-		ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
+		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
 			if a.Key == slog.LevelKey {
-				level := a.Value.Any().(slog.Level)
-				// Check if we have a custom name for this level
-				if levelName, ok := LevelNames[level]; ok {
-					a.Value = slog.StringValue(levelName)
+				if k, ok := a.Value.Any().(slog.Level); ok {
+					levelLabel, exists := LevelNames[k]
+					if exists {
+						a.Value = slog.StringValue(levelLabel)
+					}
+					a.Value = slog.StringValue(levelLabel)
 				}
 			}
+
 			return a
 		},
 	}
@@ -779,7 +786,7 @@ func (srv *Server) Run() error {
 						Interval: time.Duration(r.Frequency) * time.Second,
 						TaskFunc: func() error {
 							now := time.Now()
-							srv.log.Debug("Executing Scheduled Function", "level", "TRACE", "function", fname)
+							srv.log.Log(context.Background(), LevelTrace, "Executing Scheduled Task", "function", fname)
 							_, err := srv.runWASM(fname, "handler", []byte(""))
 							if err != nil {
 								srv.stats.Tasks.WithLabelValues(fname).Observe(float64(time.Since(now).Milliseconds()))
