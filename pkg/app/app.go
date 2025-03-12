@@ -244,7 +244,7 @@ func (srv *Server) Run() error {
 					}
 				}
 
-				srv.log.Log(nil, LevelTrace, "Config Reloaded from Consul")
+				srv.log.Log(context.Background(), LevelTrace, "Config Reloaded from Consul")
 				return nil
 			},
 		})
@@ -418,7 +418,7 @@ func (srv *Server) Run() error {
 			)
 
 			// Trace logging of callback
-			srv.logTrace("CallbackRouter called with payload",
+			srv.log.Log(context.Background(), LevelTrace, "CallbackRouter called with payload",
 				"namespace", rq.Namespace,
 				"capability", rq.Capability,
 				"operation", rq.Operation,
@@ -454,7 +454,7 @@ func (srv *Server) Run() error {
 
 			// Trace logging of callback results
 			if r.Err != nil {
-				srv.logTrace("Callback returned result with error and output: "+r.Err.Error(),
+				srv.log.Log(context.Background(), LevelTrace, "Callback returned result with error and output: "+r.Err.Error(),
 					"namespace", r.Namespace,
 					"capability", r.Capability,
 					"operation", r.Operation,
@@ -465,7 +465,7 @@ func (srv *Server) Run() error {
 					"output", string(r.Output),
 				)
 			} else {
-				srv.logTrace("Callback returned result with output",
+				srv.log.Log(context.Background(), LevelTrace, "Callback returned result with output",
 					"namespace", r.Namespace,
 					"capability", r.Capability,
 					"operation", r.Operation,
@@ -900,14 +900,6 @@ func (srv *Server) Run() error {
 	}
 
 	return nil
-}
-
-
-// logTrace logs a message at the TRACE level.
-// This uses the custom LevelTrace level.
-func (srv *Server) logTrace(msg string, attrs ...any) {
-	// Use the Log method with our custom level
-	srv.log.Log(context.Background(), LevelTrace, msg, attrs...)
 }
 
 // Stop is used to gracefully shutdown the server.
