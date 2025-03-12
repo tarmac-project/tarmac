@@ -1,10 +1,13 @@
-package app
+package logging
 
 import (
 	"fmt"
 	"log/slog"
+)
 
-	"github.com/tarmac-project/tarmac/pkg/callbacks/logging"
+const (
+	// LevelTrace is the trace level
+	LevelTrace = slog.LevelDebug - 4
 )
 
 // SlogAdapter implements the logging.Log interface for slog.Logger
@@ -13,7 +16,7 @@ type SlogAdapter struct {
 }
 
 // NewSlogAdapter creates a new adapter that wraps a slog.Logger
-func NewSlogAdapter(logger *slog.Logger) logging.Log {
+func NewSlogAdapter(logger *slog.Logger) Log {
 	return &SlogAdapter{logger: logger}
 }
 
@@ -39,5 +42,5 @@ func (l *SlogAdapter) Debug(args ...interface{}) {
 
 // Trace logs at debug level with a trace marker
 func (l *SlogAdapter) Trace(args ...interface{}) {
-	l.logger.Debug(fmt.Sprint(args...), "level", "TRACE")
+	l.logger.Log(nil, LevelTrace, fmt.Sprint(args...))
 }

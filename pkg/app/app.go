@@ -46,6 +46,11 @@ var (
 	ErrShutdown = fmt.Errorf("application shutdown gracefully")
 )
 
+// LevelNames maps custom log levels to their string representations
+var LevelNames = map[slog.Leveler]string{
+	LevelTrace: "TRACE",
+}
+
 const (
 	// DefaultNamespace is the default namespace for callback functions.
 	DefaultNamespace = "tarmac"
@@ -62,11 +67,11 @@ const (
 	// RouteTypeFunction is the route type for function to function calls.
 	RouteTypeFunction = "function"
 
-  // LevelTrace is a custom log level for trace logging.
-  LevelTrace = slog.LevelDebug - 4
+	// LevelTrace is a custom log level for trace logging.
+	LevelTrace = slog.LevelDebug - 4
 
-  // LevelDisabled is a custom log level for disabled logging.
-  LevelDisabled = slog.LevelError + 4
+	// LevelDisabled is a custom log level for disabled logging.
+	LevelDisabled = slog.LevelError + 4
 )
 
 // Server represents the main server structure.
@@ -95,8 +100,8 @@ type Server struct {
 	// log is used across the app package for logging.
 	log *slog.Logger
 
-  // logLeveler is used to dynamically change the log level.
-  logLeveler slog.Leveler
+	// logLeveler is used to dynamically change the log level.
+	logLeveler *slog.LevelVar
 
 	// runCancel is a global context cancelFunc used to trigger the shutdown of applications.
 	runCancel context.CancelFunc
@@ -122,30 +127,31 @@ func New(cfg *viper.Viper) *Server {
 
 	// Create a dynamic level variable for runtime log level changes
 	// This allows us to change log levels without recreating handlers
-  srv.logLeveler = slog.NewLevelVar(slog.LevelInfo)  
+	srv.logLeveler = new(slog.LevelVar)
 
 	// Set initial log level
+	srv.logLeveler.Set(slog.LevelInfo)
 	if srv.cfg.GetBool("debug") {
-    srv.logLeveler.Set(slog.LevelDebug)
+		srv.logLeveler.Set(slog.LevelDebug)
 	}
 
-  if srv.cfg.GetBool("trace") {
-    srv.logLeveler.Set(LevelTrace)
-  }
+	if srv.cfg.GetBool("trace") {
+		srv.logLeveler.Set(LevelTrace)
+	}
 
 	if srv.cfg.GetBool("disable_logging") {
-    srv.logLeveler.Set(LevelDisabled)
+		srv.logLeveler.Set(LevelDisabled)
 	}
 
 	// Create handler options with our dynamic level var and custom level names
 	handlerOpts := &slog.HandlerOptions{
-		Level: logLevel,
+		Level: srv.logLeveler,
 		// Replace the level attribute to use our custom level names
 		ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
 			if a.Key == slog.LevelKey {
 				level := a.Value.Any().(slog.Level)
 				// Check if we have a custom name for this level
-				if levelName, exists := LevelNames[level]; exists {
+				if levelName, ok := LevelNames[level]; ok {
 					a.Value = slog.StringValue(levelName)
 				}
 			}
@@ -153,11 +159,12 @@ func New(cfg *viper.Viper) *Server {
 		},
 	}
 
-  // Create a JSON or Text handler based on config
-  handler := slog.NewJSONHandler(os.Stdout, handlerOpts)
-  if srv.cfg.GetBool("text_log_format") {
-    handler = slog.NewTextHandler(os.Stdout, handlerOpts)
-  }
+	// Create a JSON or Text handler based on config
+	var handler slog.Handler
+	handler = slog.NewJSONHandler(os.Stdout, handlerOpts)
+	if srv.cfg.GetBool("text_log_format") {
+		handler = slog.NewTextHandler(os.Stdout, handlerOpts)
+	}
 
 	// Initialize the logger
 	srv.log = slog.New(handler)
@@ -208,44 +215,36 @@ func (srv *Server) Run() error {
 					return err
 				}
 
-				// Get the current handler to extract its LevelVar
-				h := srv.log.Handler()
+				// Start with default info level
+				newLevel := slog.LevelInfo
 
-				// Extract the LevelVar if possible using type assertion
-				if lh, ok := h.(interface{ Level() slog.Leveler }); ok {
-					if lv, ok := lh.Level().(*slog.LevelVar); ok {
-						// We found the LevelVar, now update it based on config
+				// Set appropriate level based on config
+				if srv.cfg.GetBool("debug") {
+					newLevel = slog.LevelDebug
+				}
 
-						// Start with default info level
-						newLevel := slog.LevelInfo
+				if srv.cfg.GetBool("trace") {
+					// Use our custom trace level
+					newLevel = LevelTrace
+				}
 
-						// Set appropriate level based on config
-						if srv.cfg.GetBool("debug") {
-							newLevel = slog.LevelDebug
-						}
+				if srv.cfg.GetBool("disable_logging") {
+					newLevel = slog.LevelError + 4
+				}
 
-						if srv.cfg.GetBool("trace") {
-							// Use our custom trace level
-							newLevel = LevelTrace
-						}
+				// Update the level
+				if newLevel != srv.logLeveler.Level() {
+					srv.logLeveler.Set(newLevel)
 
-						if srv.cfg.GetBool("disable_logging") {
-							newLevel = slog.LevelError + 4
-						}
-
-						// Update the level
-            srv.logLeveler.Set(newLevel)
-
-						// Log the change
-						if srv.cfg.GetBool("debug") {
-							srv.log.Debug("Dynamic log level updated to debug")
-						} else if srv.cfg.GetBool("trace") {
-							srv.log.Debug("Dynamic log level updated to trace")
-						}
+					// Log the change
+					if srv.cfg.GetBool("debug") {
+						srv.log.Debug("Dynamic log level updated to debug")
+					} else if srv.cfg.GetBool("trace") {
+						srv.log.Debug("Dynamic log level updated to trace")
 					}
 				}
 
-				srv.logTrace("Config reloaded from Consul")
+				srv.log.Log(nil, LevelTrace, "Config Reloaded from Consul")
 				return nil
 			},
 		})
@@ -590,7 +589,7 @@ func (srv *Server) Run() error {
 	// Setup Logger Callbacks
 	cbLogger, err := logging.New(logging.Config{
 		// Pass general logger into host callback with adapter
-		Log: NewSlogAdapter(srv.log),
+		Log: logging.NewSlogAdapter(srv.log),
 	})
 	if err != nil {
 		return fmt.Errorf("unable to initialize callback logger for WASM functions - %s", err)
@@ -903,25 +902,12 @@ func (srv *Server) Run() error {
 	return nil
 }
 
-// Custom level below debug for TRACE logs
-const LevelTrace = slog.Level(-8)
-
-// LevelNames maps custom log levels to their string representations
-var LevelNames = map[slog.Leveler]string{
-	LevelTrace: "TRACE",
-}
 
 // logTrace logs a message at the TRACE level.
 // This uses the custom LevelTrace level.
 func (srv *Server) logTrace(msg string, attrs ...any) {
 	// Use the Log method with our custom level
 	srv.log.Log(context.Background(), LevelTrace, msg, attrs...)
-}
-
-// logWith creates a new logger with the provided key-value pairs.
-// This is a helper method to add structured context to log entries.
-func (srv *Server) logWith(attrs ...any) *slog.Logger {
-	return srv.log.With(attrs...)
 }
 
 // Stop is used to gracefully shutdown the server.
