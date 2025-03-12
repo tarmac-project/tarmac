@@ -151,7 +151,7 @@ func New(cfg *viper.Viper) *Server {
 	handlerOpts := &slog.HandlerOptions{
 		Level: srv.logLeveler,
 		// Replace the level attribute to use our custom level names
-		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+		ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
 			if a.Key == slog.LevelKey {
 				if k, ok := a.Value.Any().(slog.Level); ok {
 					levelLabel, exists := LevelNames[k]
