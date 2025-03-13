@@ -16,7 +16,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
-        go-version: '1.21'
+        go-version: '1.24'
     - name: Execute Tests
       run: make build tests-base
     - name: Upload coverage to Codecov
@@ -31,7 +31,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
-        go-version: '1.21'
+        go-version: '1.24'
     - name: Execute Tests
       run: make build tests-redis
     - name: Upload coverage to Codecov
@@ -46,7 +46,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
-        go-version: '1.21'
+        go-version: '1.24'
     - name: Execute Tests
       run: make build tests-cassandra
     - name: Upload coverage to Codecov
@@ -62,7 +62,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
-        go-version: '1.21'
+        go-version: '1.24'
     - name: Build Test WASM Modules
       run: make build
     - name: Execute Tests
@@ -80,7 +80,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
-        go-version: '1.21'
+        go-version: '1.24'
     - name: Execute Tests
       run: make build tests-inmemory
     - name: Upload coverage to Codecov
@@ -96,7 +96,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
-        go-version: '1.21'
+        go-version: '1.24'
     - name: Execute Tests
       run: make build tests-mysql
     - name: Upload coverage to Codecov
@@ -111,7 +111,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
-        go-version: '1.21'
+        go-version: '1.24'
     - name: Execute Tests
       run: make build tests-postgres
     - name: Upload coverage to Codecov
