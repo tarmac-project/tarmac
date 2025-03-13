@@ -1,6 +1,6 @@
 module github.com/tarmac-project/tarmac/testdata/sql
 
-go 1.22.6
+go 1.24.1
 
 require (
 	github.com/tarmac-project/protobuf-go v0.0.0-20241006222641-e31a4349f2b8

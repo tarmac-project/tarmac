@@ -1,8 +1,6 @@
 module github.com/tarmac-project/tarmac
 
-go 1.23.0
-
-toolchain go1.23.2
+go 1.24.1
 
 require (
 	github.com/go-sql-driver/mysql v1.7.1
@@ -12,7 +10,6 @@ require (
 	github.com/madflojo/testcerts v1.4.0
 	github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7
 	github.com/prometheus/client_golang v1.21.1
-	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.19.0
 	github.com/tarmac-project/hord v0.6.0
 	github.com/tarmac-project/hord/drivers/bbolt v0.6.0

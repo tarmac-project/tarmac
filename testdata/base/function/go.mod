@@ -1,6 +1,6 @@
 module github.com/tarmac-project/tarmac/testdata/function
 
-go 1.21
+go 1.24.1
 
 require github.com/tarmac-project/tarmac/pkg/sdk v0.5.0
 
