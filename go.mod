@@ -1,6 +1,6 @@
 module github.com/tarmac-project/tarmac
 
-go 1.24.1
+go 1.23.7
 
 require (
 	github.com/go-sql-driver/mysql v1.7.1
