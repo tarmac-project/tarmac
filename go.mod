@@ -17,7 +17,7 @@ require (
 	github.com/tarmac-project/hord/drivers/bbolt v0.6.0
 	github.com/tarmac-project/hord/drivers/cassandra v0.6.0
 	github.com/tarmac-project/hord/drivers/hashmap v0.6.1
-	github.com/tarmac-project/hord/drivers/mock v0.6.0
+	github.com/tarmac-project/hord/drivers/mock v0.6.1
 	github.com/tarmac-project/hord/drivers/redis v0.6.0
 	github.com/tarmac-project/protobuf-go v0.0.0-20241006222441-51664fb11f56
 	github.com/tarmac-project/wapc-toolkit/callbacks v0.2.0
