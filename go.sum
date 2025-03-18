@@ -75,8 +75,8 @@ github.com/go-logr/stdr v1.2.2/go.mod h1:mMo/vtBO5dYbehREoey6XUKy/eSumjCCveDpRre
 github.com/go-sql-driver/mysql v1.7.1 h1:lUIinVbN1DY0xBg0eMOzmmtGoHwWBbvnWubQUrtU8EI=
 github.com/go-sql-driver/mysql v1.7.1/go.mod h1:OXbVy3sEdcQ2Doequ6Z5BW6fXNQTmx+9S1MCJN5yJMI=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
-github.com/gocql/gocql v1.6.0 h1:IdFdOTbnpbd0pDhl4REKQDM+Q0SzKXQ1Yh+YZZ8T/qU=
-github.com/gocql/gocql v1.6.0/go.mod h1:3gM2c4D3AnkISwBxGnMMsS8Oy4y2lhbPRsH4xnJrHG8=
+github.com/gocql/gocql v1.7.0 h1:O+7U7/1gSN7QTEAaMEsJc1Oq2QHXvCWoF3DFK9HDHus=
+github.com/gocql/gocql v1.7.0/go.mod h1:vnlvXyFZeLBF0Wy+RS8hrOdbn0UWsWtdg07XJnFxZ+4=
 github.com/godbus/dbus/v5 v5.0.4/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
 github.com/gogo/protobuf v1.1.1/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7atdtwQ=
 github.com/gogo/protobuf v1.3.2 h1:Ov1cvc58UF3b5XjBnZv7+opcTcQFZebYjWzi34vdm4Q=
@@ -100,8 +100,8 @@ github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaS
 github.com/golang/protobuf v1.5.3 h1:KhyjKVUg7Usr/dYsdSqoFveMYd5ko72D+zANwlG1mmg=
 github.com/golang/protobuf v1.5.3/go.mod h1:XVQd3VNwM+JqD3oG2Ue2ip4fOMUkwXdXDdiuN0vRsmY=
 github.com/golang/snappy v0.0.3/go.mod h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=
-github.com/golang/snappy v0.0.4 h1:yAGX7huGHXlcLOEtBnF4w7FQwA26wojNCwOYAEhLjQM=
-github.com/golang/snappy v0.0.4/go.mod h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=
+github.com/golang/snappy v1.0.0 h1:Oy607GVXHs7RtbggtPBnr2RmDArIsAefDwvrdWvRhGs=
+github.com/golang/snappy v1.0.0/go.mod h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=
 github.com/gomodule/redigo v1.9.2 h1:HrutZBLhSIU8abiSfW8pj8mPhOyMYjZT/wcA4/L9L9s=
 github.com/gomodule/redigo v1.9.2/go.mod h1:KsU3hiK/Ay8U42qpaJk+kuNa3C+spxapWpM+ywhcgtw=
 github.com/google/btree v0.0.0-20180813153112-4030bb1f1f0c/go.mod h1:lNA+9X1NB3Zf8V7Ke586lFgjr2dZNuvo3lPJSGZ5JPQ=
@@ -331,8 +331,8 @@ github.com/tarmac-project/hord v0.6.0 h1:ifrJ6aUV2N9I+YAPnFvMO2eMgjE/Ki+ixaXUFAH
 github.com/tarmac-project/hord v0.6.0/go.mod h1:b46vLVFfL9G/WG5BYNTNoordvQ9wQ+ibs1/Fn4v0vkE=
 github.com/tarmac-project/hord/drivers/bbolt v0.6.0 h1:Ra/ZhtU379mXAVwGN/Kt2E5E+ijEPdhaOIapgTwsyOk=
 github.com/tarmac-project/hord/drivers/bbolt v0.6.0/go.mod h1:l3oDMXeELlMRjGYpavVw0R22faj6DI3raBLDe3iimME=
-github.com/tarmac-project/hord/drivers/cassandra v0.6.0 h1:G5BEUUqxBzR7KihEP4Mu6yVnNsasS422CWtEuGgnHPc=
-github.com/tarmac-project/hord/drivers/cassandra v0.6.0/go.mod h1:PZnd1Y5IBxBL86WirD63wD6UDaBZeRML7QvQLgvTQ2w=
+github.com/tarmac-project/hord/drivers/cassandra v0.6.1 h1:1Nf794Og+gOSFI4cvCUXgylDcviXakpLuM8W+FHoHQE=
+github.com/tarmac-project/hord/drivers/cassandra v0.6.1/go.mod h1:BDlsqD85EEPiH6jlGtwvhcN5tP5yFf3wEUrn5GbkbHA=
 github.com/tarmac-project/hord/drivers/hashmap v0.6.1 h1:XWGrTVFCITHcF1d+N69KckdmURPUNLIHAAVpzMHbj3I=
 github.com/tarmac-project/hord/drivers/hashmap v0.6.1/go.mod h1:Kd8fzseHkWlUK2eQKGNKJyACkLcnPVekIzYc85ziVD8=
 github.com/tarmac-project/hord/drivers/mock v0.6.0 h1:8XWfpW9I16TN1ycSRf/JU+0Oq+NuFxHlhFCe2MXaohw=
