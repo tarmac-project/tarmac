@@ -15,7 +15,7 @@ require (
 	github.com/spf13/viper v1.20.0
 	github.com/spf13/viper/remote v1.20.0
 	github.com/tarmac-project/hord v0.6.0
-	github.com/tarmac-project/hord/drivers/bbolt v0.6.0
+	github.com/tarmac-project/hord/drivers/bbolt v0.6.1
 	github.com/tarmac-project/hord/drivers/cassandra v0.6.1
 	github.com/tarmac-project/hord/drivers/hashmap v0.6.1
 	github.com/tarmac-project/hord/drivers/mock v0.6.1
@@ -94,7 +94,7 @@ require (
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/tetratelabs/wazero v1.8.2 // indirect
-	go.etcd.io/bbolt v1.3.10 // indirect
+	go.etcd.io/bbolt v1.4.0 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.15 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.15 // indirect
 	go.etcd.io/etcd/client/v2 v2.305.15 // indirect
@@ -112,7 +112,7 @@ require (
 	golang.org/x/net v0.36.0 // indirect
 	golang.org/x/oauth2 v0.25.0 // indirect
 	golang.org/x/sync v0.11.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
 	google.golang.org/api v0.215.0 // indirect
