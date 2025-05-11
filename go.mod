@@ -14,7 +14,7 @@ require (
 	github.com/prometheus/client_golang v1.22.0
 	github.com/spf13/viper v1.20.1
 	github.com/spf13/viper/remote v1.20.1
-	github.com/tarmac-project/hord v0.8.1
+	github.com/tarmac-project/hord v0.8.2
 	github.com/tarmac-project/hord/drivers/bbolt v0.6.1
 	github.com/tarmac-project/hord/drivers/cassandra v0.8.1
 	github.com/tarmac-project/hord/drivers/hashmap v0.6.1
