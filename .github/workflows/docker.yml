@@ -24,7 +24,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
       - name: Build only
         id: docker_build_only
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           platforms: linux/amd64,linux/arm64
           push: false
@@ -39,7 +39,7 @@ jobs:
       - name: Build and push (main)
         id: docker_build
         if: github.ref == 'refs/heads/main'
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'push' && 'true' || 'false' }}
@@ -47,7 +47,7 @@ jobs:
       - name: Build and push (tag)
         id: docker_build_tag
         if: startsWith(github.ref, 'refs/tags/v')
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'push' && 'true' || 'false' }}
