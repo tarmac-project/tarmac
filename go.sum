@@ -336,8 +336,8 @@ github.com/tarmac-project/hord/drivers/cassandra v0.8.1 h1:AGj6vpXGLhrcCphpmavsj
 github.com/tarmac-project/hord/drivers/cassandra v0.8.1/go.mod h1:Ijwb5oyfl9HGAfzH3W5qoTo5Mqijqz87c6E6l52fqhU=
 github.com/tarmac-project/hord/drivers/hashmap v0.8.1 h1:WFKs4wcpxtOL8mc7bD18EiCCgOuG+yfVhuR5K3d6u1M=
 github.com/tarmac-project/hord/drivers/hashmap v0.8.1/go.mod h1:yIqIkXmuvnCaKusOkfczZsaMsdSpDUvGzIISPCFG/No=
-github.com/tarmac-project/hord/drivers/mock v0.6.1 h1:ZmTRclWm1iEBYdcCssLSbqWW5PZFYGlugpJlboyjqE0=
-github.com/tarmac-project/hord/drivers/mock v0.6.1/go.mod h1:B3kPMdUK3M2OoSPktP9Dm+JrllW2DMDeHeUGa41CNzc=
+github.com/tarmac-project/hord/drivers/mock v0.6.4 h1:RUGzE+3TE24oK1HdfWoh5Ui+uc74Ezc8hSnjuJEk+9g=
+github.com/tarmac-project/hord/drivers/mock v0.6.4/go.mod h1:4HnA9ZGIOlqeTZ9TvTtNVrwWIHvtPcqQfeKI0gIybRM=
 github.com/tarmac-project/hord/drivers/redis v0.6.4 h1:fRVeJW2aESY24512+Ob6/hyXjfMv/RniQYPcWSnr6CQ=
 github.com/tarmac-project/hord/drivers/redis v0.6.4/go.mod h1:ZdPpag+GiE3CWpykIFKyO/TCrArGlxH/B37rwSxUC9s=
 github.com/tarmac-project/protobuf-go v0.0.0-20241006222441-51664fb11f56 h1:lWWclbcicMaIUdlwIUSaVnAOmhwqpjVDAgUGmK5Dxb8=
