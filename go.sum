@@ -330,8 +330,8 @@ github.com/subosito/gotenv v1.6.0 h1:9NlTDc1FTs4qu0DDq7AEtTPNw6SVm7uBMsUCUjABIf8
 github.com/subosito/gotenv v1.6.0/go.mod h1:Dk4QP5c2W3ibzajGcXpNraDfq2IrhjMIvMSWPKKo0FU=
 github.com/tarmac-project/hord v0.8.2 h1:+rY5s8tnTZAaa8fVeDHlzeyMEYNhNz4JLNKDclB803g=
 github.com/tarmac-project/hord v0.8.2/go.mod h1:b46vLVFfL9G/WG5BYNTNoordvQ9wQ+ibs1/Fn4v0vkE=
-github.com/tarmac-project/hord/drivers/bbolt v0.6.1 h1:Bb4P4Da6srUaKTZEw/b85FSwHI68jsIsp6QCdiYbFwE=
-github.com/tarmac-project/hord/drivers/bbolt v0.6.1/go.mod h1:s8CriPRtNK5nqNNIkbQw+ZIQZf1w/JuLD14fBX9ygGU=
+github.com/tarmac-project/hord/drivers/bbolt v0.8.1 h1:q/YSoPyhMo/Lzy7Rrdz0BnNti3qZCffIrrS8u41sbC8=
+github.com/tarmac-project/hord/drivers/bbolt v0.8.1/go.mod h1:4L+z24RrdZaiGrqH4oBi3czbCwkSfK+fceDgMpoW760=
 github.com/tarmac-project/hord/drivers/cassandra v0.8.1 h1:AGj6vpXGLhrcCphpmavsjarrwYzWbaR/gOwmiWtPF+s=
 github.com/tarmac-project/hord/drivers/cassandra v0.8.1/go.mod h1:Ijwb5oyfl9HGAfzH3W5qoTo5Mqijqz87c6E6l52fqhU=
 github.com/tarmac-project/hord/drivers/hashmap v0.8.1 h1:WFKs4wcpxtOL8mc7bD18EiCCgOuG+yfVhuR5K3d6u1M=
