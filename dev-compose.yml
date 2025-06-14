@@ -255,5 +255,31 @@ services:
       - "CONSUL_HTTP_ADDR=consul:8500"
       - "CONSUL_HTTP_SSL=false"
 
+  nats:
+    image: nats:latest
+    ports:
+      - "4222:4222"
+
+  tests-nats-runner:
+    image: golang:latest
+    working_dir: /go/src/github.com/tarmac-project/tarmac
+    entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -run "TestFullService/NATS KV Full Service" ./...
+    volumes:
+      - "./:/go/src/github.com/tarmac-project/tarmac"
+      - "./coverage:/tmp/coverage"
+      - "./example:/example"
+      - "./testdata:/testdata"
+    environment:
+      - "APP_ENABLE_TLS=false" # Common in other test services
+      - "APP_CONSUL_ADDR=consul:8500" # Common in other test services
+      - "APP_CONSUL_KEYS_PREFIX=tarmac/config" # Common in other test services
+      - "CONSUL_HTTP_ADDR=consul:8500" # Common in other test services
+      - "CONSUL_HTTP_SSL=false" # Common in other test services
+      - "CI=true" # Ensure tests that might check for CI env run
+    depends_on:
+      - nats
+      - consul      # Added as TestFullService tarmac.json might use it
+      - consulator  # Added as TestFullService tarmac.json might use it
+
 volumes:
   coverage:
