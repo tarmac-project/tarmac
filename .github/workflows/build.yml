@@ -118,3 +118,25 @@ jobs:
       uses: codecov/codecov-action@v5 
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+
+  nats:
+    runs-on: ubuntu-latest
+    services:
+      nats:
+        image: nats:latest
+        ports:
+          - 4222:4222
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+    - name: Execute Tests
+      env:
+        NATS_URLS: nats://localhost:4222 # Ensure test uses this if it becomes configurable
+      run: make build tests-nats # Assuming a make target 'tests-nats' will be created
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
