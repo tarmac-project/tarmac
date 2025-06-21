@@ -86,6 +86,17 @@ func TestBadConfigs(t *testing.T) {
 	v.Set("wasm_function", "something-that-does-not-exist")
 	cfgs["invalid WASM path"] = v
 
+	// Invalid NATS Address
+	v = viper.New()
+	v.Set("enable_tls", false)
+	v.Set("listen_addr", "0.0.0.0:8443")
+	v.Set("disable_logging", true)
+	v.Set("enable_kvstore", true)
+	v.Set("kvstore_type", "nats")
+	v.Set("nats_url", "nats://:") // Changed to singular nats_url and invalid URL
+	v.Set("nats_bucket", "tarmac_test_bucket")
+	cfgs["invalid NATS Address"] = v
+
 	// Failing init function
 	v = viper.New()
 	v.Set("enable_tls", false)

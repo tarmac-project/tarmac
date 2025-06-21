@@ -219,6 +219,17 @@ func TestFullService(t *testing.T) {
 	tc.cfg.Set("wasm_function_config", "/testdata/sdkv1/tarmac.json")
 	tt = append(tt, tc)
 
+	tc = FullServiceTestCase{name: "NATS KV Full Service", cfg: viper.New()}
+	tc.cfg.Set("disable_logging", false)
+	tc.cfg.Set("debug", true)
+	tc.cfg.Set("listen_addr", "localhost:9001")
+	tc.cfg.Set("enable_kvstore", true)
+	tc.cfg.Set("kvstore_type", "nats")
+	tc.cfg.Set("nats_url", "nats://localhost:4222") // Changed to singular nats_url
+	tc.cfg.Set("nats_bucket", "tarmac_test_bucket")
+	tc.cfg.Set("wasm_function_config", "/testdata/tarmac.json")
+	tt = append(tt, tc)
+
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			srv := New(tc.cfg)

@@ -57,6 +57,12 @@ tests-postgres:
 	docker compose -f dev-compose.yml up --exit-code-from tests-postgres tests-postgres
 	docker compose -f dev-compose.yml down
 
+tests-nats:
+	@echo "Launching NATS Tests in Docker Compose"
+	docker compose -f dev-compose.yml up -d nats consul consulator
+	docker compose -f dev-compose.yml up --exit-code-from tests-nats-runner --build tests-nats-runner
+	docker compose -f dev-compose.yml down
+
 benchmarks:
 	@echo "Launching Tests in Docker Compose"
 	docker compose -f dev-compose.yml up -d cassandra-primary cassandra mysql
