@@ -1,5 +1,8 @@
 name: build
 
+permissions:
+  contents: read
+
 on:
   push:
     tags:
@@ -12,45 +15,45 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
       with:
         go-version: '1.21'
     - name: Execute Tests
       run: make build tests-base
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
 
   redis:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
       with:
         go-version: '1.21'
     - name: Execute Tests
       run: make build tests-redis
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
 
   cassandra:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
       with:
         go-version: '1.21'
     - name: Execute Tests
       run: make build tests-cassandra
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -58,9 +61,9 @@ jobs:
   boltdb:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
       with:
         go-version: '1.21'
     - name: Build Test WASM Modules
@@ -68,7 +71,7 @@ jobs:
     - name: Execute Tests
       run: make build tests-boltdb
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -76,15 +79,15 @@ jobs:
   in-memory:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
       with:
         go-version: '1.21'
     - name: Execute Tests
       run: make build tests-inmemory
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -92,29 +95,29 @@ jobs:
   mysql:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
       with:
         go-version: '1.21'
     - name: Execute Tests
       run: make build tests-mysql
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
 
   postgres:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
       with:
         go-version: '1.21'
     - name: Execute Tests
       run: make build tests-postgres
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5 
+      uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
