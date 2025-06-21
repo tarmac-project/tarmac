@@ -31,9 +31,8 @@ When using Environment Variables, all configurations are prefixed with `APP_`. T
 | `APP_ENABLE_PPROF` | `enable_pprof` | `bool` | Enable PProf Collection HTTP end-points |
 | `APP_ENABLE_KVSTORE` | `enable_kvstore` | `bool` | Enable the KV Store |
 | `APP_KVSTORE_TYPE` | `kvstore_type` | `string` | Select KV Store to use (Options: `redis`, `cassandra`, `boltdb`, `in-memory`, `internal`, `nats`)|
-| `APP_NATS_URLS` | `nats_urls` | `string` | Comma-separated list of NATS server URLs (Required if `kvstore_type` is `nats`) |
-| `APP_NATS_USER` | `nats_user` | `string` | Username for NATS authentication (Optional) |
-| `APP_NATS_PASSWORD` | `nats_password` | `string` | Password for NATS authentication (Optional) |
+| `APP_NATS_URL` | `nats_url` | `string` | Single NATS server URL (e.g., "nats://user:pass@localhost:4222" or "tls://localhost:4222"). User/password information, if required, should be embedded within the URL. Required if `kvstore_type` is `nats`. |
+| `APP_NATS_BUCKET` | `nats_bucket` | `string` | NATS Key-Value bucket name. Required if `kvstore_type` is `nats`. Bucket names must adhere to NATS naming conventions (e.g., `^[a-zA-Z0-9_-]+$`). |
 | `APP_ENABLE_SQL` | `enable_sql` | `bool` | Enable the SQL Store |
 | `APP_SQL_TYPE` | `sql_type` | `string` | Select SQL Store to use (Options: `postgres`, `mysql`)|
 | `APP_RUN_MODE` | `run_mode` | `string` | Select the run mode for Tarmac (Options: `daemon`, `job`). Default: `daemon`. The `job` option will cause Tarmac to exit after init functions are executed. |

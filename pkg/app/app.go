@@ -12,6 +12,7 @@ import (
 	pprof "net/http/pprof"
 	"os"
 	"os/signal"
+	"strings" // Added for strings.Split
 	"syscall"
 	"time"
 
@@ -323,11 +324,14 @@ func (srv *Server) Run() error {
 				return fmt.Errorf("could not establish kvstore connection - %s", err)
 			}
 		case "nats":
-			srv.kv, err = nats.Dial(nats.Config{
-				Servers:  srv.cfg.GetString("nats_urls"),
-				User:     srv.cfg.GetString("nats_user"),
-				Password: srv.cfg.GetString("nats_password"),
-			})
+			natsCfg := nats.Config{
+				Bucket: srv.cfg.GetString("nats_bucket"),
+				URL:    srv.cfg.GetString("nats_url"), // Use singular nats_url
+			}
+			// Servers field is not populated from nats_url.
+			// User and Password should be part of the URL if required by the NATS server.
+
+			srv.kv, err = nats.Dial(natsCfg)
 			if err != nil {
 				return fmt.Errorf("could not establish nats kvstore connection - %w", err)
 			}

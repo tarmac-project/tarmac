@@ -225,7 +225,8 @@ func TestFullService(t *testing.T) {
 	tc.cfg.Set("listen_addr", "localhost:9001")
 	tc.cfg.Set("enable_kvstore", true)
 	tc.cfg.Set("kvstore_type", "nats")
-	tc.cfg.Set("nats_urls", "nats://localhost:4222")
+	tc.cfg.Set("nats_url", "nats://localhost:4222") // Changed to singular nats_url
+	tc.cfg.Set("nats_bucket", "tarmac_test_bucket")
 	tc.cfg.Set("wasm_function_config", "/testdata/tarmac.json")
 	tt = append(tt, tc)
 

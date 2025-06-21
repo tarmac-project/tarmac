@@ -93,7 +93,8 @@ func TestBadConfigs(t *testing.T) {
 	v.Set("disable_logging", true)
 	v.Set("enable_kvstore", true)
 	v.Set("kvstore_type", "nats")
-	v.Set("nats_urls", "nats://invalid-nats-host:4222")
+	v.Set("nats_url", "nats://:") // Changed to singular nats_url and invalid URL
+	v.Set("nats_bucket", "tarmac_test_bucket")
 	cfgs["invalid NATS Address"] = v
 
 	// Failing init function
