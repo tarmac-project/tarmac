@@ -158,7 +158,6 @@ func New(cfg *viper.Viper) *Server {
 					if exists {
 						a.Value = slog.StringValue(levelLabel)
 					}
-					a.Value = slog.StringValue(levelLabel)
 				}
 			}
 
@@ -840,8 +839,11 @@ func (srv *Server) Run() error {
 							"error", err)
 						retries++
 						// Wait exponentially longer between retries
+						if delay < 1 {
+							delay = 1
+						}
 						<-time.After(time.Duration(delay) * time.Second)
-						delay *= delay
+						delay *= 2
 						continue
 					}
 					success = 1
