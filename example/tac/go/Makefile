@@ -2,7 +2,7 @@
 
 build:
 	mkdir -p functions
-	docker run -v `pwd`/:/build -w /build tinygo/tinygo:0.34.0 tinygo build -o /build/functions/tarmac.wasm -target wasi /build/main.go
+	tinygo build -o functions/tarmac.wasm -target wasi main.go
 
 docker-compose:
 	docker compose up
