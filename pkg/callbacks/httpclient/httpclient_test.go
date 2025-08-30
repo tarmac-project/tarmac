@@ -1,6 +1,7 @@
 package httpclient
 
 import (
+	"crypto/md5"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -349,10 +350,14 @@ func TestResponseBodySizeLimit(t *testing.T) {
 			return
 		}
 
-		// Generate response of specified size
+		// Generate response of specified size with repeating pattern
+		// Use a meaningful pattern instead of just 'A' characters
+		pattern := "This is test data for HTTP response body size limiting. "
+		patternBytes := []byte(pattern)
 		data := make([]byte, size)
-		for i := range data {
-			data[i] = 'A'
+		
+		for i := 0; i < size; i++ {
+			data[i] = patternBytes[i%len(patternBytes)]
 		}
 		w.Write(data)
 	}))
@@ -449,12 +454,20 @@ func TestResponseBodySizeLimit(t *testing.T) {
 					t.Errorf("%s: expected body length %d, got %d", tc.description, expectedSize, len(body))
 				}
 
-				// Verify all bytes are 'A' as expected
-				for i, b := range body {
-					if b != 'A' {
-						t.Errorf("Unexpected byte at position %d: got %v, expected 'A'", i, b)
-						break
-					}
+				// Generate expected data for MD5 verification
+				pattern := "This is test data for HTTP response body size limiting. "
+				patternBytes := []byte(pattern)
+				expectedData := make([]byte, expectedSize)
+				for i := 0; i < expectedSize; i++ {
+					expectedData[i] = patternBytes[i%len(patternBytes)]
+				}
+
+				// Verify data integrity using MD5 checksum
+				expectedMD5 := fmt.Sprintf("%x", md5.Sum(expectedData))
+				actualMD5 := fmt.Sprintf("%x", md5.Sum(body))
+				
+				if expectedMD5 != actualMD5 {
+					t.Errorf("%s: MD5 checksum mismatch. Expected %s, got %s", tc.description, expectedMD5, actualMD5)
 				}
 			})
 
@@ -500,12 +513,20 @@ func TestResponseBodySizeLimit(t *testing.T) {
 					t.Errorf("%s: expected body length %d, got %d", tc.description, expectedSize, len(rsp.Body))
 				}
 
-				// Verify all bytes are 'A' as expected
-				for i, b := range rsp.Body {
-					if b != 'A' {
-						t.Errorf("Unexpected byte at position %d: got %v, expected 'A'", i, b)
-						break
-					}
+				// Generate expected data for MD5 verification
+				pattern := "This is test data for HTTP response body size limiting. "
+				patternBytes := []byte(pattern)
+				expectedData := make([]byte, expectedSize)
+				for i := 0; i < expectedSize; i++ {
+					expectedData[i] = patternBytes[i%len(patternBytes)]
+				}
+
+				// Verify data integrity using MD5 checksum
+				expectedMD5 := fmt.Sprintf("%x", md5.Sum(expectedData))
+				actualMD5 := fmt.Sprintf("%x", md5.Sum(rsp.Body))
+				
+				if expectedMD5 != actualMD5 {
+					t.Errorf("%s: MD5 checksum mismatch. Expected %s, got %s", tc.description, expectedMD5, actualMD5)
 				}
 			})
 		})
