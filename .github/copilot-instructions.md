@@ -164,3 +164,49 @@ Tarmac is a Go-based framework for building serverless functions using WebAssemb
 - **TinyGo is required**: Standard Go WASM compilation won't work due to waPC dependencies
 - **Docker Compose recommended**: For full-stack testing with databases and external services
 - **Validate after every change**: Run build and basic functionality tests to ensure nothing is broken
+
+## Commit Message Guidelines
+
+Tarmac follows [Conventional Commits](https://www.conventionalcommits.org/) specification with specific formatting rules enforced by CI:
+
+### Format
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+### Rules (enforced by commitlint)
+- **Header max length**: 150 characters
+- **Body/footer max line length**: 100 characters per line
+- **Scope case**: Must be lowercase (e.g., `feat(api):` not `feat(API):`)
+- **Subject case**: Must be lowercase, no sentence-case, start-case, pascal-case, or upper-case
+- **Types**: Use conventional commit types (feat, fix, docs, style, refactor, test, chore, etc.)
+
+### Examples
+```bash
+# Feature addition
+feat(callbacks): add new HTTP client timeout configuration
+
+# Bug fix
+fix(wasm): resolve memory leak in function execution
+
+# Documentation update
+docs(readme): update installation instructions for TinyGo 0.39.0
+
+# Chore/maintenance
+chore(deps): update go dependencies to latest versions
+
+# Breaking change
+feat(api)!: redesign configuration format for multi-function support
+
+BREAKING CHANGE: Configuration file format has changed from JSON to YAML.
+See migration guide in docs/migration.md for upgrade instructions.
+```
+
+### CI Validation
+- All commit messages are validated by `commitlint` in CI
+- Pull requests will fail if any commit violates the format rules
+- Use `git rebase -i` to fix commit messages before pushing if needed
