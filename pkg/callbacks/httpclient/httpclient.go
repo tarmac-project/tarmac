@@ -34,6 +34,11 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
+const (
+	// DefaultMaxResponseBodySize is the default maximum size for HTTP response bodies (10MB)
+	DefaultMaxResponseBodySize = 10 * 1024 * 1024
+)
+
 // HTTPClient provides access to Host Callbacks that interact with an HTTP client. These callbacks offer all of the logic
 // and error handlings of interacting with an HTTP server. Users will send the specified JSON request and receive
 // an appropriate JSON response.
@@ -45,17 +50,19 @@ type HTTPClient struct {
 // format; each Config struct gives the specific Host Callback unique functionality.
 type Config struct {
 	// MaxResponseBodySize limits the size of HTTP response bodies to prevent excessive memory usage.
-	// Defaults to 10MB (10*1024*1024 bytes) if not specified or set to 0.
+	// Defaults to DefaultMaxResponseBodySize (10MB) if not specified or set to 0.
 	MaxResponseBodySize int64
 }
 
 // New will create and return a new HTTPClient instance that users can register as a Tarmac Host Callback function.
 // Users can provide any custom HTTP Client configurations using the configuration options supplied.
 func New(cfg Config) (*HTTPClient, error) {
-	maxSize := cfg.MaxResponseBodySize
-	if maxSize <= 0 {
-		// Default to 10MB if not specified or invalid
-		maxSize = 10 * 1024 * 1024
+	// Set default response body size
+	maxSize := int64(DefaultMaxResponseBodySize)
+
+	// Override with config value if specified and valid
+	if cfg.MaxResponseBodySize > 0 {
+		maxSize = cfg.MaxResponseBodySize
 	}
 
 	hc := &HTTPClient{
