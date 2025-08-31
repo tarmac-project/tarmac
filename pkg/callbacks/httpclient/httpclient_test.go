@@ -56,7 +56,7 @@ func Test(t *testing.T) {
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
-			fmt.Fprintf(w, "%s", body)
+			_, _ = fmt.Fprintf(w, "%s", body)
 		default:
 			return
 		}
@@ -355,11 +355,11 @@ func TestResponseBodySizeLimit(t *testing.T) {
 		pattern := "This is test data for HTTP response body size limiting. "
 		patternBytes := []byte(pattern)
 		data := make([]byte, size)
-		
+
 		for i := 0; i < size; i++ {
 			data[i] = patternBytes[i%len(patternBytes)]
 		}
-		w.Write(data)
+		_, _ = w.Write(data)
 	}))
 	defer ts.Close()
 
@@ -465,7 +465,7 @@ func TestResponseBodySizeLimit(t *testing.T) {
 				// Verify data integrity using MD5 checksum
 				expectedMD5 := fmt.Sprintf("%x", md5.Sum(expectedData))
 				actualMD5 := fmt.Sprintf("%x", md5.Sum(body))
-				
+
 				if expectedMD5 != actualMD5 {
 					t.Errorf("%s: MD5 checksum mismatch. Expected %s, got %s", tc.description, expectedMD5, actualMD5)
 				}
@@ -524,7 +524,7 @@ func TestResponseBodySizeLimit(t *testing.T) {
 				// Verify data integrity using MD5 checksum
 				expectedMD5 := fmt.Sprintf("%x", md5.Sum(expectedData))
 				actualMD5 := fmt.Sprintf("%x", md5.Sum(rsp.Body))
-				
+
 				if expectedMD5 != actualMD5 {
 					t.Errorf("%s: MD5 checksum mismatch. Expected %s, got %s", tc.description, expectedMD5, actualMD5)
 				}
