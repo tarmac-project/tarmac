@@ -33,6 +33,7 @@ func main() {
 	cfg.SetDefault("grpc_socket_path", "/grpc.sock")
 	cfg.SetDefault("run_mode", "daemon")
 	cfg.SetDefault("text_log_format", false)
+	cfg.SetDefault("http_client_max_response_body_size", 10*1024*1024) // 10MB default
 
 	// Load Config
 	cfg.AddConfigPath("./conf")

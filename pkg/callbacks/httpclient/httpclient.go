@@ -3,12 +3,16 @@ Package httpclient is part of the Tarmac suite of Host Callback packages. This p
 ability to provide WASM functions with a host callback interface that provides HTTP client capabilities.
 
 	import (
+		"log"
 		"github.com/tarmac-project/tarmac/pkg/callbacks/httpclient"
 	)
 
 	func main() {
 		// Create instance of httpclient to register for callback execution
-		httpclient := httpclient.New(httpclient.Config{})
+		httpclient, err := httpclient.New(httpclient.Config{})
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		// Create Callback router and register httpclient
 		router := callbacks.New()
@@ -34,19 +38,40 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
+const (
+	// DefaultMaxResponseBodySize is the default maximum size for HTTP response bodies (10MB)
+	DefaultMaxResponseBodySize = 10 * 1024 * 1024
+)
+
 // HTTPClient provides access to Host Callbacks that interact with an HTTP client. These callbacks offer all of the logic
 // and error handlings of interacting with an HTTP server. Users will send the specified JSON request and receive
 // an appropriate JSON response.
-type HTTPClient struct{}
+type HTTPClient struct {
+	maxResponseBodySize int64
+}
 
 // Config is provided to users to configure the Host Callback. All Tarmac Callbacks follow the same configuration
 // format; each Config struct gives the specific Host Callback unique functionality.
-type Config struct{}
+type Config struct {
+	// MaxResponseBodySize limits the size of HTTP response bodies to prevent excessive memory usage.
+	// Defaults to DefaultMaxResponseBodySize (10MB) if not specified or set to 0.
+	MaxResponseBodySize int64
+}
 
 // New will create and return a new HTTPClient instance that users can register as a Tarmac Host Callback function.
 // Users can provide any custom HTTP Client configurations using the configuration options supplied.
-func New(_ Config) (*HTTPClient, error) {
-	hc := &HTTPClient{}
+func New(cfg Config) (*HTTPClient, error) {
+	// Set default response body size
+	maxSize := int64(DefaultMaxResponseBodySize)
+
+	// Override with config value if specified and valid
+	if cfg.MaxResponseBodySize > 0 {
+		maxSize = cfg.MaxResponseBodySize
+	}
+
+	hc := &HTTPClient{
+		maxResponseBodySize: maxSize,
+	}
 	return hc, nil
 }
 
@@ -116,7 +141,7 @@ func (hc *HTTPClient) Call(b []byte) ([]byte, error) {
 		for k := range response.Header {
 			r.Headers[strings.ToLower(k)] = response.Header.Get(k)
 		}
-		body, err := io.ReadAll(response.Body)
+		body, err := io.ReadAll(io.LimitReader(response.Body, hc.maxResponseBodySize))
 		if err != nil {
 			r.Status.Code = 500
 			r.Status.Status = fmt.Sprintf("Unexpected error reading HTTP response body - %s", err)
@@ -199,7 +224,7 @@ func (hc *HTTPClient) callJSON(b []byte) ([]byte, error) {
 			for k := range response.Header {
 				r.Headers[strings.ToLower(k)] = response.Header.Get(k)
 			}
-			body, err := io.ReadAll(response.Body)
+			body, err := io.ReadAll(io.LimitReader(response.Body, hc.maxResponseBodySize))
 			if err != nil {
 				r.Status.Code = 500
 				r.Status.Status = fmt.Sprintf("Unexpected error reading HTTP response body - %s", err)
