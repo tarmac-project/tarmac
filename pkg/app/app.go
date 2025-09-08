@@ -577,7 +577,9 @@ func (srv *Server) Run() error {
 	}
 
 	// Setup HTTP Callbacks
-	cbHTTPClient, err := httpclient.New(httpclient.Config{})
+	cbHTTPClient, err := httpclient.New(httpclient.Config{
+		MaxResponseBodySize: srv.cfg.GetInt64("http_client_max_response_body_size"),
+	})
 	if err != nil {
 		return fmt.Errorf("unable to initialize callback http client for WASM functions - %s", err)
 	}
