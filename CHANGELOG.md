@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/tarmac-project/tarmac/compare/v0.9.0...v0.10.0) (2025-09-08)
+
+
+### Features
+
+* **docs:** introduce Copilot instructions for Tarmac 🚗 ([#204](https://github.com/tarmac-project/tarmac/issues/204)) ([0af8924](https://github.com/tarmac-project/tarmac/commit/0af8924bc4290d38291cafd69e6637ad08f5eea9))
+
 ## [0.9.0](https://github.com/tarmac-project/tarmac/compare/v0.8.2...v0.9.0) (2025-05-12)
 
 
