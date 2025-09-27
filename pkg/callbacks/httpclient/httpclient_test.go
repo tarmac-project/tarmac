@@ -1,6 +1,7 @@
 package httpclient
 
 import (
+	"crypto/md5"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -55,7 +56,7 @@ func Test(t *testing.T) {
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
-			fmt.Fprintf(w, "%s", body)
+			_, _ = fmt.Fprintf(w, "%s", body)
 		default:
 			return
 		}
@@ -329,5 +330,205 @@ func Test(t *testing.T) {
 				})
 			})
 		}
+	}
+}
+
+func TestResponseBodySizeLimit(t *testing.T) {
+	// Test server that returns configurable response sizes
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+
+		// Check query parameter for response size
+		sizeStr := r.URL.Query().Get("size")
+		if sizeStr == "" {
+			sizeStr = "1024" // Default 1KB
+		}
+
+		size := 1024
+		if s, err := fmt.Sscanf(sizeStr, "%d", &size); err != nil || s != 1 {
+			http.Error(w, "Invalid size parameter", http.StatusBadRequest)
+			return
+		}
+
+		// Generate response of specified size with repeating pattern
+		// Use a meaningful pattern instead of just 'A' characters
+		pattern := "This is test data for HTTP response body size limiting. "
+		patternBytes := []byte(pattern)
+		data := make([]byte, size)
+
+		for i := 0; i < size; i++ {
+			data[i] = patternBytes[i%len(patternBytes)]
+		}
+		_, _ = w.Write(data)
+	}))
+	defer ts.Close()
+
+	testCases := []struct {
+		name            string
+		config          Config
+		responseSize    int
+		expectTruncated bool
+		description     string
+	}{
+		{
+			name:            "Default 10MB limit with small response",
+			config:          Config{}, // Use default
+			responseSize:    1024,     // 1KB
+			expectTruncated: false,
+			description:     "Small response should not be truncated with default config",
+		},
+		{
+			name:            "Custom 2KB limit with 1KB response",
+			config:          Config{MaxResponseBodySize: 2048}, // 2KB
+			responseSize:    1024,                              // 1KB
+			expectTruncated: false,
+			description:     "Response smaller than limit should not be truncated",
+		},
+		{
+			name:            "Custom 2KB limit with 3KB response",
+			config:          Config{MaxResponseBodySize: 2048}, // 2KB
+			responseSize:    3072,                              // 3KB
+			expectTruncated: true,
+			description:     "Response larger than limit should be truncated",
+		},
+		{
+			name:            "Custom 2KB limit with exactly 2KB response",
+			config:          Config{MaxResponseBodySize: 2048}, // 2KB
+			responseSize:    2048,                              // 2KB
+			expectTruncated: false,
+			description:     "Response exactly at limit should not be truncated",
+		},
+		{
+			name:            "Zero config uses default 10MB",
+			config:          Config{MaxResponseBodySize: 0}, // Should use default
+			responseSize:    1024,                           // 1KB
+			expectTruncated: false,
+			description:     "Zero config should use default 10MB limit",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create HTTP client with custom config
+			h, err := New(tc.config)
+			if err != nil {
+				t.Fatalf("Unable to create HTTP Client - %s", err)
+			}
+
+			// Test both JSON and Protobuf interfaces
+			t.Run("JSON", func(t *testing.T) {
+				url := fmt.Sprintf("%s?size=%d", ts.URL, tc.responseSize)
+				jsonReq := fmt.Sprintf(`{"method":"GET","headers":{},"insecure":true,"url":"%s"}`, url)
+
+				b, err := h.Call([]byte(jsonReq))
+				if err != nil {
+					t.Fatalf("HTTP call failed: %s", err)
+				}
+
+				var rsp tarmac.HTTPClientResponse
+				if err := ffjson.Unmarshal(b, &rsp); err != nil {
+					t.Fatalf("Failed to unmarshal JSON response: %s", err)
+				}
+
+				if rsp.Status.Code != 200 {
+					t.Fatalf("Expected successful status, got %d: %s", rsp.Status.Code, rsp.Status.Status)
+				}
+
+				// Decode base64 body
+				body, err := base64.StdEncoding.DecodeString(rsp.Body)
+				if err != nil {
+					t.Fatalf("Failed to decode response body: %s", err)
+				}
+
+				expectedSize := tc.responseSize
+				maxSize := tc.config.MaxResponseBodySize
+				if maxSize <= 0 {
+					maxSize = 10 * 1024 * 1024 // Default 10MB
+				}
+
+				if tc.expectTruncated {
+					expectedSize = int(maxSize)
+				}
+
+				if len(body) != expectedSize {
+					t.Errorf("%s: expected body length %d, got %d", tc.description, expectedSize, len(body))
+				}
+
+				// Generate expected data for MD5 verification
+				pattern := "This is test data for HTTP response body size limiting. "
+				patternBytes := []byte(pattern)
+				expectedData := make([]byte, expectedSize)
+				for i := 0; i < expectedSize; i++ {
+					expectedData[i] = patternBytes[i%len(patternBytes)]
+				}
+
+				// Verify data integrity using MD5 checksum
+				expectedMD5 := fmt.Sprintf("%x", md5.Sum(expectedData))
+				actualMD5 := fmt.Sprintf("%x", md5.Sum(body))
+
+				if expectedMD5 != actualMD5 {
+					t.Errorf("%s: MD5 checksum mismatch. Expected %s, got %s", tc.description, expectedMD5, actualMD5)
+				}
+			})
+
+			t.Run("Protobuf", func(t *testing.T) {
+				url := fmt.Sprintf("%s?size=%d", ts.URL, tc.responseSize)
+				protoReq := &proto.HTTPClient{
+					Method:   "GET",
+					Headers:  map[string]string{},
+					Insecure: true,
+					Url:      url,
+				}
+
+				msg, err := pb.Marshal(protoReq)
+				if err != nil {
+					t.Fatalf("Failed to marshal protobuf request: %s", err)
+				}
+
+				b, err := h.Call(msg)
+				if err != nil {
+					t.Fatalf("HTTP call failed: %s", err)
+				}
+
+				var rsp proto.HTTPClientResponse
+				if err := pb.Unmarshal(b, &rsp); err != nil {
+					t.Fatalf("Failed to unmarshal protobuf response: %s", err)
+				}
+
+				if rsp.Status.Code != 200 {
+					t.Fatalf("Expected successful status, got %d: %s", rsp.Status.Code, rsp.Status.Status)
+				}
+
+				expectedSize := tc.responseSize
+				maxSize := tc.config.MaxResponseBodySize
+				if maxSize <= 0 {
+					maxSize = 10 * 1024 * 1024 // Default 10MB
+				}
+
+				if tc.expectTruncated {
+					expectedSize = int(maxSize)
+				}
+
+				if len(rsp.Body) != expectedSize {
+					t.Errorf("%s: expected body length %d, got %d", tc.description, expectedSize, len(rsp.Body))
+				}
+
+				// Generate expected data for MD5 verification
+				pattern := "This is test data for HTTP response body size limiting. "
+				patternBytes := []byte(pattern)
+				expectedData := make([]byte, expectedSize)
+				for i := 0; i < expectedSize; i++ {
+					expectedData[i] = patternBytes[i%len(patternBytes)]
+				}
+
+				// Verify data integrity using MD5 checksum
+				expectedMD5 := fmt.Sprintf("%x", md5.Sum(expectedData))
+				actualMD5 := fmt.Sprintf("%x", md5.Sum(rsp.Body))
+
+				if expectedMD5 != actualMD5 {
+					t.Errorf("%s: MD5 checksum mismatch. Expected %s, got %s", tc.description, expectedMD5, actualMD5)
+				}
+			})
+		})
 	}
 }

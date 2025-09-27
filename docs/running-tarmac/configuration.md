@@ -35,6 +35,7 @@ When using Environment Variables, all configurations are prefixed with `APP_`. T
 | `APP_SQL_TYPE` | `sql_type` | `string` | Select SQL Store to use (Options: `postgres`, `mysql`)|
 | `APP_RUN_MODE` | `run_mode` | `string` | Select the run mode for Tarmac (Options: `daemon`, `job`). Default: `daemon`. The `job` option will cause Tarmac to exit after init functions are executed. |
 | `APP_ENABLE_MAINTENANCE_MODE` | `enable_maintenance_mode` | `bool` | Enable Maintenance Mode. When enabled, Tarmac will return a 503 for requests to `/ready` allowing the service to go into "maintenance mode". |
+| `APP_HTTP_CLIENT_MAX_RESPONSE_BODY_SIZE` | `http_client_max_response_body_size` | `int` | Maximum size in bytes for HTTP response bodies from client requests \(default: `10485760` - 10MB\). Prevents DoS attacks and excessive memory usage. |
 
 ## Consul Format
 
