@@ -195,9 +195,7 @@ services:
       - mysql
       - postgres
   redis:
-    image: bitnami/redis:latest
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
+    image: redis:latest
   cassandra-primary:
     image: madflojo/cassandra:latest
     environment:
@@ -224,7 +222,7 @@ services:
       - 9042
       - 9160
   mysql:
-    image: bitnami/mysql:latest
+    image: mysql:latest
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: example
@@ -232,18 +230,19 @@ services:
     ports:
       - 3306:3306
   postgres:
-    image: bitnami/postgresql:latest
+    image: postgres:latest
     restart: always
     environment:
-      - POSTGRESQL_USERNAME=example
-      - POSTGRESQL_PASSWORD=example
-      - POSTGRESQL_DATABASE=example
+      - POSTGRES_USER=example
+      - POSTGRES_PASSWORD=example
+      - POSTGRES_DB=example
     ports:
       - 5432:5432
   consul:
-    image: bitnami/consul:latest
+    image: hashicorp/consul:latest
     ports:
       - 8500:8500
+    command: agent -dev -client=0.0.0.0 -ui
   consulator:
     image: lewispeckover/consulator
     command: "import /app/testdata/tarmac-consul.yml"
