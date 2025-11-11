@@ -215,7 +215,6 @@ graph TB
     
     KVStore --> Redis
     KVStore --> Cassandra
-    KVStore --> Consul
     SQLDatabase --> MySQL
     SQLDatabase --> PostgreSQL
     Metrics --> Prometheus
