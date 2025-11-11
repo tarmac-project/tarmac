@@ -21,9 +21,10 @@ services:
   redis:
     image: redis:latest
   consul:
-    image: consul
+    image: hashicorp/consul:latest
     ports:
       - 8500:8500
+    command: agent -dev -client=0.0.0.0 -ui
   consulator:
     image: lewispeckover/consulator
     command: "import /app/tarmac-consul.yml"
