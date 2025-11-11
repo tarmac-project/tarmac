@@ -213,8 +213,12 @@ graph TB
     Lookup --> SQLDatabase
     Load --> SQLDatabase
     
-    WASMEngine --> Capabilities
-    Capabilities --> ExternalServices
+    KVStore --> Redis
+    KVStore --> Cassandra
+    KVStore --> Consul
+    SQLDatabase --> MySQL
+    SQLDatabase --> PostgreSQL
+    Metrics --> Prometheus
 ```
 
 
