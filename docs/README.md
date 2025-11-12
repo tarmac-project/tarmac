@@ -166,51 +166,58 @@ The below diagram shows the architecture of an [example application](https://git
 
 This example application will execute WebAssembly functions on boot and via a scheduler to manage airport data. The application also includes an HTTP server that serves the airport data to clients via a WebAssembly function.
 
-```text
-          +-------------------------------------------------------------------------------------------------------+                                 
-          | Tarmac Host                                                                                           |                                 
-          |                                       +------------------------------------------------------------+  |                                 
-          |                                       | WebAssembly Engine                                         |  |                                 
-          |                                       |                                                            |  |                                 
-          |  +------------------------+           |  +-----------------------------------+                     |  |                                 
-          |  |On Boot Function Trigger+-----------+-->Init: Creates DB Tables, Calls Load|                     |  |                                 
-          |  +------------------------+           |  +--+--------------------------------+                     |  |                                 
-          |                                       |     |                                                      |  |                                 
-          |  +--------------------------+         |  +--v---------------------------------------------------+  |  |                                 
-          |  |Scheduled Function Trigger+---------+--> Load: Calls Fetch, then loads results to SQL Database|  |  |                                 
-          |  +--------------------------+         |  +--+---------------------------------------------------+  |  |                                 
-          |                                       |     |                                                      |  |                                 
-          |                                       |  +--v-----------------------------+                        |  |  +-----------------------------+
-          |                                       |  | Fetch: Download AirportData.csv+------------------------+--+-->HTTP Server: AirportData.csv |
-          |                                       |  +--------------------------------+                        |  |  +-----------------------------+
-          |                                       |                                                            |  |                                 
-+------+  |  +--------------------+               |  +----------------------------------+                      |  |                                 
-|Client+--+-->HTTP Request Handler+---------------+-->Lookup: Fetches Data from Cache/DB|                      |  |                                 
-+------+  |  +--------------------+               |  +----------------------------------+                      |  |                                 
-          |                                       |                                                            |  |                                 
-          |                                       +----------------------------+-------------------------------+  |                                 
-          |                                                                    |                                  |                                 
-          |                                                                    |                                  |                                 
-          |                                                                    |                                  |                                 
-          |                                       +----------------------------v-------------------------------+  |                                 
-          |                                       | Tarmac Capabilities                                        |  |                                 
-          |                                       |                                                            |  |                                 
-          |                                       | +--------+ +------------+ +-------+ +------+               |  |                                 
-          |                                       | |KV Store| |SQL Database| |Metrics| |Logger|               |  |                                 
-          |                                       | +--------+ +------------+ +-------+ +------+               |  |                                 
-          |                                       |                                                            |  |                                 
-          |                                       +------------------------------------------------------------+  |                                 
-          |                                                                                                       |                                 
-          +-------------------------------------------------+-----------------------------------------------------+                                 
-                                                            |                                                                                       
-          +-------------------------------------------------v-----------------------------------------------------+                                 
-          | External Services (Not all used in Example Application)                                               |                                 
-          |                                                                                                       |                                 
-          | +------+ +----------+ +-----+ +-----+ +----------+ +---------+                                        |                                 
-          | |Consul| |Prometheus| |Redis| |MySQL| |PostgreSQL| |Cassandra|                                        |                                 
-          | +------+ +----------+ +-----+ +-----+ +----------+ +---------+                                        |                                 
-          |                                                                                                       |                                 
-          +-------------------------------------------------------------------------------------------------------+                                 
+```mermaid
+graph TB
+    Client[Client]
+    
+    subgraph TarmacHost["Tarmac Host"]
+        HTTPHandler[HTTP Request Handler]
+        OnBootTrigger[On Boot Function Trigger]
+        ScheduledTrigger[Scheduled Function Trigger]
+        
+        subgraph WASMEngine["WebAssembly Engine"]
+            Init[Init: Creates DB Tables, Calls Load]
+            Load[Load: Calls Fetch, then loads results to SQL Database]
+            Fetch[Fetch: Download AirportData.csv]
+            Lookup[Lookup: Fetches Data from Cache/DB]
+        end
+        
+        subgraph Capabilities["Tarmac Capabilities"]
+            KVStore[KV Store]
+            SQLDatabase[SQL Database]
+            Metrics[Metrics]
+            Logger[Logger]
+        end
+    end
+    
+    HTTPServer[HTTP Server: AirportData.csv]
+    
+    subgraph ExternalServices["External Services (Not all used in Example Application)"]
+        Consul[Consul]
+        Prometheus[Prometheus]
+        Redis[Redis]
+        MySQL[MySQL]
+        PostgreSQL[PostgreSQL]
+        Cassandra[Cassandra]
+    end
+    
+    Client --> HTTPHandler
+    HTTPHandler --> Lookup
+    OnBootTrigger --> Init
+    ScheduledTrigger --> Load
+    Init --> Load
+    Load --> Fetch
+    Fetch --> HTTPServer
+    
+    Lookup --> KVStore
+    Lookup --> SQLDatabase
+    Load --> SQLDatabase
+    
+    KVStore --> Redis
+    KVStore --> Cassandra
+    SQLDatabase --> MySQL
+    SQLDatabase --> PostgreSQL
+    Metrics --> Prometheus
 ```
 
 
