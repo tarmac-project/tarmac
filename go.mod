@@ -23,7 +23,7 @@ require (
 	github.com/tarmac-project/wapc-toolkit/engine v0.2.0
 	github.com/wapc/wapc-go v0.7.2
 	github.com/wapc/wapc-go/engines/wazero v0.0.0-20250121123328-6bf9cae9d28d
-	google.golang.org/protobuf v1.36.10
+	google.golang.org/protobuf v1.36.11
 )
 
 require (
