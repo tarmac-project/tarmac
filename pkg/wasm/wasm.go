@@ -83,7 +83,7 @@ func NewServer(cfg Config) (*Server, error) {
 	s.modules = make(map[string]*Module)
 
 	if cfg.Callback == nil {
-		return s, fmt.Errorf("Callback cannot be nil")
+		return s, fmt.Errorf("callback cannot be nil")
 	}
 
 	s.callback = cfg.Callback
@@ -96,8 +96,8 @@ func (s *Server) Shutdown() {
 	defer s.RUnlock()
 	for _, m := range s.modules {
 		defer m.cancel()
-		defer m.module.Close(m.ctx)
-		defer m.pool.Close(m.ctx)
+		defer func(module *Module) { _ = module.module.Close(module.ctx) }(m)
+		defer func(module *Module) { module.pool.Close(module.ctx) }(m)
 	}
 }
 
@@ -175,7 +175,7 @@ func (m *Module) Run(handler string, payload []byte) ([]byte, error) {
 	defer func() {
 		err := m.pool.Return(i)
 		if err != nil {
-			defer i.Close(m.ctx)
+			defer func() { _ = i.Close(m.ctx) }()
 		}
 	}()
 

@@ -234,7 +234,7 @@ func (db *Database) query(qry []byte) ([]string, []map[string]any, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to execute query - %s", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	columns, err := rows.Columns()
 	if err != nil {

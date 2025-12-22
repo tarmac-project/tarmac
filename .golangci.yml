@@ -5,13 +5,11 @@ run:
   tests: true
 
 linters:
-  disable-all: true
   enable:
     - misspell
     - revive
     - bodyclose
     - errname
-  disable:
     - errcheck
     - govet
     - ineffassign

@@ -23,8 +23,8 @@ func TestParserFile(t *testing.T) {
 	}
 
 	// Ensure the file handle is closed and the temporary file is removed at the end of the function
-	defer fh.Close()
-	defer os.Remove(fh.Name())
+	defer func() { _ = fh.Close() }()
+	defer func() { _ = os.Remove(fh.Name()) }()
 
 	// Get the filename of the temporary file
 	fn := fh.Name()
@@ -257,8 +257,8 @@ func TestConfigParser(t *testing.T) {
 			}
 
 			// Ensure the file handle is closed and the temporary file is removed at the end of the function
-			defer fh.Close()
-			defer os.Remove(fh.Name())
+			defer func() { _ = fh.Close() }()
+			defer func() { _ = os.Remove(fh.Name()) }()
 
 			// Get the filename of the temporary file
 			fn := fh.Name()
