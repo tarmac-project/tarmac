@@ -19,5 +19,5 @@ linters:
     - unused
 
 issues:
-  # Exclude all issues from default linters that are not in the original configuration
+  # Don't exclude issues from the enabled linters
   exclude-use-default: false
