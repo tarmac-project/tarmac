@@ -19,10 +19,10 @@ import (
 )
 
 const (
-	// Default Pool Size.
+	// DefaultPoolSize is the default size of the WASM module pool.
 	DefaultPoolSize = 100
 
-	// Default Pool Timeout.
+	// DefaultPoolTimeout is the default timeout in seconds for acquiring a module from the pool.
 	DefaultPoolTimeout = 5
 )
 

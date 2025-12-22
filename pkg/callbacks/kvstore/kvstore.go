@@ -316,6 +316,7 @@ func (k *KVStore) deleteJSON(b []byte) ([]byte, error) {
 	return rsp, fmt.Errorf("%s", r.Status.Status)
 }
 
+// Keys returns a list of keys from the KV store based on the request parameters.
 func (k *KVStore) Keys(b []byte) ([]byte, error) {
 	if len(b) == 0 {
 		return k.keysJSON(b)

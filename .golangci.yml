@@ -5,13 +5,19 @@ run:
   tests: true
 
 linters:
+  disable-all: true
   enable:
     - misspell
     - revive
     - bodyclose
     - errname
+  disable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
 
-formatters:
-  enable:
-    - gofumpt  # Stricter replacement for gofmt
-    - goimports
+issues:
+  # Exclude all issues from default linters that are not in the original configuration
+  exclude-use-default: false

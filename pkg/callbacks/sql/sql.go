@@ -1,5 +1,5 @@
 /*
-Package database is part of the Tarmac suite of Host Callback packages. This package provides users with the ability to
+Package sql is part of the Tarmac suite of Host Callback packages. This package provides users with the ability to
 provide WASM functions with a host callback interface that provides SQL database capabilities.
 
 	import (
