@@ -133,7 +133,7 @@ func (srv *Server) WASMHandler(w http.ResponseWriter, r *http.Request, _ httprou
 	// Return status code and print stdout
 	w.WriteHeader(200)
 	if _, err := fmt.Fprintf(w, "%s", rsp); err != nil {
-		srv.log.Debug("Error writing response: "+err.Error(),
+		srv.log.Debug("Error writing response",
 			"error", err)
 	}
 }

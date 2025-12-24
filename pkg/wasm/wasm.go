@@ -9,6 +9,7 @@ package wasm
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -28,7 +29,7 @@ const (
 
 var (
 	// ErrCallbackNil is returned when the callback function is nil.
-	ErrCallbackNil = fmt.Errorf("callback cannot be nil")
+	ErrCallbackNil = errors.New("callback cannot be nil")
 )
 
 // Config is used to configure the initial WASM Server.
