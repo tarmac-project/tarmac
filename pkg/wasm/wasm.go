@@ -26,6 +26,11 @@ const (
 	DefaultPoolTimeout = 5
 )
 
+var (
+	// ErrCallbackNil is returned when the callback function is nil.
+	ErrCallbackNil = fmt.Errorf("callback cannot be nil")
+)
+
 // Config is used to configure the initial WASM Server.
 type Config struct {
 
@@ -83,7 +88,7 @@ func NewServer(cfg Config) (*Server, error) {
 	s.modules = make(map[string]*Module)
 
 	if cfg.Callback == nil {
-		return s, fmt.Errorf("callback cannot be nil")
+		return s, ErrCallbackNil
 	}
 
 	s.callback = cfg.Callback
