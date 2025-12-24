@@ -15,7 +15,3 @@ linters:
     - ineffassign
     - staticcheck
     - unused
-
-issues:
-  # Don't exclude issues from the enabled linters
-  exclude-use-default: false
