@@ -19,10 +19,10 @@ require (
 	github.com/tarmac-project/hord/drivers/mock v0.6.4
 	github.com/tarmac-project/hord/drivers/redis v0.6.4
 	github.com/tarmac-project/protobuf-go v0.0.0-20241006222441-51664fb11f56
-	github.com/tarmac-project/wapc-toolkit/callbacks v0.2.0
-	github.com/tarmac-project/wapc-toolkit/engine v0.2.0
+	github.com/tarmac-project/wapc-toolkit/callbacks v0.3.0
+	github.com/tarmac-project/wapc-toolkit/engine v0.3.0
 	github.com/wapc/wapc-go v0.7.2
-	github.com/wapc/wapc-go/engines/wazero v0.0.0-20250121123328-6bf9cae9d28d
+	github.com/wapc/wapc-go/engines/wazero v0.0.0-20250220020831-a72aedbbe70d
 	google.golang.org/protobuf v1.36.11
 )
 
@@ -34,7 +34,7 @@ require (
 	cloud.google.com/go/firestore v1.18.0 // indirect
 	cloud.google.com/go/longrunning v0.6.7 // indirect
 	github.com/FZambia/sentinel v1.1.1 // indirect
-	github.com/Workiva/go-datastructures v1.1.5 // indirect
+	github.com/Workiva/go-datastructures v1.1.7 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -91,7 +91,7 @@ require (
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/tetratelabs/wazero v1.8.2 // indirect
+	github.com/tetratelabs/wazero v1.10.1 // indirect
 	go.etcd.io/bbolt v1.4.0 // indirect
 	go.etcd.io/etcd/api/v3 v3.6.4 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.6.4 // indirect
