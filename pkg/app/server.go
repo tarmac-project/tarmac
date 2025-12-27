@@ -132,7 +132,14 @@ func (srv *Server) WASMHandler(w http.ResponseWriter, r *http.Request, _ httprou
 
 	// Return status code and print stdout
 	w.WriteHeader(200)
-	fmt.Fprintf(w, "%s", rsp)
+	if _, err := fmt.Fprintf(w, "%s", rsp); err != nil {
+		srv.log.Debug("Error writing response",
+			"method", r.Method,
+			"remote-addr", r.RemoteAddr,
+			"http-protocol", r.Proto,
+			"content-length", r.ContentLength,
+			"error", err)
+	}
 }
 
 // runWASM will load and execute the specified WASM module.

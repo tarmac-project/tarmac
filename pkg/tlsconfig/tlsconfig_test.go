@@ -94,8 +94,8 @@ func TestTLSConfig(t *testing.T) {
 					if err != nil {
 						t.Fatalf("Could not generate certs for test - %s", err)
 					}
-					defer os.Remove(c.cert)
-					defer os.Remove(c.key)
+					defer func() { _ = os.Remove(c.cert) }()
+					defer func() { _ = os.Remove(c.key) }()
 				}
 
 				err := b.CertsFromFile(c.cert, c.key)
