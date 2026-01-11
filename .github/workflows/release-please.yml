@@ -14,11 +14,9 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@4c567a1d2360bf1a0f2b51b6f27bb1d0e8d49f92
         id: release
         with:
           command: manifest
           config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json
-
-

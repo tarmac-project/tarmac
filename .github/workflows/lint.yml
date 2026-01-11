@@ -14,12 +14,12 @@ jobs:
     name: golangci
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@0c52d547c9bc32b1aa6d1b81a0d1d2d6f05d1b1b
         with:
           go-version: '1.21'
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@3a9195298986a9c9c1f608b06ab1b8f2f3e1da5b
         with:
           # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
           version: latest

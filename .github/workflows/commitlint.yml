@@ -7,9 +7,9 @@ jobs:
   commitlint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
           fetch-depth: 0
-      - uses: wagoid/commitlint-github-action@v6
+      - uses: wagoid/commitlint-github-action@4fce8190c7e1b7b6d2a1d3a0ef2d0d57f0c29328
         with:
           configFile: .commitlintrc.yaml
