@@ -14,6 +14,12 @@ import (
 	"github.com/tarmac-project/tarmac/pkg/tlsconfig"
 )
 
+const (
+	// Test server timeout values
+	testServerContextTimeout = 2 * time.Second
+	testServerMaxWaitTimeout = 2500 * time.Millisecond // Slightly longer than context timeout
+)
+
 func TestBadConfigs(t *testing.T) {
 	cfgs := make(map[string]*viper.Viper)
 
@@ -563,7 +569,7 @@ func TestTLSBranchBehavior(t *testing.T) {
 		cfg.Set("wasm_function", "../../testdata/base/default/tarmac.wasm")
 
 		srv := New(cfg)
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), testServerContextTimeout)
 		defer cancel()
 
 		// Start server in goroutine
@@ -585,7 +591,7 @@ func TestTLSBranchBehavior(t *testing.T) {
 			if err != nil && err != ErrShutdown {
 				t.Errorf("Expected ErrShutdown or nil, got: %s", err)
 			}
-		case <-time.After(2500 * time.Millisecond):
+		case <-time.After(testServerMaxWaitTimeout):
 			// Slightly longer than context timeout to ensure proper shutdown
 			srv.Stop()
 		}
@@ -601,7 +607,7 @@ func TestTLSBranchBehavior(t *testing.T) {
 		cfg.Set("wasm_function", "../../testdata/base/default/tarmac.wasm")
 
 		srv := New(cfg)
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), testServerContextTimeout)
 		defer cancel()
 
 		// Start server in goroutine
@@ -623,7 +629,7 @@ func TestTLSBranchBehavior(t *testing.T) {
 			if err != nil && err != ErrShutdown {
 				t.Errorf("Expected ErrShutdown or nil, got: %s", err)
 			}
-		case <-time.After(2500 * time.Millisecond):
+		case <-time.After(testServerMaxWaitTimeout):
 			// Slightly longer than context timeout to ensure proper shutdown
 			srv.Stop()
 		}
