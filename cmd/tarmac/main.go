@@ -30,6 +30,8 @@ func main() {
 	cfg.SetDefault("boltdb_bucket", "tarmac")
 	cfg.SetDefault("boltdb_permissions", 0600)
 	cfg.SetDefault("boltdb_timeout", 5)
+	cfg.SetDefault("nats_url", "nats://localhost:4222")
+	cfg.SetDefault("nats_bucket", "tarmac")
 	cfg.SetDefault("grpc_socket_path", "/grpc.sock")
 	cfg.SetDefault("run_mode", "daemon")
 	cfg.SetDefault("text_log_format", false)

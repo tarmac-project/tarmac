@@ -28,6 +28,7 @@ import (
 	"github.com/tarmac-project/hord/drivers/bbolt"
 	"github.com/tarmac-project/hord/drivers/cassandra"
 	"github.com/tarmac-project/hord/drivers/hashmap"
+	"github.com/tarmac-project/hord/drivers/nats"
 	"github.com/tarmac-project/hord/drivers/redis"
 	"github.com/tarmac-project/tarmac/pkg/callbacks/httpclient"
 	"github.com/tarmac-project/tarmac/pkg/callbacks/kvstore"
@@ -317,6 +318,16 @@ func (srv *Server) Run() error {
 				User:                       srv.cfg.GetString("cassandra_user"),
 				Password:                   srv.cfg.GetString("cassandra_password"),
 				EnableHostnameVerification: srv.cfg.GetBool("cassandra_hostname_verify"),
+			})
+			if err != nil {
+				return fmt.Errorf("could not establish kvstore connection - %s", err)
+			}
+		case "nats":
+			srv.kv, err = nats.Dial(nats.Config{
+				URL:           srv.cfg.GetString("nats_url"),
+				Bucket:        srv.cfg.GetString("nats_bucket"),
+				Servers:       srv.cfg.GetStringSlice("nats_servers"),
+				SkipTLSVerify: srv.cfg.GetBool("nats_skip_tls_verify"),
 			})
 			if err != nil {
 				return fmt.Errorf("could not establish kvstore connection - %s", err)
