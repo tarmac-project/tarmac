@@ -543,18 +543,7 @@ func (f *failingRoundTripper) RoundTrip(*http.Request) (*http.Response, error) {
 	return nil, f.err
 }
 
-// errorReader simulates body read failures
-type errorReader struct {
-	err error
-}
 
-func (e *errorReader) Read(p []byte) (n int, err error) {
-	return 0, e.err
-}
-
-func (e *errorReader) Close() error {
-	return nil
-}
 
 // TestErrorPaths tests all error branches in Call and callJSON
 func TestErrorPaths(t *testing.T) {
@@ -785,7 +774,7 @@ func TestTransportFailures(t *testing.T) {
 	})
 
 	// Test with custom failing transport
-	t.Run("Custom Failing Transport", func(t *testing.T) {
+	t.Run("Custom Failing Transport", func(_ *testing.T) {
 		// Create a custom HTTPClient with failing transport
 		// This test verifies the error handling works with explicit transport failures
 		// Note: This is primarily for documentation/demonstration as the actual
@@ -805,7 +794,7 @@ func TestBodyReadFailures(t *testing.T) {
 		}
 
 		// Create a test server that returns a body that will fail to read
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			// Write a chunked response and then close the connection abruptly
 			w.Header().Set("Content-Length", "1000000") // Claim large body
 			w.WriteHeader(http.StatusOK)
@@ -824,7 +813,7 @@ func TestBodyReadFailures(t *testing.T) {
 			t.Fatalf("Failed to marshal request: %s", err)
 		}
 
-		rsp, err := h.Call(payload)
+		rsp, callErr := h.Call(payload)
 		// Body read errors are handled gracefully in the current implementation
 		// The error is set in the status but the function returns the response
 
@@ -839,6 +828,8 @@ func TestBodyReadFailures(t *testing.T) {
 				t.Logf("Body read error handled, status: %s", r.Status.Status)
 			}
 		}
+		// Avoid unused variable warning
+		_ = callErr
 	})
 
 	t.Run("JSON Body Read Error", func(t *testing.T) {
@@ -848,7 +839,7 @@ func TestBodyReadFailures(t *testing.T) {
 		}
 
 		// Create a test server that returns a body that will fail to read
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Length", "1000000")
 			w.WriteHeader(http.StatusOK)
 			w.(http.Flusher).Flush()
@@ -858,7 +849,7 @@ func TestBodyReadFailures(t *testing.T) {
 
 		payload := fmt.Sprintf(`{"method":"GET","url":"%s"}`, ts.URL)
 
-		rsp, err := h.Call([]byte(payload))
+		rsp, callErr := h.Call([]byte(payload))
 
 		var r tarmac.HTTPClientResponse
 		if err := ffjson.Unmarshal(rsp, &r); err != nil {
@@ -871,6 +862,8 @@ func TestBodyReadFailures(t *testing.T) {
 				t.Logf("Body read error handled, status: %s", r.Status.Status)
 			}
 		}
+		// Avoid unused variable warning
+		_ = callErr
 	})
 }
 
