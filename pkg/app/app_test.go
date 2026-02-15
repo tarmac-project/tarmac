@@ -112,7 +112,7 @@ func TestBadConfigs(t *testing.T) {
 	v.Set("listen_addr", "0.0.0.0:8443")
 	v.Set("disable_logging", true)
 	v.Set("enable_kvstore", false)
-	v.Set("wasm_function_config", "/testdata/tarmac-fail.json")
+	v.Set("wasm_function_config", "../../testdata/tarmac-fail.json")
 	cfgs["failing init function"] = v
 
 	// Loop through bad configs, creating sub-tests as we go
@@ -147,7 +147,7 @@ func TestPProfServerEnabled(t *testing.T) {
 	cfg.Set("debug", true)
 	cfg.Set("trace", true)
 	cfg.Set("enable_pprof", true)
-	cfg.Set("wasm_function", "/testdata/base/default/tarmac.wasm")
+	cfg.Set("wasm_function", "../../testdata/base/default/tarmac.wasm")
 	srv := New(cfg)
 	go func() {
 		err := srv.Run()
@@ -197,7 +197,7 @@ func TestPProfServerDisabled(t *testing.T) {
 	cfg.Set("use_consul", false)
 	cfg.Set("debug", true)
 	cfg.Set("trace", true)
-	cfg.Set("wasm_function", "/testdata/base/default/tarmac.wasm")
+	cfg.Set("wasm_function", "../../testdata/base/default/tarmac.wasm")
 	srv := New(cfg)
 	go func() {
 		err := srv.Run()

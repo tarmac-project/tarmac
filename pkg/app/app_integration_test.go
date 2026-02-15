@@ -3,7 +3,6 @@
 package app
 
 import (
-	"context"
 	"crypto/tls"
 	"net/http"
 	"os"
@@ -15,30 +14,6 @@ import (
 	_ "github.com/spf13/viper/remote"
 	"github.com/tarmac-project/tarmac/pkg/tlsconfig"
 )
-
-// waitForServer polls the health endpoint until it responds or times out
-func waitForServer(url string, timeout time.Duration) error {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	ticker := time.NewTicker(500 * time.Millisecond)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-ticker.C:
-			resp, err := http.Get(url)
-			if err == nil {
-				resp.Body.Close()
-				if resp.StatusCode == 200 {
-					return nil
-				}
-			}
-		}
-	}
-}
 
 func TestRunningServer(t *testing.T) {
 	cfg := viper.New()
