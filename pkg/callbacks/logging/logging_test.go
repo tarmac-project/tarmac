@@ -3,6 +3,7 @@ package logging
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"log/slog"
 	"sync"
 	"testing"
@@ -151,13 +152,11 @@ if len(args) == 0 {
 return ""
 }
 if len(args) == 1 {
-return args[0].(string)
+if s, ok := args[0].(string); ok {
+return s
 }
-result := ""
-for _, arg := range args {
-result += arg.(string)
 }
-return result
+return fmt.Sprint(args...)
 }
 
 // TestLoggerBehavior validates that Logger adapter methods call the correct logger methods
