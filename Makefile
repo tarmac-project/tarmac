@@ -15,6 +15,14 @@ build-testdata:
 	$(MAKE) -C testdata/base/function build
 	$(MAKE) -C testdata/base/successafter5 build
 
+# Unit tests - run locally without external dependencies
+tests-unit: build
+	@echo "Running unit tests (no external services required)"
+	go test -v -race -covermode=atomic ./...
+
+# Integration tests - require external services via Docker Compose
+tests-integration: build tests-nobuild
+
 tests: build tests-nobuild
 tests-nobuild: tests-base tests-redis tests-cassandra tests-mysql tests-postgres tests-boltdb tests-inmemory
 
