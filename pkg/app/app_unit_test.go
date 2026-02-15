@@ -11,20 +11,6 @@ import (
 	"github.com/tarmac-project/tarmac/pkg/telemetry"
 )
 
-// mockKVDatabase is a mock implementation of hord.Database for testing
-type mockKVDatabase struct {
-	setupErr       error
-	healthCheckErr error
-}
-
-func (m *mockKVDatabase) Setup() error               { return m.setupErr }
-func (m *mockKVDatabase) HealthCheck() error         { return m.healthCheckErr }
-func (m *mockKVDatabase) Close()                     {}
-func (m *mockKVDatabase) Get(string) ([]byte, error) { return nil, nil }
-func (m *mockKVDatabase) Set(string, []byte) error   { return nil }
-func (m *mockKVDatabase) Delete(string) error        { return nil }
-func (m *mockKVDatabase) Keys() ([]string, error)    { return nil, nil }
-
 // TestStopMethod tests the Stop method behavior
 func TestStopMethod(t *testing.T) {
 	tests := []struct {
@@ -43,7 +29,7 @@ func TestStopMethod(t *testing.T) {
 				}
 				// Start a listener so shutdown has something to close
 				go func() {
-					srv.httpServer.ListenAndServe()
+					_ = srv.httpServer.ListenAndServe() // Ignore error as we're shutting down immediately
 				}()
 				time.Sleep(50 * time.Millisecond) // Give server time to start
 			},
