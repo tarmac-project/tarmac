@@ -14,6 +14,10 @@ func waitForServer(url string, timeout time.Duration) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
 
@@ -22,7 +26,7 @@ func waitForServer(url string, timeout time.Duration) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			resp, err := http.Get(url)
+			resp, err := client.Get(url)
 			if err == nil {
 				resp.Body.Close()
 				if resp.StatusCode == 200 || resp.StatusCode == 403 {

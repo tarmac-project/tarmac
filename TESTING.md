@@ -22,7 +22,11 @@ Or directly with go:
 go test -v -race ./...
 ```
 
-**Unit test runtime:** ~32 seconds for pkg/app tests
+**Unit test runtime:** 
+- `TestBadConfigs`: ~0.01s (configuration validation)
+- `TestPProfServerEnabled`: ~31s (includes 30s profile test)
+- `TestPProfServerDisabled`: ~0.5s (quick verification)
+- **Total**: ~32s (down from 60s+ with fixed sleeps in integration tests)
 
 Unit tests include:
 - Configuration validation tests (`TestBadConfigs`)
