@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/julienschmidt/httprouter v1.3.0
-	github.com/lib/pq v1.10.9
+	github.com/lib/pq v1.11.1
 	github.com/madflojo/tasks v1.2.1
 	github.com/madflojo/testcerts v1.5.0
 	github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7
