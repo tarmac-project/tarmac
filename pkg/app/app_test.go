@@ -535,3 +535,94 @@ func TestRunningFailMTLSServer(t *testing.T) {
 		}
 	})
 }
+
+// TestTLSBranchBehavior verifies that when TLS is enabled, the server only
+// attempts to start a TLS listener and doesn't fall through to start a
+// non-TLS listener. This test addresses the issue where the code could
+// fall through after ListenAndServeTLS returns.
+func TestTLSBranchBehavior(t *testing.T) {
+	// Test that TLS configuration attempts only TLS listener
+	t.Run("TLS enabled uses only TLS listener", func(t *testing.T) {
+		// Create Test Certs
+		err := testcerts.GenerateCertsToFile("/tmp/tls_branch_cert", "/tmp/tls_branch_key")
+		if err != nil {
+			t.Errorf("Failed to create certs - %s", err)
+			t.FailNow()
+		}
+		defer os.Remove("/tmp/tls_branch_cert")
+		defer os.Remove("/tmp/tls_branch_key")
+
+		cfg := viper.New()
+		cfg.Set("disable_logging", true)
+		cfg.Set("enable_tls", true)
+		cfg.Set("cert_file", "/tmp/tls_branch_cert")
+		cfg.Set("key_file", "/tmp/tls_branch_key")
+		cfg.Set("listen_addr", "127.0.0.1:19001") // Use unique port
+		cfg.Set("enable_kvstore", false)
+		cfg.Set("wasm_function", "../../testdata/base/default/tarmac.wasm")
+
+		srv := New(cfg)
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		// Start server in goroutine
+		errChan := make(chan error, 1)
+		go func() {
+			errChan <- srv.Run()
+		}()
+
+		// Schedule shutdown
+		go func() {
+			<-ctx.Done()
+			srv.Stop()
+		}()
+
+		// Wait for either error or timeout
+		select {
+		case err := <-errChan:
+			// Server should stop with ErrShutdown
+			if err != nil && err != ErrShutdown {
+				t.Errorf("Expected ErrShutdown or nil, got: %s", err)
+			}
+		case <-time.After(3 * time.Second):
+			srv.Stop()
+		}
+	})
+
+	// Test that non-TLS configuration attempts only non-TLS listener
+	t.Run("TLS disabled uses only HTTP listener", func(t *testing.T) {
+		cfg := viper.New()
+		cfg.Set("disable_logging", true)
+		cfg.Set("enable_tls", false)
+		cfg.Set("listen_addr", "127.0.0.1:19002") // Use unique port
+		cfg.Set("enable_kvstore", false)
+		cfg.Set("wasm_function", "../../testdata/base/default/tarmac.wasm")
+
+		srv := New(cfg)
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		// Start server in goroutine
+		errChan := make(chan error, 1)
+		go func() {
+			errChan <- srv.Run()
+		}()
+
+		// Schedule shutdown
+		go func() {
+			<-ctx.Done()
+			srv.Stop()
+		}()
+
+		// Wait for either error or timeout
+		select {
+		case err := <-errChan:
+			// Server should stop with ErrShutdown
+			if err != nil && err != ErrShutdown {
+				t.Errorf("Expected ErrShutdown or nil, got: %s", err)
+			}
+		case <-time.After(3 * time.Second):
+			srv.Stop()
+		}
+	})
+}

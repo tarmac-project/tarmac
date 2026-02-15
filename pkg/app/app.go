@@ -907,15 +907,16 @@ func (srv *Server) Run() error {
 			}
 			return fmt.Errorf("unable to start HTTPS Server - %s", err)
 		}
-	}
-	err = srv.httpServer.ListenAndServe()
-	if err != nil {
-		if err == http.ErrServerClosed {
-			// Wait until all outstanding requests are done
-			<-srv.runCtx.Done()
-			return ErrShutdown
+	} else {
+		err = srv.httpServer.ListenAndServe()
+		if err != nil {
+			if err == http.ErrServerClosed {
+				// Wait until all outstanding requests are done
+				<-srv.runCtx.Done()
+				return ErrShutdown
+			}
+			return fmt.Errorf("unable to start HTTP Server - %s", err)
 		}
-		return fmt.Errorf("unable to start HTTP Server - %s", err)
 	}
 
 	return nil
