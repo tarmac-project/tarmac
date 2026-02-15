@@ -3,7 +3,6 @@ package httpclient
 import (
 	"crypto/md5"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -534,17 +533,6 @@ func TestResponseBodySizeLimit(t *testing.T) {
 	}
 }
 
-// failingRoundTripper simulates transport failures
-type failingRoundTripper struct {
-	err error
-}
-
-func (f *failingRoundTripper) RoundTrip(*http.Request) (*http.Response, error) {
-	return nil, f.err
-}
-
-
-
 // TestErrorPaths tests all error branches in Call and callJSON
 func TestErrorPaths(t *testing.T) {
 	h, err := New(Config{})
@@ -702,8 +690,6 @@ func TestErrorPaths(t *testing.T) {
 
 // TestTransportFailures tests HTTP transport failures
 func TestTransportFailures(t *testing.T) {
-	testErr := errors.New("simulated transport failure")
-
 	t.Run("Protobuf Transport Failure", func(t *testing.T) {
 		h, err := New(Config{})
 		if err != nil {
@@ -773,16 +759,10 @@ func TestTransportFailures(t *testing.T) {
 		}
 	})
 
-	// Test with custom failing transport
-	t.Run("Custom Failing Transport", func(_ *testing.T) {
-		// Create a custom HTTPClient with failing transport
-		// This test verifies the error handling works with explicit transport failures
-		// Note: This is primarily for documentation/demonstration as the actual
-		// http.Client is created internally and cannot be easily mocked
-		_ = &failingRoundTripper{err: testErr}
-		// The actual implementation creates its own http.Client internally
-		// so we test via invalid URLs that trigger real transport errors
-	})
+	// Note: Custom RoundTripper mocking is not used in these tests because the
+	// http.Client is created internally within the Call/callJSON methods and cannot
+	// be easily injected with a custom transport. Instead, we test transport failures
+	// through actual connection errors (invalid ports, unreachable hosts, etc.)
 }
 
 // TestBodyReadFailures tests response body read failures
@@ -813,7 +793,7 @@ func TestBodyReadFailures(t *testing.T) {
 			t.Fatalf("Failed to marshal request: %s", err)
 		}
 
-		rsp, callErr := h.Call(payload)
+		rsp, _ := h.Call(payload)
 		// Body read errors are handled gracefully in the current implementation
 		// The error is set in the status but the function returns the response
 
@@ -828,8 +808,6 @@ func TestBodyReadFailures(t *testing.T) {
 				t.Logf("Body read error handled, status: %s", r.Status.Status)
 			}
 		}
-		// Avoid unused variable warning
-		_ = callErr
 	})
 
 	t.Run("JSON Body Read Error", func(t *testing.T) {
@@ -849,7 +827,7 @@ func TestBodyReadFailures(t *testing.T) {
 
 		payload := fmt.Sprintf(`{"method":"GET","url":"%s"}`, ts.URL)
 
-		rsp, callErr := h.Call([]byte(payload))
+		rsp, _ := h.Call([]byte(payload))
 
 		var r tarmac.HTTPClientResponse
 		if err := ffjson.Unmarshal(rsp, &r); err != nil {
@@ -862,8 +840,6 @@ func TestBodyReadFailures(t *testing.T) {
 				t.Logf("Body read error handled, status: %s", r.Status.Status)
 			}
 		}
-		// Avoid unused variable warning
-		_ = callErr
 	})
 }
 
