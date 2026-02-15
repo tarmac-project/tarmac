@@ -276,7 +276,7 @@ func (srv *Server) Run() error {
 				return fmt.Errorf("could not create boltdb file - %w", err)
 			}
 			if fh != nil {
-				fh.Close()
+				_ = fh.Close()
 			}
 
 			// Open datastore
