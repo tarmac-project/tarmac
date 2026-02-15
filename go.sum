@@ -307,6 +307,8 @@ github.com/tarmac-project/hord/drivers/hashmap v0.8.1 h1:WFKs4wcpxtOL8mc7bD18EiC
 github.com/tarmac-project/hord/drivers/hashmap v0.8.1/go.mod h1:yIqIkXmuvnCaKusOkfczZsaMsdSpDUvGzIISPCFG/No=
 github.com/tarmac-project/hord/drivers/mock v0.6.4 h1:RUGzE+3TE24oK1HdfWoh5Ui+uc74Ezc8hSnjuJEk+9g=
 github.com/tarmac-project/hord/drivers/mock v0.6.4/go.mod h1:4HnA9ZGIOlqeTZ9TvTtNVrwWIHvtPcqQfeKI0gIybRM=
+github.com/tarmac-project/hord/drivers/nats v0.8.1 h1:IKHmMtFiJCubKwREX9uYEXeGHOJmBp5PkoCpYkoT52w=
+github.com/tarmac-project/hord/drivers/nats v0.8.1/go.mod h1:hsUEPOuXC1f9tbWsOKt0dNO4PMuoog5aQdvRJ1WI5+s=
 github.com/tarmac-project/hord/drivers/redis v0.6.4 h1:fRVeJW2aESY24512+Ob6/hyXjfMv/RniQYPcWSnr6CQ=
 github.com/tarmac-project/hord/drivers/redis v0.6.4/go.mod h1:ZdPpag+GiE3CWpykIFKyO/TCrArGlxH/B37rwSxUC9s=
 github.com/tarmac-project/protobuf-go v0.0.0-20241006222441-51664fb11f56 h1:lWWclbcicMaIUdlwIUSaVnAOmhwqpjVDAgUGmK5Dxb8=
