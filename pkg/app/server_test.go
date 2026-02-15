@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -455,4 +456,218 @@ func TestWASMRunner(t *testing.T) {
 		})
 	}
 
+}
+
+func TestWASMHandlerFailures(t *testing.T) {
+	cfg := viper.New()
+	cfg.Set("disable_logging", false)
+	cfg.Set("debug", true)
+	cfg.Set("listen_addr", "localhost:9002")
+	cfg.Set("wasm_function", "../../testdata/base/default/tarmac.wasm")
+
+	srv := New(cfg)
+	go func() {
+		err := srv.Run()
+		if err != nil && err != ErrShutdown {
+			t.Errorf("Run unexpectedly stopped - %s", err)
+		}
+	}()
+	defer srv.Stop()
+
+	// Wait for Server to start
+	time.Sleep(2 * time.Second)
+
+	t.Run("GET request success", func(t *testing.T) {
+		resp, err := http.Get("http://localhost:9002/")
+		if err != nil {
+			t.Fatalf("Unexpected error when making HTTP request - %s", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("Expected status code %d, got %d", http.StatusOK, resp.StatusCode)
+		}
+	})
+
+	t.Run("POST with valid data", func(t *testing.T) {
+		resp, err := http.Post("http://localhost:9002/", "application/text", bytes.NewBuffer([]byte("test")))
+		if err != nil {
+			t.Fatalf("Unexpected error when making HTTP request - %s", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("Expected status code %d, got %d", http.StatusOK, resp.StatusCode)
+		}
+	})
+
+	t.Run("PUT with valid data", func(t *testing.T) {
+		req, err := http.NewRequest("PUT", "http://localhost:9002/", bytes.NewBuffer([]byte("test data")))
+		if err != nil {
+			t.Fatalf("Failed to create request - %s", err)
+		}
+		req.Header.Set("Content-Type", "application/text")
+
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("Unexpected error when making HTTP request - %s", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("Expected status code %d, got %d", http.StatusOK, resp.StatusCode)
+		}
+	})
+
+	t.Run("DELETE request success", func(t *testing.T) {
+		req, err := http.NewRequest("DELETE", "http://localhost:9002/", nil)
+		if err != nil {
+			t.Fatalf("Failed to create request - %s", err)
+		}
+
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("Unexpected error when making HTTP request - %s", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("Expected status code %d, got %d", http.StatusOK, resp.StatusCode)
+		}
+	})
+}
+
+func TestWASMHandlerWithFailingModule(t *testing.T) {
+	// Create a temp config file with a failing module
+	configContent := `{
+		"services": {
+			"test-service": {
+				"name": "test-service",
+				"functions": {
+					"fail": {
+						"filepath": "../../testdata/base/fail/tarmac.wasm",
+						"pool_size": 1
+					}
+				},
+				"routes": [
+					{
+						"type": "http",
+						"methods": ["POST"],
+						"path": "/fail",
+						"function": "fail"
+					}
+				]
+			}
+		}
+	}`
+
+	tmpfile, err := os.CreateTemp("", "tarmac-test-*.json")
+	if err != nil {
+		t.Fatalf("Failed to create temp file - %s", err)
+	}
+	defer os.Remove(tmpfile.Name())
+
+	if _, err := tmpfile.Write([]byte(configContent)); err != nil {
+		t.Fatalf("Failed to write to temp file - %s", err)
+	}
+	tmpfile.Close()
+
+	cfg := viper.New()
+	cfg.Set("disable_logging", false)
+	cfg.Set("debug", true)
+	cfg.Set("listen_addr", "localhost:9003")
+	cfg.Set("wasm_function_config", tmpfile.Name())
+
+	srv := New(cfg)
+	go func() {
+		err := srv.Run()
+		if err != nil && err != ErrShutdown {
+			t.Errorf("Run unexpectedly stopped - %s", err)
+		}
+	}()
+	defer srv.Stop()
+
+	// Wait for Server to start
+	time.Sleep(5 * time.Second)
+
+	t.Run("POST to failing module endpoint", func(t *testing.T) {
+		resp, err := http.Post("http://localhost:9003/fail", "application/text", bytes.NewBuffer([]byte("test")))
+		if err != nil {
+			t.Fatalf("Unexpected error when making HTTP request - %s", err)
+		}
+		defer resp.Body.Close()
+
+		// Should return 500 Internal Server Error when module execution fails
+		if resp.StatusCode != http.StatusInternalServerError {
+			t.Errorf("Expected status code %d, got %d", http.StatusInternalServerError, resp.StatusCode)
+		}
+	})
+}
+
+func TestRunWASMWithFailingModule(t *testing.T) {
+	// Create a temp config file with a failing module
+	configContent := `{
+		"services": {
+			"test-service": {
+				"name": "test-service",
+				"functions": {
+					"fail": {
+						"filepath": "../../testdata/base/fail/tarmac.wasm",
+						"pool_size": 1
+					}
+				}
+			}
+		}
+	}`
+
+	tmpfile, err := os.CreateTemp("", "tarmac-test-*.json")
+	if err != nil {
+		t.Fatalf("Failed to create temp file - %s", err)
+	}
+	defer os.Remove(tmpfile.Name())
+
+	if _, err := tmpfile.Write([]byte(configContent)); err != nil {
+		t.Fatalf("Failed to write to temp file - %s", err)
+	}
+	tmpfile.Close()
+
+	cfg := viper.New()
+	cfg.Set("disable_logging", false)
+	cfg.Set("debug", true)
+	cfg.Set("listen_addr", "localhost:9004")
+	cfg.Set("wasm_function_config", tmpfile.Name())
+
+	srv := New(cfg)
+	go func() {
+		err := srv.Run()
+		if err != nil && err != ErrShutdown {
+			t.Errorf("Run unexpectedly stopped - %s", err)
+		}
+	}()
+	defer srv.Stop()
+
+	// Wait for Server to start
+	time.Sleep(5 * time.Second)
+
+	t.Run("Invoke failing module", func(t *testing.T) {
+		_, err := srv.runWASM("fail", "handler", []byte("test"))
+		if err == nil {
+			t.Errorf("Expected error when executing failing module, got success")
+		}
+		if !strings.Contains(err.Error(), "failed to execute wasm module") {
+			t.Errorf("Expected error message to contain 'failed to execute wasm module', got: %s", err.Error())
+		}
+	})
+
+	t.Run("Module not found error", func(t *testing.T) {
+		_, err := srv.runWASM("nonexistent", "handler", []byte("test"))
+		if err == nil {
+			t.Errorf("Expected error when executing non-existent module, got success")
+		}
+		if !strings.Contains(err.Error(), "unable to load wasi environment") {
+			t.Errorf("Expected error message to contain 'unable to load wasi environment', got: %s", err.Error())
+		}
+	})
 }
