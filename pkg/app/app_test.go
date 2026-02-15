@@ -543,20 +543,21 @@ func TestRunningFailMTLSServer(t *testing.T) {
 func TestTLSBranchBehavior(t *testing.T) {
 	// Test that TLS configuration attempts only TLS listener
 	t.Run("TLS enabled uses only TLS listener", func(t *testing.T) {
-		// Create Test Certs
-		err := testcerts.GenerateCertsToFile("/tmp/tls_branch_cert", "/tmp/tls_branch_key")
+		// Create Test Certs in temporary directory
+		tmpDir := t.TempDir()
+		certFile := tmpDir + "/cert.pem"
+		keyFile := tmpDir + "/key.pem"
+		err := testcerts.GenerateCertsToFile(certFile, keyFile)
 		if err != nil {
 			t.Errorf("Failed to create certs - %s", err)
 			t.FailNow()
 		}
-		defer os.Remove("/tmp/tls_branch_cert")
-		defer os.Remove("/tmp/tls_branch_key")
 
 		cfg := viper.New()
 		cfg.Set("disable_logging", true)
 		cfg.Set("enable_tls", true)
-		cfg.Set("cert_file", "/tmp/tls_branch_cert")
-		cfg.Set("key_file", "/tmp/tls_branch_key")
+		cfg.Set("cert_file", certFile)
+		cfg.Set("key_file", keyFile)
 		cfg.Set("listen_addr", "127.0.0.1:19001") // Use unique port
 		cfg.Set("enable_kvstore", false)
 		cfg.Set("wasm_function", "../../testdata/base/default/tarmac.wasm")
@@ -577,14 +578,15 @@ func TestTLSBranchBehavior(t *testing.T) {
 			srv.Stop()
 		}()
 
-		// Wait for either error or timeout
+		// Wait for either error or context timeout
 		select {
 		case err := <-errChan:
 			// Server should stop with ErrShutdown
 			if err != nil && err != ErrShutdown {
 				t.Errorf("Expected ErrShutdown or nil, got: %s", err)
 			}
-		case <-time.After(3 * time.Second):
+		case <-time.After(2500 * time.Millisecond):
+			// Slightly longer than context timeout to ensure proper shutdown
 			srv.Stop()
 		}
 	})
@@ -614,14 +616,15 @@ func TestTLSBranchBehavior(t *testing.T) {
 			srv.Stop()
 		}()
 
-		// Wait for either error or timeout
+		// Wait for either error or context timeout
 		select {
 		case err := <-errChan:
 			// Server should stop with ErrShutdown
 			if err != nil && err != ErrShutdown {
 				t.Errorf("Expected ErrShutdown or nil, got: %s", err)
 			}
-		case <-time.After(3 * time.Second):
+		case <-time.After(2500 * time.Millisecond):
+			// Slightly longer than context timeout to ensure proper shutdown
 			srv.Stop()
 		}
 	})
