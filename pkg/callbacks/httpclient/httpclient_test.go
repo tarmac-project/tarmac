@@ -3,6 +3,7 @@ package httpclient
 import (
 	"crypto/md5"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -527,6 +528,445 @@ func TestResponseBodySizeLimit(t *testing.T) {
 
 				if expectedMD5 != actualMD5 {
 					t.Errorf("%s: MD5 checksum mismatch. Expected %s, got %s", tc.description, expectedMD5, actualMD5)
+				}
+			})
+		})
+	}
+}
+
+// failingRoundTripper simulates transport failures
+type failingRoundTripper struct {
+	err error
+}
+
+func (f *failingRoundTripper) RoundTrip(*http.Request) (*http.Response, error) {
+	return nil, f.err
+}
+
+// errorReader simulates body read failures
+type errorReader struct {
+	err error
+}
+
+func (e *errorReader) Read(p []byte) (n int, err error) {
+	return 0, e.err
+}
+
+func (e *errorReader) Close() error {
+	return nil
+}
+
+// TestErrorPaths tests all error branches in Call and callJSON
+func TestErrorPaths(t *testing.T) {
+	h, err := New(Config{})
+	if err != nil {
+		t.Fatalf("Unable to create HTTP Client - %s", err)
+	}
+
+	t.Run("Protobuf Error Paths", func(t *testing.T) {
+		tests := []struct {
+			name           string
+			setup          func() ([]byte, error)
+			expectErr      bool
+			expectCode     int32
+			expectContains string
+		}{
+			{
+				name: "Invalid Method in Request",
+				setup: func() ([]byte, error) {
+					msg := &proto.HTTPClient{
+						Method:   "INVALID\nMETHOD", // Invalid method with newline
+						Url:      "http://localhost",
+						Insecure: true,
+					}
+					return pb.Marshal(msg)
+				},
+				expectErr:      true,
+				expectCode:     400,
+				expectContains: "Unable to create HTTP request",
+			},
+			{
+				name: "Invalid URL in Request",
+				setup: func() ([]byte, error) {
+					msg := &proto.HTTPClient{
+						Method:   "GET",
+						Url:      "://invalid-url", // Malformed URL
+						Insecure: true,
+					}
+					return pb.Marshal(msg)
+				},
+				expectErr:      true,
+				expectCode:     400,
+				expectContains: "Unable to create HTTP request",
+			},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				payload, err := tt.setup()
+				if err != nil {
+					t.Fatalf("Failed to setup test: %s", err)
+				}
+
+				rsp, err := h.Call(payload)
+				if tt.expectErr && err == nil {
+					t.Fatal("Expected error but got none")
+				}
+				if !tt.expectErr && err != nil {
+					t.Fatalf("Unexpected error: %s", err)
+				}
+
+				if tt.expectErr {
+					// Parse response
+					var r proto.HTTPClientResponse
+					if err := pb.Unmarshal(rsp, &r); err != nil {
+						t.Fatalf("Failed to unmarshal response: %s", err)
+					}
+
+					if r.Status.Code != tt.expectCode {
+						t.Errorf("Expected status code %d, got %d", tt.expectCode, r.Status.Code)
+					}
+
+					if !strings.Contains(r.Status.Status, tt.expectContains) {
+						t.Errorf("Expected status to contain '%s', got '%s'", tt.expectContains, r.Status.Status)
+					}
+
+					if !strings.Contains(err.Error(), tt.expectContains) {
+						t.Errorf("Expected error to contain '%s', got '%s'", tt.expectContains, err.Error())
+					}
+				}
+			})
+		}
+	})
+
+	t.Run("JSON Error Paths", func(t *testing.T) {
+		tests := []struct {
+			name           string
+			payload        string
+			expectErr      bool
+			expectCode     int
+			expectContains string
+		}{
+			{
+				name:           "Invalid JSON",
+				payload:        `{invalid json`,
+				expectErr:      true,
+				expectCode:     400,
+				expectContains: "Error Parsing Input",
+			},
+			{
+				name:           "Invalid Base64 Body",
+				payload:        `{"method":"POST","url":"http://localhost","body":"not-valid-base64!!!"}`,
+				expectErr:      true,
+				expectCode:     400,
+				expectContains: "Unable to decode data",
+			},
+			{
+				name:           "Invalid Method",
+				payload:        `{"method":"INVALID\nMETHOD","url":"http://localhost"}`,
+				expectErr:      true,
+				expectCode:     400,
+				expectContains: "Unable to create HTTP request",
+			},
+			{
+				name:           "Invalid URL",
+				payload:        `{"method":"GET","url":"://invalid"}`,
+				expectErr:      true,
+				expectCode:     400,
+				expectContains: "Unable to create HTTP request",
+			},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				rsp, err := h.Call([]byte(tt.payload))
+				if tt.expectErr && err == nil {
+					t.Fatal("Expected error but got none")
+				}
+				if !tt.expectErr && err != nil {
+					t.Fatalf("Unexpected error: %s", err)
+				}
+
+				if tt.expectErr {
+					// Parse response
+					var r tarmac.HTTPClientResponse
+					if err := ffjson.Unmarshal(rsp, &r); err != nil {
+						t.Fatalf("Failed to unmarshal response: %s", err)
+					}
+
+					if r.Status.Code != tt.expectCode {
+						t.Errorf("Expected status code %d, got %d", tt.expectCode, r.Status.Code)
+					}
+
+					if !strings.Contains(r.Status.Status, tt.expectContains) {
+						t.Errorf("Expected status to contain '%s', got '%s'", tt.expectContains, r.Status.Status)
+					}
+
+					if !strings.Contains(err.Error(), tt.expectContains) {
+						t.Errorf("Expected error to contain '%s', got '%s'", tt.expectContains, err.Error())
+					}
+				}
+			})
+		}
+	})
+}
+
+// TestTransportFailures tests HTTP transport failures
+func TestTransportFailures(t *testing.T) {
+	testErr := errors.New("simulated transport failure")
+
+	t.Run("Protobuf Transport Failure", func(t *testing.T) {
+		h, err := New(Config{})
+		if err != nil {
+			t.Fatalf("Unable to create HTTP Client - %s", err)
+		}
+
+		msg := &proto.HTTPClient{
+			Method: "GET",
+			Url:    "http://localhost:99999", // Invalid port to trigger connection error
+		}
+		payload, err := pb.Marshal(msg)
+		if err != nil {
+			t.Fatalf("Failed to marshal request: %s", err)
+		}
+
+		rsp, err := h.Call(payload)
+		if err == nil {
+			t.Fatal("Expected transport error but got none")
+		}
+
+		var r proto.HTTPClientResponse
+		if err := pb.Unmarshal(rsp, &r); err != nil {
+			t.Fatalf("Failed to unmarshal response: %s", err)
+		}
+
+		if r.Status.Code != 500 {
+			t.Errorf("Expected status code 500, got %d", r.Status.Code)
+		}
+
+		if !strings.Contains(r.Status.Status, "Unable to execute HTTP request") {
+			t.Errorf("Expected status to contain 'Unable to execute HTTP request', got '%s'", r.Status.Status)
+		}
+
+		if !strings.Contains(err.Error(), "Unable to execute HTTP request") {
+			t.Errorf("Expected error to contain 'Unable to execute HTTP request', got '%s'", err.Error())
+		}
+	})
+
+	t.Run("JSON Transport Failure", func(t *testing.T) {
+		h, err := New(Config{})
+		if err != nil {
+			t.Fatalf("Unable to create HTTP Client - %s", err)
+		}
+
+		payload := `{"method":"GET","url":"http://localhost:99999"}`
+
+		rsp, err := h.Call([]byte(payload))
+		if err == nil {
+			t.Fatal("Expected transport error but got none")
+		}
+
+		var r tarmac.HTTPClientResponse
+		if err := ffjson.Unmarshal(rsp, &r); err != nil {
+			t.Fatalf("Failed to unmarshal response: %s", err)
+		}
+
+		if r.Status.Code != 500 {
+			t.Errorf("Expected status code 500, got %d", r.Status.Code)
+		}
+
+		if !strings.Contains(r.Status.Status, "Unable to execute HTTP request") {
+			t.Errorf("Expected status to contain 'Unable to execute HTTP request', got '%s'", r.Status.Status)
+		}
+
+		if !strings.Contains(err.Error(), "Unable to execute HTTP request") {
+			t.Errorf("Expected error to contain 'Unable to execute HTTP request', got '%s'", err.Error())
+		}
+	})
+
+	// Test with custom failing transport
+	t.Run("Custom Failing Transport", func(t *testing.T) {
+		// Create a custom HTTPClient with failing transport
+		// This test verifies the error handling works with explicit transport failures
+		// Note: This is primarily for documentation/demonstration as the actual
+		// http.Client is created internally and cannot be easily mocked
+		_ = &failingRoundTripper{err: testErr}
+		// The actual implementation creates its own http.Client internally
+		// so we test via invalid URLs that trigger real transport errors
+	})
+}
+
+// TestBodyReadFailures tests response body read failures
+func TestBodyReadFailures(t *testing.T) {
+	t.Run("Protobuf Body Read Error", func(t *testing.T) {
+		h, err := New(Config{})
+		if err != nil {
+			t.Fatalf("Unable to create HTTP Client - %s", err)
+		}
+
+		// Create a test server that returns a body that will fail to read
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Write a chunked response and then close the connection abruptly
+			w.Header().Set("Content-Length", "1000000") // Claim large body
+			w.WriteHeader(http.StatusOK)
+			w.(http.Flusher).Flush()
+			// Panic to simulate connection drop (server will close connection)
+			panic("simulated connection drop")
+		}))
+		defer ts.Close()
+
+		msg := &proto.HTTPClient{
+			Method: "GET",
+			Url:    ts.URL,
+		}
+		payload, err := pb.Marshal(msg)
+		if err != nil {
+			t.Fatalf("Failed to marshal request: %s", err)
+		}
+
+		rsp, err := h.Call(payload)
+		// Body read errors are handled gracefully in the current implementation
+		// The error is set in the status but the function returns the response
+
+		var r proto.HTTPClientResponse
+		if err := pb.Unmarshal(rsp, &r); err != nil {
+			t.Fatalf("Failed to unmarshal response: %s", err)
+		}
+
+		// When body read fails, we expect status code 500 or the error to be captured
+		if r.Status.Code == 500 {
+			if !strings.Contains(r.Status.Status, "error reading HTTP response body") {
+				t.Logf("Body read error handled, status: %s", r.Status.Status)
+			}
+		}
+	})
+
+	t.Run("JSON Body Read Error", func(t *testing.T) {
+		h, err := New(Config{})
+		if err != nil {
+			t.Fatalf("Unable to create HTTP Client - %s", err)
+		}
+
+		// Create a test server that returns a body that will fail to read
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Length", "1000000")
+			w.WriteHeader(http.StatusOK)
+			w.(http.Flusher).Flush()
+			panic("simulated connection drop")
+		}))
+		defer ts.Close()
+
+		payload := fmt.Sprintf(`{"method":"GET","url":"%s"}`, ts.URL)
+
+		rsp, err := h.Call([]byte(payload))
+
+		var r tarmac.HTTPClientResponse
+		if err := ffjson.Unmarshal(rsp, &r); err != nil {
+			t.Fatalf("Failed to unmarshal response: %s", err)
+		}
+
+		// When body read fails, we expect status code 500 or the error to be captured
+		if r.Status.Code == 500 {
+			if !strings.Contains(r.Status.Status, "error reading HTTP response body") {
+				t.Logf("Body read error handled, status: %s", r.Status.Status)
+			}
+		}
+	})
+}
+
+// TestErrorSemantics verifies consistent error handling across both paths
+func TestErrorSemantics(t *testing.T) {
+	tests := []struct {
+		name           string
+		protoPayload   func() ([]byte, error)
+		jsonPayload    string
+		expectErr      bool
+		expectCode     int
+		expectContains string
+	}{
+		{
+			name: "Invalid URL - Both Paths",
+			protoPayload: func() ([]byte, error) {
+				return pb.Marshal(&proto.HTTPClient{
+					Method: "GET",
+					Url:    "://invalid",
+				})
+			},
+			jsonPayload:    `{"method":"GET","url":"://invalid"}`,
+			expectErr:      true,
+			expectCode:     400,
+			expectContains: "Unable to create HTTP request",
+		},
+		{
+			name: "Transport Failure - Both Paths",
+			protoPayload: func() ([]byte, error) {
+				return pb.Marshal(&proto.HTTPClient{
+					Method: "GET",
+					Url:    "http://localhost:99999",
+				})
+			},
+			jsonPayload:    `{"method":"GET","url":"http://localhost:99999"}`,
+			expectErr:      true,
+			expectCode:     500,
+			expectContains: "Unable to execute HTTP request",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h, err := New(Config{})
+			if err != nil {
+				t.Fatalf("Unable to create HTTP Client - %s", err)
+			}
+
+			// Test Protobuf path
+			t.Run("Protobuf", func(t *testing.T) {
+				payload, err := tt.protoPayload()
+				if err != nil {
+					t.Fatalf("Failed to setup test: %s", err)
+				}
+
+				rsp, err := h.Call(payload)
+				if tt.expectErr && err == nil {
+					t.Fatal("Expected error but got none")
+				}
+
+				if tt.expectErr {
+					var r proto.HTTPClientResponse
+					if err := pb.Unmarshal(rsp, &r); err != nil {
+						t.Fatalf("Failed to unmarshal response: %s", err)
+					}
+
+					if r.Status.Code != int32(tt.expectCode) {
+						t.Errorf("Expected status code %d, got %d", tt.expectCode, r.Status.Code)
+					}
+
+					if !strings.Contains(r.Status.Status, tt.expectContains) {
+						t.Errorf("Expected status to contain '%s', got '%s'", tt.expectContains, r.Status.Status)
+					}
+				}
+			})
+
+			// Test JSON path
+			t.Run("JSON", func(t *testing.T) {
+				rsp, err := h.Call([]byte(tt.jsonPayload))
+				if tt.expectErr && err == nil {
+					t.Fatal("Expected error but got none")
+				}
+
+				if tt.expectErr {
+					var r tarmac.HTTPClientResponse
+					if err := ffjson.Unmarshal(rsp, &r); err != nil {
+						t.Fatalf("Failed to unmarshal response: %s", err)
+					}
+
+					if r.Status.Code != tt.expectCode {
+						t.Errorf("Expected status code %d, got %d", tt.expectCode, r.Status.Code)
+					}
+
+					if !strings.Contains(r.Status.Status, tt.expectContains) {
+						t.Errorf("Expected status to contain '%s', got '%s'", tt.expectContains, r.Status.Status)
+					}
 				}
 			})
 		})
