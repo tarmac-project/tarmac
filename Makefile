@@ -16,7 +16,7 @@ build-testdata:
 	$(MAKE) -C testdata/base/successafter5 build
 
 tests: build tests-nobuild
-tests-nobuild: tests-base tests-redis tests-cassandra tests-mysql tests-postgres tests-boltdb tests-inmemory
+tests-nobuild: tests-base tests-redis tests-nats tests-cassandra tests-mysql tests-postgres tests-boltdb tests-inmemory
 
 tests-base:
 	@echo "Launching Tests in Docker Compose"
@@ -37,6 +37,11 @@ tests-inmemory:
 tests-redis:
 	@echo "Launching Tests in Docker Compose"
 	docker compose -f dev-compose.yml up --exit-code-from tests-redis tests-redis
+	docker compose -f dev-compose.yml down
+
+tests-nats:
+	@echo "Launching Tests in Docker Compose"
+	docker compose -f dev-compose.yml up --exit-code-from tests-nats tests-nats
 	docker compose -f dev-compose.yml down
 
 tests-cassandra:
