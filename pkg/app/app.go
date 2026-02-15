@@ -525,6 +525,16 @@ func (srv *Server) Run() error {
 		if err != nil {
 			return fmt.Errorf("unable to register callback for sql query - %s", err)
 		}
+
+		err = router.RegisterCallback(callbacks.CallbackConfig{
+			Namespace:  DefaultNamespace,
+			Capability: "sql",
+			Operation:  "exec",
+			Func:       cbSQL.Exec,
+		})
+		if err != nil {
+			return fmt.Errorf("unable to register callback for sql exec - %s", err)
+		}
 	}
 
 	// Setup KVStore Callbacks
