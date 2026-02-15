@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -29,7 +30,12 @@ func TestStopMethod(t *testing.T) {
 				}
 				// Start a listener so shutdown has something to close
 				go func() {
-					_ = srv.httpServer.ListenAndServe() // Ignore error as we're shutting down immediately
+					err := srv.httpServer.ListenAndServe()
+					// We expect either no error (server started and stopped cleanly)
+					// or ErrServerClosed (server was shut down)
+					if err != nil && err != http.ErrServerClosed {
+						t.Errorf("Unexpected error from ListenAndServe: %v", err)
+					}
 				}()
 				time.Sleep(50 * time.Millisecond) // Give server time to start
 			},
@@ -167,7 +173,7 @@ func TestRunErrorPaths(t *testing.T) {
 					t.Fatal("Got shutdown error when expecting initialization error")
 				}
 				// Check if error message contains expected substring
-				if tt.expectedError != "" && !contains(err.Error(), tt.expectedError) {
+				if tt.expectedError != "" && !strings.Contains(err.Error(), tt.expectedError) {
 					t.Errorf("Expected error to contain %q, got %q", tt.expectedError, err.Error())
 				}
 			case <-ctx.Done():
@@ -247,7 +253,7 @@ func TestRunWithRedisConnectionError(t *testing.T) {
 		if err == nil {
 			t.Fatal("Expected error but got nil")
 		}
-		if !contains(err.Error(), "could not establish kvstore connection") {
+		if !strings.Contains(err.Error(), "could not establish kvstore connection") {
 			t.Errorf("Expected kvstore connection error, got: %v", err)
 		}
 	case <-ctx.Done():
@@ -298,7 +304,7 @@ func TestRunWithCassandraErrors(t *testing.T) {
 				if err == nil {
 					t.Fatal("Expected error but got nil")
 				}
-				if tt.expectedError != "" && !contains(err.Error(), tt.expectedError) {
+				if tt.expectedError != "" && !strings.Contains(err.Error(), tt.expectedError) {
 					t.Errorf("Expected error to contain %q, got %q", tt.expectedError, err.Error())
 				}
 			case <-ctx.Done():
@@ -335,7 +341,7 @@ func TestRunWithBoltDBErrors(t *testing.T) {
 		if err == nil {
 			t.Fatal("Expected error but got nil")
 		}
-		if !contains(err.Error(), "could not create boltdb file") {
+		if !strings.Contains(err.Error(), "could not create boltdb file") {
 			t.Errorf("Expected boltdb file creation error, got: %v", err)
 		}
 	case <-ctx.Done():
@@ -463,19 +469,4 @@ func TestStopIdempotency(t *testing.T) {
 	}()
 
 	srv.Stop()
-}
-
-// contains is a helper function to check if a string contains a substring
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
-		(len(s) > 0 && len(substr) > 0 && findSubstring(s, substr)))
-}
-
-func findSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }
