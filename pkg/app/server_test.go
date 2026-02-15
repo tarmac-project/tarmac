@@ -458,7 +458,7 @@ func TestWASMRunner(t *testing.T) {
 
 }
 
-func TestWASMHandlerFailures(t *testing.T) {
+func TestWASMHandlerHTTPMethods(t *testing.T) {
 	cfg := viper.New()
 	cfg.Set("disable_logging", false)
 	cfg.Set("debug", true)
