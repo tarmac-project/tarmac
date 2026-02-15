@@ -7,6 +7,7 @@ package kvstore
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 
 	"github.com/valyala/fastjson"
@@ -55,9 +56,20 @@ func (kv *KV) Set(key string, data []byte) error {
 	}
 
 	d := base64.StdEncoding.EncodeToString(data)
-	j := fmt.Sprintf(`{"key":"%s","data":"%s"}`, key, d)
+	payload := struct {
+		Key  string `json:"key"`
+		Data string `json:"data"`
+	}{
+		Key:  key,
+		Data: d,
+	}
 
-	_, err := kv.hostCall(kv.namespace, "kvstore", "set", []byte(j))
+	j, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("unable to marshal payload - %s", err)
+	}
+
+	_, err = kv.hostCall(kv.namespace, "kvstore", "set", j)
 	if err != nil {
 		return fmt.Errorf("unable to execute set - %s", err)
 	}
@@ -71,7 +83,18 @@ func (kv *KV) Get(key string) ([]byte, error) {
 		return []byte(""), fmt.Errorf("key cannot be empty")
 	}
 
-	b, err := kv.hostCall(kv.namespace, "kvstore", "get", []byte(fmt.Sprintf(`{"key":"%s"}`, key)))
+	payload := struct {
+		Key string `json:"key"`
+	}{
+		Key: key,
+	}
+
+	j, err := json.Marshal(payload)
+	if err != nil {
+		return []byte(""), fmt.Errorf("unable to marshal payload - %s", err)
+	}
+
+	b, err := kv.hostCall(kv.namespace, "kvstore", "get", j)
 	if err != nil {
 		return []byte(""), fmt.Errorf("unable to execute get - %s", err)
 	}
@@ -90,7 +113,18 @@ func (kv *KV) Delete(key string) error {
 		return fmt.Errorf("key cannot be empty")
 	}
 
-	_, err := kv.hostCall(kv.namespace, "kvstore", "delete", []byte(fmt.Sprintf(`{"key":"%s"}`, key)))
+	payload := struct {
+		Key string `json:"key"`
+	}{
+		Key: key,
+	}
+
+	j, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("unable to marshal payload - %s", err)
+	}
+
+	_, err = kv.hostCall(kv.namespace, "kvstore", "delete", j)
 	if err != nil {
 		return fmt.Errorf("unable to execute delete - %s", err)
 	}
