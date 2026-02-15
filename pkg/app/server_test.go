@@ -484,7 +484,7 @@ func TestBoltDBExistingFile(t *testing.T) {
 
 	// Create the server
 	srv := New(cfg)
-	
+
 	// Start the server in a goroutine - the key test is that this doesn't panic
 	// when encountering the existing BoltDB file
 	errChan := make(chan error, 1)
