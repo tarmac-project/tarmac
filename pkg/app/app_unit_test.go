@@ -28,10 +28,10 @@ func (m *mockKVDatabase) Keys() ([]string, error)    { return nil, nil }
 // TestStopMethod tests the Stop method behavior
 func TestStopMethod(t *testing.T) {
 	tests := []struct {
-		name            string
-		setupServer     func(*Server)
-		expectError     bool
-		expectLog       bool
+		name        string
+		setupServer func(*Server)
+		expectError bool
+		expectLog   bool
 	}{
 		{
 			name: "successful shutdown",
@@ -79,7 +79,7 @@ func TestStopMethod(t *testing.T) {
 			cfg := viper.New()
 			cfg.Set("disable_logging", true)
 			srv := New(cfg)
-			
+
 			// Setup the server based on test case
 			tt.setupServer(srv)
 
@@ -205,7 +205,7 @@ func TestRunConfigWatcher(t *testing.T) {
 	cfg.Set("config_watch_interval", 1) // 1 second interval
 
 	srv := New(cfg)
-	
+
 	// We can't easily test the full Run without external dependencies,
 	// but we can verify the scheduler can be created
 	srv.scheduler = tasks.New()
@@ -229,9 +229,200 @@ func TestRunConfigWatcher(t *testing.T) {
 
 	// Wait for task to run
 	time.Sleep(200 * time.Millisecond)
-	
+
 	if !taskRan {
 		t.Error("Expected scheduled task to run")
+	}
+}
+
+// TestRunWithRedisConnectionError tests Run() with Redis connection error
+func TestRunWithRedisConnectionError(t *testing.T) {
+	cfg := viper.New()
+	cfg.Set("enable_tls", false)
+	cfg.Set("listen_addr", "localhost:0")
+	cfg.Set("disable_logging", true)
+	cfg.Set("enable_kvstore", true)
+	cfg.Set("kvstore_type", "redis")
+	cfg.Set("redis_server", "invalid-redis-host:9999")
+	cfg.Set("redis_connect_timeout", 1) // Short timeout
+
+	srv := New(cfg)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- srv.Run()
+	}()
+
+	select {
+	case err := <-errCh:
+		if err == nil {
+			t.Fatal("Expected error but got nil")
+		}
+		if !contains(err.Error(), "could not establish kvstore connection") {
+			t.Errorf("Expected kvstore connection error, got: %v", err)
+		}
+	case <-ctx.Done():
+		srv.Stop()
+		t.Fatal("Run() did not return an error within timeout")
+	}
+}
+
+// TestRunWithCassandraErrors tests Run() with Cassandra configuration errors
+func TestRunWithCassandraErrors(t *testing.T) {
+	tests := []struct {
+		name          string
+		setupConfig   func(*viper.Viper)
+		expectedError string
+	}{
+		{
+			name: "cassandra empty keyspace",
+			setupConfig: func(v *viper.Viper) {
+				v.Set("enable_tls", false)
+				v.Set("listen_addr", "localhost:0")
+				v.Set("disable_logging", true)
+				v.Set("enable_kvstore", true)
+				v.Set("kvstore_type", "cassandra")
+				v.Set("cassandra_hosts", []string{"cassandra-host"})
+				v.Set("cassandra_keyspace", "") // Empty keyspace should fail
+			},
+			expectedError: "could not establish kvstore connection",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := viper.New()
+			tt.setupConfig(cfg)
+
+			srv := New(cfg)
+
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+
+			errCh := make(chan error, 1)
+			go func() {
+				errCh <- srv.Run()
+			}()
+
+			select {
+			case err := <-errCh:
+				if err == nil {
+					t.Fatal("Expected error but got nil")
+				}
+				if tt.expectedError != "" && !contains(err.Error(), tt.expectedError) {
+					t.Errorf("Expected error to contain %q, got %q", tt.expectedError, err.Error())
+				}
+			case <-ctx.Done():
+				srv.Stop()
+				t.Fatal("Run() did not return an error within timeout")
+			}
+		})
+	}
+}
+
+// TestRunWithBoltDBErrors tests Run() with BoltDB configuration errors
+func TestRunWithBoltDBErrors(t *testing.T) {
+	cfg := viper.New()
+	cfg.Set("enable_tls", false)
+	cfg.Set("listen_addr", "localhost:0")
+	cfg.Set("disable_logging", true)
+	cfg.Set("enable_kvstore", true)
+	cfg.Set("kvstore_type", "boltdb")
+	cfg.Set("boltdb_filename", "/nonexistent/directory/test.db")
+	cfg.Set("boltdb_permissions", 0600)
+
+	srv := New(cfg)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- srv.Run()
+	}()
+
+	select {
+	case err := <-errCh:
+		if err == nil {
+			t.Fatal("Expected error but got nil")
+		}
+		if !contains(err.Error(), "could not create boltdb file") {
+			t.Errorf("Expected boltdb file creation error, got: %v", err)
+		}
+	case <-ctx.Done():
+		srv.Stop()
+		t.Fatal("Run() did not return an error within timeout")
+	}
+}
+
+// TestRunWithMySQLError tests Run() with MySQL connection error
+func TestRunWithMySQLError(t *testing.T) {
+	cfg := viper.New()
+	cfg.Set("enable_tls", false)
+	cfg.Set("listen_addr", "localhost:0")
+	cfg.Set("disable_logging", true)
+	cfg.Set("enable_kvstore", false)
+	cfg.Set("enable_sql", true)
+	cfg.Set("sql_type", "mysql")
+	cfg.Set("sql_dsn", "invalid:connection@tcp(nonexistent:3306)/db")
+
+	srv := New(cfg)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- srv.Run()
+	}()
+
+	select {
+	case err := <-errCh:
+		if err == nil {
+			t.Fatal("Expected error but got nil")
+		}
+		// MySQL driver may return the error during Open or later during connection
+		// We just verify we got an error, the exact message may vary
+	case <-ctx.Done():
+		srv.Stop()
+		// This is also acceptable - MySQL driver may not fail immediately
+	}
+}
+
+// TestRunWithPostgreSQLError tests Run() with PostgreSQL connection error
+func TestRunWithPostgreSQLError(t *testing.T) {
+	cfg := viper.New()
+	cfg.Set("enable_tls", false)
+	cfg.Set("listen_addr", "localhost:0")
+	cfg.Set("disable_logging", true)
+	cfg.Set("enable_kvstore", false)
+	cfg.Set("enable_sql", true)
+	cfg.Set("sql_type", "postgres")
+	cfg.Set("sql_dsn", "postgres://invalid:invalid@nonexistent:5432/db?sslmode=disable")
+
+	srv := New(cfg)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- srv.Run()
+	}()
+
+	select {
+	case err := <-errCh:
+		if err == nil {
+			t.Fatal("Expected error but got nil")
+		}
+		// PostgreSQL driver may return the error during Open or later
+		// We just verify we got an error, the exact message may vary
+	case <-ctx.Done():
+		srv.Stop()
+		// This is also acceptable - PostgreSQL driver may not fail immediately
 	}
 }
 
@@ -269,7 +460,7 @@ func TestStopIdempotency(t *testing.T) {
 	cfg := viper.New()
 	cfg.Set("disable_logging", true)
 	srv := New(cfg)
-	
+
 	srv.stats = telemetry.New()
 	srv.httpServer = &http.Server{
 		Addr: "localhost:0",
@@ -277,20 +468,20 @@ func TestStopIdempotency(t *testing.T) {
 
 	// Call Stop multiple times
 	srv.Stop()
-	
+
 	// Calling Stop again should not panic
 	defer func() {
 		if r := recover(); r != nil {
 			t.Errorf("Stop() panicked on second call: %v", r)
 		}
 	}()
-	
+
 	srv.Stop()
 }
 
 // contains is a helper function to check if a string contains a substring
 func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(substr) == 0 || 
+	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
 		(len(s) > 0 && len(substr) > 0 && findSubstring(s, substr)))
 }
 
