@@ -68,6 +68,28 @@ func TestBadConfigs(t *testing.T) {
 	v.Set("cassandra_hosts", []string{"cassandra-primary", "cassandra"})
 	cfgs["invalid Cassandra Keyspace"] = v
 
+	// Invalid NATS URL
+	v = viper.New()
+	v.Set("enable_tls", false)
+	v.Set("listen_addr", "0.0.0.0:8443")
+	v.Set("disable_logging", true)
+	v.Set("enable_kvstore", true)
+	v.Set("kvstore_type", "nats")
+	v.Set("nats_url", "nats://notarealaddress:4222")
+	v.Set("nats_bucket", "tarmac")
+	cfgs["invalid NATS URL"] = v
+
+	// Invalid NATS Bucket
+	v = viper.New()
+	v.Set("enable_tls", false)
+	v.Set("listen_addr", "0.0.0.0:8443")
+	v.Set("disable_logging", true)
+	v.Set("enable_kvstore", true)
+	v.Set("kvstore_type", "nats")
+	v.Set("nats_url", "nats://nats:4222")
+	v.Set("nats_bucket", "")
+	cfgs["invalid NATS Bucket"] = v
+
 	// Invalid KVStore
 	v = viper.New()
 	v.Set("enable_tls", false)
