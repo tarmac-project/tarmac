@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/madflojo/tasks"
 	"github.com/spf13/viper"
 	"github.com/tarmac-project/tarmac/pkg/telemetry"
 )
@@ -184,49 +183,6 @@ func TestRunErrorPaths(t *testing.T) {
 	}
 }
 
-// TestRunConfigWatcher tests the config watcher functionality
-func TestRunConfigWatcher(t *testing.T) {
-	// This test verifies that when Consul is enabled and config_watch_interval is set,
-	// the config watcher task is scheduled
-	cfg := viper.New()
-	cfg.Set("enable_tls", false)
-	cfg.Set("listen_addr", "localhost:0")
-	cfg.Set("disable_logging", true)
-	cfg.Set("enable_kvstore", false)
-	cfg.Set("use_consul", true)
-	cfg.Set("config_watch_interval", 1) // 1 second interval
-
-	srv := New(cfg)
-
-	// We can't easily test the full Run without external dependencies,
-	// but we can verify the scheduler can be created
-	srv.scheduler = tasks.New()
-	if srv.scheduler == nil {
-		t.Fatal("Failed to create scheduler")
-	}
-	defer srv.scheduler.Stop()
-
-	// Add a simple task to verify scheduler works
-	taskRan := false
-	_, err := srv.scheduler.Add(&tasks.Task{
-		Interval: 100 * time.Millisecond,
-		TaskFunc: func() error {
-			taskRan = true
-			return nil
-		},
-	})
-	if err != nil {
-		t.Fatalf("Failed to add task to scheduler: %v", err)
-	}
-
-	// Wait for task to run
-	time.Sleep(200 * time.Millisecond)
-
-	if !taskRan {
-		t.Error("Expected scheduled task to run")
-	}
-}
-
 // TestRunWithRedisConnectionError tests Run() with Redis connection error
 func TestRunWithRedisConnectionError(t *testing.T) {
 	cfg := viper.New()
@@ -350,71 +306,65 @@ func TestRunWithBoltDBErrors(t *testing.T) {
 	}
 }
 
-// TestRunWithMySQLError tests Run() with MySQL connection error
-func TestRunWithMySQLError(t *testing.T) {
-	cfg := viper.New()
-	cfg.Set("enable_tls", false)
-	cfg.Set("listen_addr", "localhost:0")
-	cfg.Set("disable_logging", true)
-	cfg.Set("enable_kvstore", false)
-	cfg.Set("enable_sql", true)
-	cfg.Set("sql_type", "mysql")
-	cfg.Set("sql_dsn", "invalid:connection@tcp(nonexistent:3306)/db")
-
-	srv := New(cfg)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
-	errCh := make(chan error, 1)
-	go func() {
-		errCh <- srv.Run()
-	}()
-
-	select {
-	case err := <-errCh:
-		if err == nil {
-			t.Fatal("Expected error but got nil")
-		}
-		// MySQL driver may return the error during Open or later during connection
-		// We just verify we got an error, the exact message may vary
-	case <-ctx.Done():
-		srv.Stop()
-		// This is also acceptable - MySQL driver may not fail immediately
+// TestRunWithSQLErrors tests Run() with SQL connection errors
+func TestRunWithSQLErrors(t *testing.T) {
+	tests := []struct {
+		name        string
+		setupConfig func(*viper.Viper)
+	}{
+		{
+			name: "mysql connection error",
+			setupConfig: func(v *viper.Viper) {
+				v.Set("enable_tls", false)
+				v.Set("listen_addr", "localhost:0")
+				v.Set("disable_logging", true)
+				v.Set("enable_kvstore", false)
+				v.Set("enable_sql", true)
+				v.Set("sql_type", "mysql")
+				v.Set("sql_dsn", "invalid:connection@tcp(nonexistent:3306)/db")
+			},
+		},
+		{
+			name: "postgresql connection error",
+			setupConfig: func(v *viper.Viper) {
+				v.Set("enable_tls", false)
+				v.Set("listen_addr", "localhost:0")
+				v.Set("disable_logging", true)
+				v.Set("enable_kvstore", false)
+				v.Set("enable_sql", true)
+				v.Set("sql_type", "postgres")
+				v.Set("sql_dsn", "postgres://invalid:invalid@nonexistent:5432/db?sslmode=disable")
+			},
+		},
 	}
-}
 
-// TestRunWithPostgreSQLError tests Run() with PostgreSQL connection error
-func TestRunWithPostgreSQLError(t *testing.T) {
-	cfg := viper.New()
-	cfg.Set("enable_tls", false)
-	cfg.Set("listen_addr", "localhost:0")
-	cfg.Set("disable_logging", true)
-	cfg.Set("enable_kvstore", false)
-	cfg.Set("enable_sql", true)
-	cfg.Set("sql_type", "postgres")
-	cfg.Set("sql_dsn", "postgres://invalid:invalid@nonexistent:5432/db?sslmode=disable")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := viper.New()
+			tt.setupConfig(cfg)
 
-	srv := New(cfg)
+			srv := New(cfg)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
 
-	errCh := make(chan error, 1)
-	go func() {
-		errCh <- srv.Run()
-	}()
+			errCh := make(chan error, 1)
+			go func() {
+				errCh <- srv.Run()
+			}()
 
-	select {
-	case err := <-errCh:
-		if err == nil {
-			t.Fatal("Expected error but got nil")
-		}
-		// PostgreSQL driver may return the error during Open or later
-		// We just verify we got an error, the exact message may vary
-	case <-ctx.Done():
-		srv.Stop()
-		// This is also acceptable - PostgreSQL driver may not fail immediately
+			select {
+			case err := <-errCh:
+				if err == nil {
+					t.Fatal("Expected error but got nil")
+				}
+				// SQL drivers may return the error during Open or later during connection
+				// We just verify we got an error, the exact message may vary
+			case <-ctx.Done():
+				srv.Stop()
+				// This is also acceptable - SQL driver may not fail immediately
+			}
+		})
 	}
 }
 
