@@ -127,6 +127,7 @@ func (srv *Server) WASMHandler(w http.ResponseWriter, r *http.Request, _ httprou
 			"content-length", r.ContentLength,
 			"error", err)
 		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "%s", rsp)
 		return
 	}
 

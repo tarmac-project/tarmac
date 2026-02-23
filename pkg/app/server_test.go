@@ -90,6 +90,45 @@ func TestBasicFunction(t *testing.T) {
 
 }
 
+func TestErrorWithPayload(t *testing.T) {
+	cfg := viper.New()
+	cfg.Set("disable_logging", false)
+	cfg.Set("debug", true)
+	cfg.Set("listen_addr", "localhost:9002")
+	cfg.Set("wasm_function", "/testdata/base/errwithpayload/tarmac.wasm")
+
+	srv := New(cfg)
+	go func() {
+		err := srv.Run()
+		if err != nil && err != ErrShutdown {
+			t.Errorf("Run unexpectedly stopped - %s", err)
+		}
+	}()
+	// Clean up
+	defer srv.Stop()
+
+	// Wait for Server to start
+	time.Sleep(2 * time.Second)
+
+	t.Run("Error With Payload Returns 500 And Body", func(t *testing.T) {
+		r, err := http.Post("http://localhost:9002/", "application/text", bytes.NewBuffer([]byte("test")))
+		if err != nil {
+			t.Fatalf("Unexpected error when making HTTP request - %s", err)
+		}
+		defer r.Body.Close()
+		if r.StatusCode != http.StatusInternalServerError {
+			t.Errorf("Unexpected http status code when making HTTP request %d", r.StatusCode)
+		}
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			t.Errorf("Unexpected error reading http response - %s", err)
+		}
+		if string(body) != "error with payload" {
+			t.Errorf("Unexpected reply from http response - got %s", body)
+		}
+	})
+}
+
 func TestMaintenanceMode(t *testing.T) {
 	cfg := viper.New()
 	cfg.Set("disable_logging", false)
