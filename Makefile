@@ -9,6 +9,7 @@ build-testdata:
 	$(MAKE) -C testdata/sdkv1/logger build
 	$(MAKE) -C testdata/base/default build
 	$(MAKE) -C testdata/base/fail build
+	$(MAKE) -C testdata/base/errwithpayload build
 	$(MAKE) -C testdata/base/kv build
 	$(MAKE) -C testdata/base/sql build
 	$(MAKE) -C testdata/base/logger build
