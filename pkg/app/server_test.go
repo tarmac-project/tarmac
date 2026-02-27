@@ -468,3 +468,63 @@ func TestWASMRunner(t *testing.T) {
 	}
 
 }
+
+// TestBoltDBExistingFile ensures that when a BoltDB file already exists,
+// the initialization code does not panic when attempting to close a nil file handle.
+// This is a regression test for the nil pointer dereference when fh.Close()
+// was called unconditionally after os.OpenFile with O_EXCL flag.
+func TestBoltDBExistingFile(t *testing.T) {
+	// Create a temporary file that will represent an existing BoltDB file
+	fh, err := os.CreateTemp("", "tarmac-test-*.db")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	dbPath := fh.Name()
+	fh.Close()
+	defer os.Remove(dbPath)
+
+	// Configure the server to use the existing BoltDB file
+	cfg := viper.New()
+	cfg.Set("disable_logging", true)
+	cfg.Set("listen_addr", "localhost:9099")
+	cfg.Set("kvstore_type", "internal")
+	cfg.Set("boltdb_filename", dbPath)
+	cfg.Set("boltdb_bucket", "test-bucket")
+	cfg.Set("boltdb_permissions", 0600)
+	cfg.Set("boltdb_timeout", 5)
+	cfg.Set("enable_kvstore", true)
+
+	// Create the server
+	srv := New(cfg)
+
+	// Start the server in a goroutine - the key test is that this doesn't panic
+	// when encountering the existing BoltDB file
+	errChan := make(chan error, 1)
+	go func() {
+		err := srv.Run()
+		errChan <- err
+	}()
+
+	// Give the BoltDB initialization time to occur
+	time.Sleep(500 * time.Millisecond)
+
+	// Stop the server
+	srv.Stop()
+
+	// Wait for shutdown
+	select {
+	case err := <-errChan:
+		// We expect either a graceful shutdown or an error about WASM function
+		// The important part is that we didn't panic from the nil file handle
+		if err != nil && err != ErrShutdown {
+			// Check if it's a WASM-related error (expected since we didn't configure WASM)
+			// or any other error that's not the panic we're testing for
+			t.Logf("Server stopped with error (expected): %v", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Error("Server did not shut down in time")
+	}
+
+	// If we got here without panicking, the fix is working
+	t.Log("Test passed: no panic when BoltDB file already exists")
+}
