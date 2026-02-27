@@ -41,7 +41,7 @@ services:
   tests-base:
     image: golang:latest
     working_dir: /go/src/github.com/tarmac-project/tarmac
-    entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -skip "TestFullService/.*" ./...
+    entrypoint: go test -v -race -tags integration -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -skip "TestFullService/.*" ./...
     volumes:
       - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
