@@ -7,8 +7,8 @@ package http
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/valyala/fastjson"
 )
@@ -90,10 +90,9 @@ func (h *Client) Do(method string, headers map[string]string, url string, insecu
 		return Response{}, fmt.Errorf("url cannot be empty")
 	}
 
-	// Build headers string
-	hh := []string{}
-	for k, v := range headers {
-		hh = append(hh, fmt.Sprintf(`"%s":"%s"`, k, v))
+	// Ensure headers map is not nil
+	if headers == nil {
+		headers = make(map[string]string)
 	}
 
 	// Encode HTTP Payload
@@ -102,11 +101,28 @@ func (h *Client) Do(method string, headers map[string]string, url string, insecu
 		d = base64.StdEncoding.EncodeToString(payload)
 	}
 
-	// Build Callback JSON
-	r := fmt.Sprintf(`{"method":"%s", "headers": {%s},"url":"%s","body":"%s", "insecure": %t}`, method, strings.Join(hh, ", "), url, d, insecure)
+	// Build Callback JSON using proper struct marshaling
+	req := struct {
+		Method   string            `json:"method"`
+		Headers  map[string]string `json:"headers"`
+		URL      string            `json:"url"`
+		Body     string            `json:"body"`
+		Insecure bool              `json:"insecure"`
+	}{
+		Method:   method,
+		Headers:  headers,
+		URL:      url,
+		Body:     d,
+		Insecure: insecure,
+	}
+
+	r, err := json.Marshal(req)
+	if err != nil {
+		return Response{}, fmt.Errorf("unable to marshal request - %s", err)
+	}
 
 	// Perform Host Callback
-	b, err := h.hostCall(h.namespace, "httpclient", "call", []byte(r))
+	b, err := h.hostCall(h.namespace, "httpclient", "call", r)
 	if err != nil {
 		return Response{}, fmt.Errorf("unable to call Client - %s", err)
 	}

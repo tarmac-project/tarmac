@@ -3,6 +3,7 @@ package kvstore
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"testing"
 )
@@ -53,6 +54,57 @@ func TestKVStore(t *testing.T) {
 			data: []byte("bar"),
 			hostCall: func(string, string, string, []byte) ([]byte, error) {
 				return nil, fmt.Errorf("HostCall error")
+			},
+		},
+		{
+			name: "Key with quotes",
+			err:  false,
+			key:  `key"with"quotes`,
+			data: []byte("test_data"),
+			hostCall: func(namespace, operation, key string, data []byte) ([]byte, error) {
+				// Verify the JSON is valid and properly escaped
+				var payload map[string]interface{}
+				if err := json.Unmarshal(data, &payload); err != nil {
+					t.Errorf("Invalid JSON payload: %s, error: %v", string(data), err)
+				}
+				if payload["key"] != `key"with"quotes` {
+					t.Errorf("Key not properly encoded: %v", payload["key"])
+				}
+				return []byte(""), nil
+			},
+		},
+		{
+			name: "Key with backslashes",
+			err:  false,
+			key:  `key\with\backslashes`,
+			data: []byte("test_data"),
+			hostCall: func(namespace, operation, key string, data []byte) ([]byte, error) {
+				// Verify the JSON is valid and properly escaped
+				var payload map[string]interface{}
+				if err := json.Unmarshal(data, &payload); err != nil {
+					t.Errorf("Invalid JSON payload: %s, error: %v", string(data), err)
+				}
+				if payload["key"] != `key\with\backslashes` {
+					t.Errorf("Key not properly encoded: %v", payload["key"])
+				}
+				return []byte(""), nil
+			},
+		},
+		{
+			name: "Key with mixed special characters",
+			err:  false,
+			key:  `key"with\mixed'chars`,
+			data: []byte("test_data"),
+			hostCall: func(namespace, operation, key string, data []byte) ([]byte, error) {
+				// Verify the JSON is valid and properly escaped
+				var payload map[string]interface{}
+				if err := json.Unmarshal(data, &payload); err != nil {
+					t.Errorf("Invalid JSON payload: %s, error: %v", string(data), err)
+				}
+				if payload["key"] != `key"with\mixed'chars` {
+					t.Errorf("Key not properly encoded: %v", payload["key"])
+				}
+				return []byte(""), nil
 			},
 		},
 	}
@@ -119,6 +171,40 @@ func TestKVStore_Get(t *testing.T) {
 			data: []byte("hello"),
 			hostCall: func(string, string, string, []byte) ([]byte, error) {
 				return []byte(fmt.Sprintf(`{"data":"%s"}`, base64.StdEncoding.EncodeToString([]byte("hello")))), nil
+			},
+		},
+		{
+			name: "Key with quotes",
+			err:  false,
+			key:  `key"with"quotes`,
+			data: []byte("hello"),
+			hostCall: func(namespace, operation, key string, data []byte) ([]byte, error) {
+				// Verify the JSON is valid and properly escaped
+				var payload map[string]interface{}
+				if err := json.Unmarshal(data, &payload); err != nil {
+					t.Errorf("Invalid JSON payload: %s, error: %v", string(data), err)
+				}
+				if payload["key"] != `key"with"quotes` {
+					t.Errorf("Key not properly encoded: %v", payload["key"])
+				}
+				return []byte(fmt.Sprintf(`{"data":"%s"}`, base64.StdEncoding.EncodeToString([]byte("hello")))), nil
+			},
+		},
+		{
+			name: "Key with backslashes",
+			err:  false,
+			key:  `key\with\backslashes`,
+			data: []byte("test_value"),
+			hostCall: func(namespace, operation, key string, data []byte) ([]byte, error) {
+				// Verify the JSON is valid and properly escaped
+				var payload map[string]interface{}
+				if err := json.Unmarshal(data, &payload); err != nil {
+					t.Errorf("Invalid JSON payload: %s, error: %v", string(data), err)
+				}
+				if payload["key"] != `key\with\backslashes` {
+					t.Errorf("Key not properly encoded: %v", payload["key"])
+				}
+				return []byte(fmt.Sprintf(`{"data":"%s"}`, base64.StdEncoding.EncodeToString([]byte("test_value")))), nil
 			},
 		},
 	}
@@ -215,6 +301,38 @@ func TestKVStore_Delete(t *testing.T) {
 					t.Errorf("Incorrect data passed to hostCall")
 				}
 				return []byte(""), fmt.Errorf("hostCall failed")
+			},
+		},
+		{
+			name: "Delete key with quotes",
+			err:  false,
+			key:  `key"with"quotes`,
+			hostCall: func(namespace, operation, key string, data []byte) ([]byte, error) {
+				// Verify the JSON is valid and properly escaped
+				var payload map[string]interface{}
+				if err := json.Unmarshal(data, &payload); err != nil {
+					t.Errorf("Invalid JSON payload: %s, error: %v", string(data), err)
+				}
+				if payload["key"] != `key"with"quotes` {
+					t.Errorf("Key not properly encoded: %v", payload["key"])
+				}
+				return []byte(`{"success": true}`), nil
+			},
+		},
+		{
+			name: "Delete key with backslashes",
+			err:  false,
+			key:  `key\with\backslashes`,
+			hostCall: func(namespace, operation, key string, data []byte) ([]byte, error) {
+				// Verify the JSON is valid and properly escaped
+				var payload map[string]interface{}
+				if err := json.Unmarshal(data, &payload); err != nil {
+					t.Errorf("Invalid JSON payload: %s, error: %v", string(data), err)
+				}
+				if payload["key"] != `key\with\backslashes` {
+					t.Errorf("Key not properly encoded: %v", payload["key"])
+				}
+				return []byte(`{"success": true}`), nil
 			},
 		},
 	}

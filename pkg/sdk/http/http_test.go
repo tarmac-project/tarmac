@@ -1,6 +1,7 @@
 package http
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -271,6 +272,60 @@ func TestHTTPDo(t *testing.T) {
 	tc.headers["testing"] = "testing"
 	tt = append(tt, tc)
 
+	// Test with URL containing special characters
+	tc = HTTPDoTestCase{
+		name:     "HTTP request with URL containing quotes",
+		err:      false,
+		method:   "GET",
+		url:      `http://example.com/path?param="value"`,
+		insecure: false,
+		headers:  make(map[string]string),
+		hostCall: func(namespace, capability, function string, input []byte) ([]byte, error) {
+			// Verify JSON is valid
+			var req map[string]interface{}
+			if err := json.Unmarshal(input, &req); err != nil {
+				t.Errorf("Invalid JSON payload: %s, error: %v", string(input), err)
+			}
+			// Verify URL is properly encoded
+			if req["url"] != `http://example.com/path?param="value"` {
+				t.Errorf("URL not properly encoded: %v", req["url"])
+			}
+			return []byte(`{"code": 200,"headers":{},"body":"","status":{"code":200,"status":"OK"}}`), nil
+		},
+	}
+	tt = append(tt, tc)
+
+	// Test with headers containing special characters
+	tc = HTTPDoTestCase{
+		name:     "HTTP request with headers containing quotes and backslashes",
+		err:      false,
+		method:   "POST",
+		url:      "http://example.com",
+		insecure: false,
+		headers:  map[string]string{`X-Custom"Header`: `value"with\quotes`, "X-Normal": "normal"},
+		payload:  []byte("test"),
+		hostCall: func(namespace, capability, function string, input []byte) ([]byte, error) {
+			// Verify JSON is valid
+			var req map[string]interface{}
+			if err := json.Unmarshal(input, &req); err != nil {
+				t.Errorf("Invalid JSON payload: %s, error: %v", string(input), err)
+			}
+			// Verify headers are properly encoded
+			headers, ok := req["headers"].(map[string]interface{})
+			if !ok {
+				t.Errorf("Invalid headers: %v", req["headers"])
+			}
+			if headers[`X-Custom"Header`] != `value"with\quotes` {
+				t.Errorf("Header with quotes not properly encoded: %v", headers[`X-Custom"Header`])
+			}
+			if headers["X-Normal"] != "normal" {
+				t.Errorf("Normal header not properly encoded: %v", headers["X-Normal"])
+			}
+			return []byte(`{"code": 200,"headers":{},"body":"dGVzdA==","status":{"code":200,"status":"OK"}}`), nil
+		},
+	}
+	tt = append(tt, tc)
+
 	for _, c := range tt {
 		t.Run(c.name, func(t *testing.T) {
 			// Create new client
@@ -291,20 +346,20 @@ func TestHTTPDo(t *testing.T) {
 				t.Errorf("expected error got nil - %s", err)
 			}
 
-			// Validate response code
-			if rsp.StatusCode != 200 {
+			// Validate response code - only if not expecting error
+			if !c.err && rsp.StatusCode != 200 {
 				t.Errorf("Unexpected response code: %d", rsp.StatusCode)
 			}
 
-			// Validate response headers
-			if len(c.headers) > 0 {
+			// Validate response headers - only check for "testing" header if it exists in request headers
+			if !c.err && c.headers != nil && c.headers["testing"] != "" {
 				if len(rsp.Headers) != 1 || rsp.Headers["testing"] != c.headers["testing"] {
 					t.Errorf("Unexpected response headers: %v", rsp.Headers)
 				}
 			}
 
 			// Validate response body
-			if len(c.payload) > 0 {
+			if !c.err && len(c.payload) > 0 {
 				if string(rsp.Body) != string(c.payload) {
 					t.Errorf("Unexpected response body: %s", rsp.Body)
 				}
