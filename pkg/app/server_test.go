@@ -46,7 +46,7 @@ func TestBasicFunction(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Unexpected error when making HTTP request - %s", err)
 		}
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when making HTTP request %d", r.StatusCode)
 		}
@@ -64,7 +64,7 @@ func TestBasicFunction(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Unexpected error when making HTTP request - %s", err)
 		}
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
 		}
@@ -75,7 +75,7 @@ func TestBasicFunction(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Unexpected error when making HTTP request - %s", err)
 		}
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when making HTTP request %d", r.StatusCode)
 		}
@@ -116,7 +116,7 @@ func TestMaintenanceMode(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Unexpected error when making HTTP request - %s", err)
 		}
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 		if r.StatusCode != 503 {
 			t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
 		}
@@ -178,8 +178,8 @@ func TestFullService(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error creating temp file - %s", err)
 	}
-	defer os.Remove(fh.Name())
-	fh.Close()
+	defer func() { _ = os.Remove(fh.Name()) }()
+	_ = fh.Close()
 
 	tc = FullServiceTestCase{name: "BoltDB", cfg: viper.New()}
 	tc.cfg.Set("disable_logging", false)
@@ -252,7 +252,7 @@ func TestFullService(t *testing.T) {
 				if err != nil {
 					t.Fatalf("Unexpected error when making HTTP request - %s", err)
 				}
-				defer r.Body.Close()
+				defer func() { _ = r.Body.Close() }()
 				if r.StatusCode != 200 {
 					t.Errorf("Unexpected http status code when making HTTP request %d", r.StatusCode)
 				}
@@ -271,7 +271,7 @@ func TestFullService(t *testing.T) {
 					if err != nil {
 						t.Fatalf("Unexpected error when making HTTP request - %s", err)
 					}
-					defer r.Body.Close()
+					defer func() { _ = r.Body.Close() }()
 					if r.StatusCode != 200 {
 						t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
 					}
@@ -284,7 +284,7 @@ func TestFullService(t *testing.T) {
 					if err != nil {
 						t.Fatalf("Unexpected error when making HTTP request - %s", err)
 					}
-					defer r.Body.Close()
+					defer func() { _ = r.Body.Close() }()
 					if r.StatusCode != 200 {
 						t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
 					}
@@ -296,7 +296,7 @@ func TestFullService(t *testing.T) {
 				if err != nil {
 					t.Fatalf("Unexpected error when making HTTP request - %s", err)
 				}
-				defer r.Body.Close()
+				defer func() { _ = r.Body.Close() }()
 				if r.StatusCode != 200 {
 					t.Errorf("Unexpected http status code when making request %d", r.StatusCode)
 				}
@@ -365,11 +365,11 @@ func TestInitFuncs(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Unexpected error creating temp file - %s", err)
 			}
-			defer os.Remove(fh.Name())
+			defer func() { _ = os.Remove(fh.Name()) }()
 			if _, err := fh.Write(tc.config); err != nil {
 				t.Fatalf("Unexpected error writing to temp file - %s", err)
 			}
-			fh.Close()
+			_ = fh.Close()
 			tc.cfg.Set("wasm_function_config", fh.Name())
 
 			// Create the server

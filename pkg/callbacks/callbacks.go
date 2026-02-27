@@ -15,7 +15,9 @@ import (
 )
 
 var (
+	// ErrNotFound is returned when a callback is not found in the router.
 	ErrNotFound = fmt.Errorf("callback not found")
+	// ErrCanceled is returned when a callback context has expired.
 	ErrCanceled = fmt.Errorf("callback context has expired")
 )
 

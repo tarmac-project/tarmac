@@ -70,6 +70,7 @@ func New(_ Config) (*Metrics, error) {
 	return m, nil
 }
 
+// Counter increments a counter metric with the given name.
 func (m *Metrics) Counter(b []byte) ([]byte, error) {
 	rq := &proto.MetricsCounter{}
 	err := pb.Unmarshal(b, rq)
