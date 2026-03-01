@@ -241,7 +241,7 @@ type slogRecord struct {
 	message string
 }
 
-func (h *spySlogHandler) Enabled(_ context.Context, level slog.Level) bool {
+func (h *spySlogHandler) Enabled(_ context.Context, _ slog.Level) bool {
 	return true
 }
 
@@ -255,11 +255,11 @@ func (h *spySlogHandler) Handle(_ context.Context, r slog.Record) error {
 	return nil
 }
 
-func (h *spySlogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+func (h *spySlogHandler) WithAttrs(_ []slog.Attr) slog.Handler {
 	return h
 }
 
-func (h *spySlogHandler) WithGroup(name string) slog.Handler {
+func (h *spySlogHandler) WithGroup(_ string) slog.Handler {
 	return h
 }
 
