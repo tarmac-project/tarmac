@@ -241,11 +241,11 @@ type slogRecord struct {
 	message string
 }
 
-func (h *spySlogHandler) Enabled(ctx context.Context, level slog.Level) bool {
+func (h *spySlogHandler) Enabled(_ context.Context, level slog.Level) bool {
 	return true
 }
 
-func (h *spySlogHandler) Handle(ctx context.Context, r slog.Record) error {
+func (h *spySlogHandler) Handle(_ context.Context, r slog.Record) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	h.records = append(h.records, slogRecord{
