@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 	"sync"
 	"testing"
 )
@@ -388,7 +389,7 @@ func TestSlogAdapterIntegration(t *testing.T) {
 	// Verify each message appears in output
 	expectedMessages := []string{"info test", "warn test", "error test", "debug test", "trace test"}
 	for _, msg := range expectedMessages {
-		if !bytes.Contains([]byte(output), []byte(msg)) {
+		if !strings.Contains(output, msg) {
 			t.Errorf("Expected output to contain %q, got: %s", msg, output)
 		}
 	}
