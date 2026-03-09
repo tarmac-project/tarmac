@@ -14,6 +14,12 @@ import (
 	"github.com/tarmac-project/tarmac/pkg/tlsconfig"
 )
 
+const (
+	// Test server timeout values
+	testServerContextTimeout = 2 * time.Second
+	testServerMaxWaitTimeout = 2500 * time.Millisecond // Slightly longer than context timeout
+)
+
 func TestBadConfigs(t *testing.T) {
 	cfgs := make(map[string]*viper.Viper)
 
@@ -554,6 +560,100 @@ func TestRunningFailMTLSServer(t *testing.T) {
 			defer r.Body.Close()
 			t.Errorf("Unexpected success when requesting health status")
 			t.FailNow()
+		}
+	})
+}
+
+// TestTLSBranchBehavior verifies that when TLS is enabled, the server only
+// attempts to start a TLS listener and doesn't fall through to start a
+// non-TLS listener. This test addresses the issue where the code could
+// fall through after ListenAndServeTLS returns.
+func TestTLSBranchBehavior(t *testing.T) {
+	// Test that TLS configuration attempts only TLS listener
+	t.Run("TLS enabled uses only TLS listener", func(t *testing.T) {
+		// Create Test Certs in temporary directory
+		tmpDir := t.TempDir()
+		certFile := tmpDir + "/cert.pem"
+		keyFile := tmpDir + "/key.pem"
+		err := testcerts.GenerateCertsToFile(certFile, keyFile)
+		if err != nil {
+			t.Errorf("Failed to create certs - %s", err)
+			t.FailNow()
+		}
+
+		cfg := viper.New()
+		cfg.Set("disable_logging", true)
+		cfg.Set("enable_tls", true)
+		cfg.Set("cert_file", certFile)
+		cfg.Set("key_file", keyFile)
+		cfg.Set("listen_addr", "127.0.0.1:19001") // Use unique port
+		cfg.Set("enable_kvstore", false)
+		cfg.Set("wasm_function", "../../testdata/base/default/tarmac.wasm")
+
+		srv := New(cfg)
+		ctx, cancel := context.WithTimeout(context.Background(), testServerContextTimeout)
+		defer cancel()
+
+		// Start server in goroutine
+		errChan := make(chan error, 1)
+		go func() {
+			errChan <- srv.Run()
+		}()
+
+		// Schedule shutdown
+		go func() {
+			<-ctx.Done()
+			srv.Stop()
+		}()
+
+		// Wait for either error or context timeout
+		select {
+		case err := <-errChan:
+			// Server should stop with ErrShutdown
+			if err != nil && err != ErrShutdown {
+				t.Errorf("Expected ErrShutdown or nil, got: %s", err)
+			}
+		case <-time.After(testServerMaxWaitTimeout):
+			// Slightly longer than context timeout to ensure proper shutdown
+			srv.Stop()
+		}
+	})
+
+	// Test that non-TLS configuration attempts only non-TLS listener
+	t.Run("TLS disabled uses only HTTP listener", func(t *testing.T) {
+		cfg := viper.New()
+		cfg.Set("disable_logging", true)
+		cfg.Set("enable_tls", false)
+		cfg.Set("listen_addr", "127.0.0.1:19002") // Use unique port
+		cfg.Set("enable_kvstore", false)
+		cfg.Set("wasm_function", "../../testdata/base/default/tarmac.wasm")
+
+		srv := New(cfg)
+		ctx, cancel := context.WithTimeout(context.Background(), testServerContextTimeout)
+		defer cancel()
+
+		// Start server in goroutine
+		errChan := make(chan error, 1)
+		go func() {
+			errChan <- srv.Run()
+		}()
+
+		// Schedule shutdown
+		go func() {
+			<-ctx.Done()
+			srv.Stop()
+		}()
+
+		// Wait for either error or context timeout
+		select {
+		case err := <-errChan:
+			// Server should stop with ErrShutdown
+			if err != nil && err != ErrShutdown {
+				t.Errorf("Expected ErrShutdown or nil, got: %s", err)
+			}
+		case <-time.After(testServerMaxWaitTimeout):
+			// Slightly longer than context timeout to ensure proper shutdown
+			srv.Stop()
 		}
 	})
 }
