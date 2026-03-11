@@ -1,0 +1,8 @@
+github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7 h1:xoIK0ctDddBMnc74udxJYBqlo9Ylnsp1waqjLsnef20=
+github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7/go.mod h1:YARuvh7BUWHNhzDq2OM5tzR2RiCcN2D7sapiKyCel/M=
+github.com/tarmac-project/tarmac/pkg/sdk v0.5.0 h1:QKsEf6SXTYrJM9/B4cNoM4RS3/rzuViJaiutEcdSRZQ=
+github.com/tarmac-project/tarmac/pkg/sdk v0.5.0/go.mod h1:UTKYV0QFdkJDgV2sJcnuCujVy49MCd8bgi2JmwviJ6E=
+github.com/valyala/fastjson v1.6.4 h1:uAUNq9Z6ymTgGhcm0UynUAB6tlbakBrz6CQFax3BXVQ=
+github.com/valyala/fastjson v1.6.4/go.mod h1:CLCAqky6SMuOcxStkYQvblddUtoRxhYMGLrsQns1aXY=
+github.com/wapc/wapc-guest-tinygo v0.3.3 h1:jLebiwjVSHLGnS+BRabQ6+XOV7oihVWAc05Hf1SbeR0=
+github.com/wapc/wapc-guest-tinygo v0.3.3/go.mod h1:mzM3CnsdSYktfPkaBdZ8v88ZlfUDEy5Jh5XBOV3fYcw=
