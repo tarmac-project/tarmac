@@ -2,7 +2,7 @@ package callbacks
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"sync"
 	"testing"
 	"time"
@@ -10,6 +10,7 @@ import (
 
 type Counter struct {
 	sync.RWMutex
+
 	count int
 }
 
@@ -53,7 +54,7 @@ func TestCallbacks(t *testing.T) {
 	router := New(Config{
 		PreFunc: func(namespace, _ string, _ []byte) ([]byte, error) {
 			if namespace == "badfunc" {
-				return []byte(""), fmt.Errorf("Forced Error")
+				return []byte(""), errors.New("forced error")
 			}
 			return []byte(""), nil
 		},

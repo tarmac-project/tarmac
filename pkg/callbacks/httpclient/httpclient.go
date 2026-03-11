@@ -23,14 +23,18 @@ package httpclient
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/pquerna/ffjson/ffjson"
+
 	"github.com/tarmac-project/tarmac"
 
 	"github.com/tarmac-project/protobuf-go/sdk"
@@ -39,8 +43,11 @@ import (
 )
 
 const (
-	// DefaultMaxResponseBodySize is the default maximum size for HTTP response bodies (10MB)
+	// DefaultMaxResponseBodySize is the default maximum size for HTTP response bodies (10MB).
 	DefaultMaxResponseBodySize = 10 * 1024 * 1024
+
+	// DefaultRequestTimeout bounds outbound HTTP callback requests.
+	DefaultRequestTimeout = 30 * time.Second
 )
 
 // HTTPClient provides access to Host Callbacks that interact with an HTTP client. These callbacks offer all of the logic
@@ -95,28 +102,36 @@ func (hc *HTTPClient) Call(b []byte) ([]byte, error) {
 	var request *http.Request
 	var c *http.Client
 	tr := &http.Transport{}
-	if msg.Insecure {
+	if msg.GetInsecure() {
 		tr.TLSClientConfig = &tls.Config{
 			InsecureSkipVerify: true,
 		}
 	}
-	c = &http.Client{Transport: tr}
+	c = &http.Client{
+		Transport: tr,
+		Timeout:   DefaultRequestTimeout,
+	}
 
 	// Create HTTP Request
-	request, err = http.NewRequest(msg.Method, msg.Url, bytes.NewBuffer(msg.Body))
+	request, err = http.NewRequestWithContext(
+		context.Background(),
+		msg.GetMethod(),
+		msg.GetUrl(),
+		bytes.NewBuffer(msg.GetBody()),
+	)
 	if err != nil {
 		r.Status.Code = 400
 		r.Status.Status = fmt.Sprintf("Unable to create HTTP request - %s", err)
 		// Marshal a response to return to caller
 		rsp, err := pb.Marshal(r)
 		if err != nil {
-			return []byte(""), fmt.Errorf("unable to marshal HTTPClient:call response")
+			return []byte(""), errors.New("unable to marshal HTTPClient:call response")
 		}
-		return rsp, fmt.Errorf("%s", r.Status.Status)
+		return rsp, fmt.Errorf("%s", r.GetStatus().GetStatus())
 	}
 
 	// Set user-supplied headers
-	for k, v := range msg.Headers {
+	for k, v := range msg.GetHeaders() {
 		request.Header.Set(k, v)
 	}
 
@@ -128,13 +143,13 @@ func (hc *HTTPClient) Call(b []byte) ([]byte, error) {
 		// Marshal a response to return to caller
 		rsp, err := pb.Marshal(r)
 		if err != nil {
-			return []byte(""), fmt.Errorf("unable to marshal HTTPClient:call response")
+			return []byte(""), errors.New("unable to marshal HTTPClient:call response")
 		}
-		return rsp, fmt.Errorf("%s", r.Status.Status)
+		return rsp, fmt.Errorf("%s", r.GetStatus().GetStatus())
 	}
 
 	// Populate Response with Response
-	if response != nil { // nolint
+	if response != nil {
 		defer response.Body.Close()
 		r.Code = int32(response.StatusCode)
 		r.Headers = make(map[string]string)
@@ -152,14 +167,14 @@ func (hc *HTTPClient) Call(b []byte) ([]byte, error) {
 	// Marshal a response to return to caller
 	rsp, err := pb.Marshal(r)
 	if err != nil {
-		return []byte(""), fmt.Errorf("unable to marshal HTTPClient:call response")
+		return []byte(""), errors.New("unable to marshal HTTPClient:call response")
 	}
 
 	// Return response to caller
-	if r.Status.Code == 200 {
+	if r.GetStatus().GetCode() == 200 {
 		return rsp, nil
 	}
-	return rsp, fmt.Errorf("%s", r.Status.Status)
+	return rsp, fmt.Errorf("%s", r.GetStatus().GetStatus())
 }
 
 func (hc *HTTPClient) callJSON(b []byte) ([]byte, error) {
@@ -193,18 +208,21 @@ func (hc *HTTPClient) callJSON(b []byte) ([]byte, error) {
 				InsecureSkipVerify: true,
 			}
 		}
-		c = &http.Client{Transport: tr}
+		c = &http.Client{
+			Transport: tr,
+			Timeout:   DefaultRequestTimeout,
+		}
 
 		// Create HTTP Request
-		request, err = http.NewRequest(rq.Method, rq.URL, bytes.NewBuffer(data))
+		request, err = http.NewRequestWithContext(context.Background(), rq.Method, rq.URL, bytes.NewBuffer(data))
 		if err != nil {
 			r.Status.Code = 400
 			r.Status.Status = fmt.Sprintf("Unable to create HTTP request - %s", err)
-		}
-
-		// Set user-supplied headers
-		for k, v := range rq.Headers {
-			request.Header.Set(k, v)
+		} else {
+			// Set user-supplied headers
+			for k, v := range rq.Headers {
+				request.Header.Set(k, v)
+			}
 		}
 	}
 
@@ -217,7 +235,7 @@ func (hc *HTTPClient) callJSON(b []byte) ([]byte, error) {
 		}
 
 		// Populate Response with Response
-		if response != nil { // nolint
+		if response != nil {
 			defer response.Body.Close()
 			r.Code = response.StatusCode
 			r.Headers = make(map[string]string)
@@ -236,7 +254,7 @@ func (hc *HTTPClient) callJSON(b []byte) ([]byte, error) {
 	// Marshal a response JSON to return to caller
 	rsp, err := ffjson.Marshal(r)
 	if err != nil {
-		return []byte(""), fmt.Errorf("unable to marshal HTTPClient:call response")
+		return []byte(""), errors.New("unable to marshal HTTPClient:call response")
 	}
 
 	// Return response to caller

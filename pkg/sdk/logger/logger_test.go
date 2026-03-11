@@ -45,13 +45,18 @@ func TestLogger(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Initialize logger with mock hostCall
 			logs := make(map[string]string)
-			logger, err := New(Config{Namespace: "default", HostCall: func(namespace string, capability string, function string, input []byte) ([]byte, error) {
-				if namespace != "default" || capability != "logger" || function != tc.level {
-					t.Errorf("hostcall signature invalid %s, %s, %s", namespace, capability, function)
-				}
-				logs[function] = string(input)
-				return []byte(""), nil
-			}})
+			logger, err := New(
+				Config{
+					Namespace: "default",
+					HostCall: func(namespace string, capability string, function string, input []byte) ([]byte, error) {
+						if namespace != "default" || capability != "logger" || function != tc.level {
+							t.Errorf("hostcall signature invalid %s, %s, %s", namespace, capability, function)
+						}
+						logs[function] = string(input)
+						return []byte(""), nil
+					},
+				},
+			)
 			if err != nil {
 				t.Errorf("unexpected error initializing logger - %s", err)
 			}

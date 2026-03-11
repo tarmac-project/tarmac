@@ -5,11 +5,13 @@ import (
 	"encoding/base64"
 	"fmt"
 	"strconv"
-	// Import MySQL Driver
+
+	// Import MySQL Driver.
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pquerna/ffjson/ffjson"
+
 	"github.com/tarmac-project/tarmac"
 
 	proto "github.com/tarmac-project/protobuf-go/sdk/sql"
@@ -66,7 +68,6 @@ func TestSQLQuery(t *testing.T) {
 	})
 
 	t.Run("Protobuf Based Queries", func(t *testing.T) {
-
 		t.Run("Unhappy Path", func(t *testing.T) {
 			for _, c := range tc {
 				t.Run(c.name, func(t *testing.T) {
@@ -89,8 +90,8 @@ func TestSQLQuery(t *testing.T) {
 					}
 
 					// Check Status Codes
-					if rsp.Status.Code == 200 {
-						t.Fatalf("Unexpected Success with unhappy path test - %d", rsp.Status.Code)
+					if rsp.GetStatus().GetCode() == 200 {
+						t.Fatalf("Unexpected Success with unhappy path test - %d", rsp.GetStatus().GetCode())
 					}
 				})
 			}
@@ -98,7 +99,11 @@ func TestSQLQuery(t *testing.T) {
 
 		t.Run("Happy Path", func(t *testing.T) {
 			t.Run("Create Table", func(t *testing.T) {
-				query := &proto.SQLExec{Query: []byte(`CREATE TABLE IF NOT EXISTS testpkg ( id int NOT NULL AUTO_INCREMENT, name varchar(255), PRIMARY KEY (id) );`)}
+				query := &proto.SQLExec{
+					Query: []byte(
+						`CREATE TABLE IF NOT EXISTS testpkg ( id int NOT NULL AUTO_INCREMENT, name varchar(255), PRIMARY KEY (id) );`,
+					),
+				}
 				qMsg, err := pb.Marshal(query)
 				if err != nil {
 					t.Fatalf("Unable to marshal query message")
@@ -117,8 +122,12 @@ func TestSQLQuery(t *testing.T) {
 				}
 
 				// Check Status Codes
-				if rsp.Status.Code != 200 {
-					t.Fatalf("Callback execution did not work, returned %d - %s", rsp.Status.Code, rsp.Status.Status)
+				if rsp.GetStatus().GetCode() != 200 {
+					t.Fatalf(
+						"Callback execution did not work, returned %d - %s",
+						rsp.GetStatus().GetCode(),
+						rsp.GetStatus().GetStatus(),
+					)
 				}
 			})
 
@@ -142,18 +151,22 @@ func TestSQLQuery(t *testing.T) {
 				}
 
 				// Check Status Codes
-				if rsp.Status.Code != 200 {
-					t.Fatalf("Callback execution did not work, returned %d - %s", rsp.Status.Code, rsp.Status.Status)
+				if rsp.GetStatus().GetCode() != 200 {
+					t.Fatalf(
+						"Callback execution did not work, returned %d - %s",
+						rsp.GetStatus().GetCode(),
+						rsp.GetStatus().GetStatus(),
+					)
 				}
 
 				// Check Rows Affected
-				if rsp.RowsAffected != 1 {
-					t.Errorf("Unexpected rows affected - %d", rsp.RowsAffected)
+				if rsp.GetRowsAffected() != 1 {
+					t.Errorf("Unexpected rows affected - %d", rsp.GetRowsAffected())
 				}
 
 				// Check Last Insert ID
-				if rsp.LastInsertId != 1 {
-					t.Errorf("Unexpected last insert ID - %d", rsp.LastInsertId)
+				if rsp.GetLastInsertId() != 1 {
+					t.Errorf("Unexpected last insert ID - %d", rsp.GetLastInsertId())
 				}
 			})
 
@@ -177,25 +190,28 @@ func TestSQLQuery(t *testing.T) {
 				}
 
 				// Check Status Codes
-				if rsp.Status.Code != 200 {
-					t.Fatalf("Callback execution did not work, returned %d - %s", rsp.Status.Code, rsp.Status.Status)
+				if rsp.GetStatus().GetCode() != 200 {
+					t.Fatalf(
+						"Callback execution did not work, returned %d - %s",
+						rsp.GetStatus().GetCode(),
+						rsp.GetStatus().GetStatus(),
+					)
 				}
 
 				// Verify Columns
-				if len(rsp.Columns) != 2 {
-					t.Fatalf("Unexpected number of columns returned - %d", len(rsp.Columns))
+				if len(rsp.GetColumns()) != 2 {
+					t.Fatalf("Unexpected number of columns returned - %d", len(rsp.GetColumns()))
 				}
 
 				// Check Column Names
-				if rsp.Columns[0] != "id" || rsp.Columns[1] != "name" {
-					t.Fatalf("Unexpected column names returned - %v", rsp.Columns)
+				if rsp.GetColumns()[0] != "id" || rsp.GetColumns()[1] != "name" {
+					t.Fatalf("Unexpected column names returned - %v", rsp.GetColumns())
 				}
 
 				// Verify Data
-				if len(rsp.Data) == 0 {
+				if len(rsp.GetData()) == 0 {
 					t.Fatalf("No data returned from query")
 				}
-
 			})
 
 			t.Run("Delete Table", func(t *testing.T) {
@@ -218,17 +234,24 @@ func TestSQLQuery(t *testing.T) {
 				}
 
 				// Check Status Codes
-				if rsp.Status.Code != 200 {
-					t.Fatalf("Callback execution did not work, returned %d - %s", rsp.Status.Code, rsp.Status.Status)
+				if rsp.GetStatus().GetCode() != 200 {
+					t.Fatalf(
+						"Callback execution did not work, returned %d - %s",
+						rsp.GetStatus().GetCode(),
+						rsp.GetStatus().GetStatus(),
+					)
 				}
 			})
-
 		})
 	})
 
 	t.Run("Test SQLExec", func(t *testing.T) {
 		t.Run("Happy Path", func(t *testing.T) {
-			query := &proto.SQLExec{Query: []byte(`CREATE TABLE IF NOT EXISTS testpkg ( id int NOT NULL AUTO_INCREMENT, name varchar(255), PRIMARY KEY (id) );`)}
+			query := &proto.SQLExec{
+				Query: []byte(
+					`CREATE TABLE IF NOT EXISTS testpkg ( id int NOT NULL AUTO_INCREMENT, name varchar(255), PRIMARY KEY (id) );`,
+				),
+			}
 			qMsg, err := pb.Marshal(query)
 			if err != nil {
 				t.Fatalf("Unable to marshal query message")
@@ -247,8 +270,12 @@ func TestSQLQuery(t *testing.T) {
 			}
 
 			// Check Status Codes
-			if rsp.Status.Code != 200 {
-				t.Fatalf("Callback execution did not work, returned %d - %s", rsp.Status.Code, rsp.Status.Status)
+			if rsp.GetStatus().GetCode() != 200 {
+				t.Fatalf(
+					"Callback execution did not work, returned %d - %s",
+					rsp.GetStatus().GetCode(),
+					rsp.GetStatus().GetStatus(),
+				)
 			}
 		})
 
@@ -272,8 +299,8 @@ func TestSQLQuery(t *testing.T) {
 			}
 
 			// Check Status Codes
-			if rsp.Status.Code == 200 {
-				t.Fatalf("Unexpected Success with unhappy path test - %d", rsp.Status.Code)
+			if rsp.GetStatus().GetCode() == 200 {
+				t.Fatalf("Unexpected Success with unhappy path test - %d", rsp.GetStatus().GetCode())
 			}
 		})
 
@@ -297,19 +324,20 @@ func TestSQLQuery(t *testing.T) {
 			}
 
 			// Check Status Codes
-			if rsp.Status.Code == 200 {
-				t.Fatalf("Unexpected Success with unhappy path test - %d", rsp.Status.Code)
+			if rsp.GetStatus().GetCode() == 200 {
+				t.Fatalf("Unexpected Success with unhappy path test - %d", rsp.GetStatus().GetCode())
 			}
 		})
 	})
 
 	// Test the JSON Interface for Backwards Compatibility
 	t.Run("JSON Based Queries", func(t *testing.T) {
-
 		t.Run("Unhappy Path", func(t *testing.T) {
 			for _, c := range tc {
 				t.Run(c.name, func(t *testing.T) {
-					r, err := db.Query([]byte(fmt.Sprintf(`{"query":"%s"}`, base64.StdEncoding.EncodeToString([]byte(c.q)))))
+					r, err := db.Query(
+						[]byte(fmt.Sprintf(`{"query":"%s"}`, base64.StdEncoding.EncodeToString([]byte(c.q)))),
+					)
 					if err == nil {
 						t.Fatalf("Unexpected success with failure test case")
 					}
@@ -345,7 +373,11 @@ func TestSQLQuery(t *testing.T) {
 
 		t.Run("Happy Path", func(t *testing.T) {
 			t.Run("Create Table", func(t *testing.T) {
-				q := base64.StdEncoding.EncodeToString([]byte(`CREATE TABLE IF NOT EXISTS testpkg ( id int NOT NULL, name varchar(255), PRIMARY KEY (id) );`))
+				q := base64.StdEncoding.EncodeToString(
+					[]byte(
+						`CREATE TABLE IF NOT EXISTS testpkg ( id int NOT NULL, name varchar(255), PRIMARY KEY (id) );`,
+					),
+				)
 				j := fmt.Sprintf(`{"query":"%s"}`, q)
 				r, err := db.Query([]byte(j))
 				if err != nil {
@@ -366,7 +398,9 @@ func TestSQLQuery(t *testing.T) {
 			})
 
 			t.Run("Insert Data", func(t *testing.T) {
-				q := base64.StdEncoding.EncodeToString([]byte(`INSERT INTO testpkg (id, name)  VALUES (1, "John Smith");`))
+				q := base64.StdEncoding.EncodeToString(
+					[]byte(`INSERT INTO testpkg (id, name)  VALUES (1, "John Smith");`),
+				)
 				j := fmt.Sprintf(`{"query":"%s"}`, q)
 				r, err := db.Query([]byte(j))
 				if err != nil {
@@ -432,7 +466,6 @@ func TestSQLQuery(t *testing.T) {
 				if id != 1 {
 					t.Fatalf("Unexpected value from Database got %d", id)
 				}
-
 			})
 
 			t.Run("Delete Table", func(t *testing.T) {

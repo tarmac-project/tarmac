@@ -148,9 +148,10 @@ func TestMetricsGauges(t *testing.T) {
 
 			// Call increment and decrement
 			// Call Inc or Dec
-			if tc.caseName == "Increment" {
+			switch tc.caseName {
+			case "Increment":
 				gauge.Inc()
-			} else if tc.caseName == "Decrement" {
+			case "Decrement":
 				gauge.Dec()
 			}
 		})

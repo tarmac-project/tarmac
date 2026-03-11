@@ -24,7 +24,10 @@ host-level actions such as storing data within the database, logging specific da
 package sdk
 
 import (
+	"errors"
 	"fmt"
+
+	wapc "github.com/wapc/wapc-guest-tinygo"
 
 	"github.com/tarmac-project/tarmac/pkg/sdk/function"
 	"github.com/tarmac-project/tarmac/pkg/sdk/http"
@@ -32,7 +35,6 @@ import (
 	"github.com/tarmac-project/tarmac/pkg/sdk/logger"
 	"github.com/tarmac-project/tarmac/pkg/sdk/metrics"
 	"github.com/tarmac-project/tarmac/pkg/sdk/sql"
-	wapc "github.com/wapc/wapc-guest-tinygo"
 )
 
 // Tarmac provides an interface to users which wraps and simplifies the interfaces for WASM Functions execute by Tarmac. This interface
@@ -87,7 +89,7 @@ func New(cfg Config) (*Tarmac, error) {
 
 	// Validate Handler is not empty
 	if cfg.Handler == nil {
-		return t, fmt.Errorf("function handler cannot be nil")
+		return t, errors.New("function handler cannot be nil")
 	}
 	t.handler = cfg.Handler
 
@@ -104,37 +106,37 @@ func New(cfg Config) (*Tarmac, error) {
 	// Initialize a Logger instance
 	t.Logger, err = logger.New(logger.Config{Namespace: cfg.Namespace, HostCall: cfg.hostCall})
 	if err != nil {
-		return t, fmt.Errorf("error while initializing logger - %s", err)
+		return t, fmt.Errorf("error while initializing logger - %w", err)
 	}
 
 	// Initialize a Metrics instance
 	t.Metrics, err = metrics.New(metrics.Config{Namespace: cfg.Namespace, HostCall: cfg.hostCall})
 	if err != nil {
-		return t, fmt.Errorf("error while initializing metrics - %s", err)
+		return t, fmt.Errorf("error while initializing metrics - %w", err)
 	}
 
 	// Initialize an HTTP instance
 	t.HTTP, err = http.New(http.Config{Namespace: cfg.Namespace, HostCall: cfg.hostCall})
 	if err != nil {
-		return t, fmt.Errorf("error while initializing HTTP - %s", err)
+		return t, fmt.Errorf("error while initializing HTTP - %w", err)
 	}
 
 	// Initialize a KV instance
 	t.KV, err = kvstore.New(kvstore.Config{Namespace: cfg.Namespace, HostCall: cfg.hostCall})
 	if err != nil {
-		return t, fmt.Errorf("error while initializing KV - %s", err)
+		return t, fmt.Errorf("error while initializing KV - %w", err)
 	}
 
 	// Initialize an SQL instance
 	t.SQL, err = sql.New(sql.Config{Namespace: cfg.Namespace, HostCall: cfg.hostCall})
 	if err != nil {
-		return t, fmt.Errorf("error while initializing SQL - %s", err)
+		return t, fmt.Errorf("error while initializing SQL - %w", err)
 	}
 
 	// Initialize a Function instance
 	t.Function, err = function.New(function.Config{Namespace: cfg.Namespace, HostCall: cfg.hostCall})
 	if err != nil {
-		return t, fmt.Errorf("error while initializing Function - %s", err)
+		return t, fmt.Errorf("error while initializing Function - %w", err)
 	}
 
 	return t, nil

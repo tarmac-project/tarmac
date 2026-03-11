@@ -7,6 +7,7 @@ package kvstore
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 
 	"github.com/valyala/fastjson"
@@ -38,7 +39,7 @@ func New(cfg Config) (*KV, error) {
 
 	// Verify HostCall is set
 	if cfg.HostCall == nil {
-		return &KV{}, fmt.Errorf("HostCall cannot be nil")
+		return &KV{}, errors.New("HostCall cannot be nil")
 	}
 
 	return &KV{namespace: cfg.Namespace, hostCall: cfg.HostCall}, nil
@@ -47,11 +48,11 @@ func New(cfg Config) (*KV, error) {
 // Set will store the supplied data under the provided key.
 func (kv *KV) Set(key string, data []byte) error {
 	if key == "" {
-		return fmt.Errorf("key cannot be empty")
+		return errors.New("key cannot be empty")
 	}
 
 	if len(data) == 0 {
-		return fmt.Errorf("data cannot by empty")
+		return errors.New("data cannot be empty")
 	}
 
 	d := base64.StdEncoding.EncodeToString(data)
@@ -59,7 +60,7 @@ func (kv *KV) Set(key string, data []byte) error {
 
 	_, err := kv.hostCall(kv.namespace, "kvstore", "set", []byte(j))
 	if err != nil {
-		return fmt.Errorf("unable to execute set - %s", err)
+		return fmt.Errorf("unable to execute set - %w", err)
 	}
 
 	return nil
@@ -68,17 +69,17 @@ func (kv *KV) Set(key string, data []byte) error {
 // Get will fetch the data stored under the supplied key.
 func (kv *KV) Get(key string) ([]byte, error) {
 	if key == "" {
-		return []byte(""), fmt.Errorf("key cannot be empty")
+		return []byte(""), errors.New("key cannot be empty")
 	}
 
 	b, err := kv.hostCall(kv.namespace, "kvstore", "get", []byte(fmt.Sprintf(`{"key":"%s"}`, key)))
 	if err != nil {
-		return []byte(""), fmt.Errorf("unable to execute get - %s", err)
+		return []byte(""), fmt.Errorf("unable to execute get - %w", err)
 	}
 
 	d, err := base64.StdEncoding.DecodeString(fastjson.GetString(b, "data"))
 	if err != nil {
-		return []byte(""), fmt.Errorf("unable to decode fetched data - %s", err)
+		return []byte(""), fmt.Errorf("unable to decode fetched data - %w", err)
 	}
 
 	return d, nil
@@ -87,12 +88,12 @@ func (kv *KV) Get(key string) ([]byte, error) {
 // Delete will delete the data and key defined at key.
 func (kv *KV) Delete(key string) error {
 	if key == "" {
-		return fmt.Errorf("key cannot be empty")
+		return errors.New("key cannot be empty")
 	}
 
 	_, err := kv.hostCall(kv.namespace, "kvstore", "delete", []byte(fmt.Sprintf(`{"key":"%s"}`, key)))
 	if err != nil {
-		return fmt.Errorf("unable to execute delete - %s", err)
+		return fmt.Errorf("unable to execute delete - %w", err)
 	}
 
 	return nil
@@ -104,12 +105,12 @@ func (kv *KV) Keys() ([]string, error) {
 
 	b, err := kv.hostCall(kv.namespace, "kvstore", "keys", []byte(""))
 	if err != nil {
-		return keys, fmt.Errorf("unable to execute keys - %s", err)
+		return keys, fmt.Errorf("unable to execute keys - %w", err)
 	}
 
 	v, err := fastjson.ParseBytes(b)
 	if err != nil {
-		return keys, fmt.Errorf("unable to parse returned data - %s", err)
+		return keys, fmt.Errorf("unable to parse returned data - %w", err)
 	}
 
 	for _, k := range v.GetArray("keys") {

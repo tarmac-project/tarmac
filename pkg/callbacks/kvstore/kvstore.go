@@ -26,6 +26,7 @@ import (
 
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/tarmac-project/hord"
+
 	"github.com/tarmac-project/tarmac"
 
 	"github.com/tarmac-project/protobuf-go/sdk"
@@ -53,7 +54,7 @@ type Config struct {
 }
 
 var (
-	// ErrNilKey is returned when the key is nil
+	// ErrNilKey is returned when the key is nil.
 	ErrNilKey = errors.New("key cannot be nil")
 )
 
@@ -62,7 +63,7 @@ var (
 func New(cfg Config) (*KVStore, error) {
 	k := &KVStore{}
 	if cfg.KV == nil {
-		return k, fmt.Errorf("KV Store cannot be nil")
+		return k, errors.New("KV Store cannot be nil")
 	}
 	k.kv = cfg.KV
 	return k, nil
@@ -83,13 +84,13 @@ func (k *KVStore) Get(b []byte) ([]byte, error) {
 		},
 	}
 
-	if msg.Key == "" {
+	if msg.GetKey() == "" {
 		rsp.Status.Code = 400
 		rsp.Status.Status = ErrNilKey.Error()
 	}
 
-	if rsp.Status.Code == 200 {
-		data, err := k.kv.Get(msg.Key)
+	if rsp.GetStatus().GetCode() == 200 {
+		data, err := k.kv.Get(msg.GetKey())
 		if err != nil {
 			rsp.Status.Code = 404
 			rsp.Status.Status = fmt.Sprintf("Unable to fetch key %s", err)
@@ -100,14 +101,14 @@ func (k *KVStore) Get(b []byte) ([]byte, error) {
 
 	m, err := pb.Marshal(rsp)
 	if err != nil {
-		return nil, fmt.Errorf("unable to marshal kvstore:get response")
+		return nil, errors.New("unable to marshal kvstore:get response")
 	}
 
-	if rsp.Status.Code == 200 {
+	if rsp.GetStatus().GetCode() == 200 {
 		return m, nil
 	}
 
-	return m, fmt.Errorf("%s", rsp.Status.Status)
+	return m, fmt.Errorf("%s", rsp.GetStatus().GetStatus())
 }
 
 // getJSON retains the JSON based Get function for backwards compatibility. This function will be removed in future
@@ -141,7 +142,7 @@ func (k *KVStore) getJSON(b []byte) ([]byte, error) {
 	// Marshal a resposne JSON to return to caller
 	rsp, err := ffjson.Marshal(r)
 	if err != nil {
-		return []byte(""), fmt.Errorf("unable to marshal kvstore:get response")
+		return []byte(""), errors.New("unable to marshal kvstore:get response")
 	}
 
 	if r.Status.Code == 200 {
@@ -165,7 +166,7 @@ func (k *KVStore) Set(b []byte) ([]byte, error) {
 		},
 	}
 
-	if msg.Key == "" {
+	if msg.GetKey() == "" {
 		rsp.Status.Code = 400
 		rsp.Status.Status = ErrNilKey.Error()
 	}
@@ -175,8 +176,8 @@ func (k *KVStore) Set(b []byte) ([]byte, error) {
 		rsp.Status.Status = "Data cannot be nil"
 	}
 
-	if rsp.Status.Code == 200 {
-		err = k.kv.Set(msg.Key, msg.Data)
+	if rsp.GetStatus().GetCode() == 200 {
+		err = k.kv.Set(msg.GetKey(), msg.GetData())
 		if err != nil {
 			rsp.Status.Code = 500
 			rsp.Status.Status = fmt.Sprintf("Unable to store data - %s", err)
@@ -185,14 +186,14 @@ func (k *KVStore) Set(b []byte) ([]byte, error) {
 
 	m, err := pb.Marshal(rsp)
 	if err != nil {
-		return nil, fmt.Errorf("unable to marshal kvstore:set response")
+		return nil, errors.New("unable to marshal kvstore:set response")
 	}
 
-	if rsp.Status.Code == 200 {
+	if rsp.GetStatus().GetCode() == 200 {
 		return m, nil
 	}
 
-	return m, fmt.Errorf("%s", rsp.Status.Status)
+	return m, fmt.Errorf("%s", rsp.GetStatus().GetStatus())
 }
 
 // setJSON retains the JSON based Set function for backwards compatibility. This function will be removed in future
@@ -230,7 +231,7 @@ func (k *KVStore) setJSON(b []byte) ([]byte, error) {
 	// Marshal a resposne JSON to return to caller
 	rsp, err := ffjson.Marshal(r)
 	if err != nil {
-		return []byte(""), fmt.Errorf("unable to marshal kvstore:set response")
+		return []byte(""), errors.New("unable to marshal kvstore:set response")
 	}
 
 	if r.Status.Code == 200 {
@@ -254,13 +255,13 @@ func (k *KVStore) Delete(b []byte) ([]byte, error) {
 		},
 	}
 
-	if msg.Key == "" {
+	if msg.GetKey() == "" {
 		rsp.Status.Code = 400
 		rsp.Status.Status = ErrNilKey.Error()
 	}
 
-	if rsp.Status.Code == 200 {
-		err = k.kv.Delete(msg.Key)
+	if rsp.GetStatus().GetCode() == 200 {
+		err = k.kv.Delete(msg.GetKey())
 		if err != nil {
 			rsp.Status.Code = 404
 			rsp.Status.Status = fmt.Sprintf("Unable to delete key %s", err)
@@ -269,14 +270,14 @@ func (k *KVStore) Delete(b []byte) ([]byte, error) {
 
 	m, err := pb.Marshal(rsp)
 	if err != nil {
-		return nil, fmt.Errorf("unable to marshal kvstore:delete response")
+		return nil, errors.New("unable to marshal kvstore:delete response")
 	}
 
-	if rsp.Status.Code == 200 {
+	if rsp.GetStatus().GetCode() == 200 {
 		return m, nil
 	}
 
-	return m, fmt.Errorf("%s", rsp.Status.Status)
+	return m, fmt.Errorf("%s", rsp.GetStatus().GetStatus())
 }
 
 // deleteJSON retains the JSON based Delete function for backwards compatibility. This function will be removed in future
@@ -307,7 +308,7 @@ func (k *KVStore) deleteJSON(b []byte) ([]byte, error) {
 	// Marshal a response JSON to return to caller
 	rsp, err := ffjson.Marshal(r)
 	if err != nil {
-		return []byte(""), fmt.Errorf("unable to marshal kvstore:delete response")
+		return []byte(""), errors.New("unable to marshal kvstore:keys response")
 	}
 
 	if r.Status.Code == 200 {
@@ -337,14 +338,14 @@ func (k *KVStore) Keys(b []byte) ([]byte, error) {
 
 	m, err := pb.Marshal(rsp)
 	if err != nil {
-		return nil, fmt.Errorf("unable to marshal kvstore:keys response")
+		return nil, errors.New("unable to marshal kvstore:keys response")
 	}
 
-	if rsp.Status.Code == 200 {
+	if rsp.GetStatus().GetCode() == 200 {
 		return m, nil
 	}
 
-	return m, fmt.Errorf("%s", rsp.Status.Status)
+	return m, fmt.Errorf("%s", rsp.GetStatus().GetStatus())
 }
 
 func (k *KVStore) keysJSON(_ []byte) ([]byte, error) {
@@ -364,7 +365,7 @@ func (k *KVStore) keysJSON(_ []byte) ([]byte, error) {
 	// Marshal a response JSON to return to caller
 	rsp, err := ffjson.Marshal(r)
 	if err != nil {
-		return []byte(""), fmt.Errorf("unable to marshal kvstore:delete response")
+		return []byte(""), errors.New("unable to marshal kvstore:delete response")
 	}
 
 	if r.Status.Code == 200 {

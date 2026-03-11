@@ -5,7 +5,7 @@ This package provides a user-friendly interface for interacting with other WASM 
 */
 package function
 
-import "fmt"
+import "errors"
 
 // Function provides a simple interface for Tarmac Functions to send messages via the standard function.
 type Function struct {
@@ -33,7 +33,7 @@ func New(cfg Config) (*Function, error) {
 
 	// Verify HostCall is set
 	if cfg.HostCall == nil {
-		return &Function{}, fmt.Errorf("HostCall cannot be nil")
+		return &Function{}, errors.New("HostCall cannot be nil")
 	}
 
 	return &Function{namespace: cfg.Namespace, hostCall: cfg.HostCall}, nil

@@ -5,6 +5,7 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -86,11 +87,11 @@ type Route struct {
 var (
 	// ErrRouteNotFound is returned when a requested route is not found in the
 	// service's route configuration.
-	ErrRouteNotFound = fmt.Errorf("route not found")
+	ErrRouteNotFound = errors.New("route not found")
 
 	// ErrInvalidConfig is returned when the configuration file does not contain the required fields or is otherwise
 	// invalid.
-	ErrInvalidConfig = fmt.Errorf("invalid configuration file")
+	ErrInvalidConfig = errors.New("invalid configuration file")
 )
 
 const (
@@ -105,7 +106,7 @@ const (
 func Parse(filepath string) (*Config, error) {
 	// Read the file contents
 	b, err := os.ReadFile(filepath)
-	if err == os.ErrNotExist {
+	if errors.Is(err, os.ErrNotExist) {
 		return &Config{}, os.ErrNotExist
 	}
 	if err != nil {

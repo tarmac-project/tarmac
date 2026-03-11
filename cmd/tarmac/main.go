@@ -1,23 +1,24 @@
 package main
 
 import (
-	"github.com/spf13/viper"
-	_ "github.com/spf13/viper/remote"
-	"github.com/tarmac-project/tarmac/pkg/app"
+	"errors"
+	"fmt"
 	"log/slog"
 	"os"
+
+	"github.com/spf13/viper"
+	_ "github.com/spf13/viper/remote"
+
+	"github.com/tarmac-project/tarmac/pkg/app"
 )
 
-func main() {
-	// Initiate a simple logger
-	log := slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{
+func newLogger() *slog.Logger {
+	return slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	}))
+}
 
-	// Setup Config
-	cfg := viper.New()
-
-	// Set Default Configs
+func setDefaults(cfg *viper.Viper) {
 	cfg.SetDefault("enable_tls", true)
 	cfg.SetDefault("listen_addr", "0.0.0.0:8443")
 	cfg.SetDefault("cert_file", "/certs/cert.crt")
@@ -36,21 +37,45 @@ func main() {
 	cfg.SetDefault("run_mode", "daemon")
 	cfg.SetDefault("text_log_format", false)
 	cfg.SetDefault("http_client_max_response_body_size", 10*1024*1024) // 10MB default
+}
 
-	// Load Config
+func configureConfig(cfg *viper.Viper) {
 	cfg.AddConfigPath("./conf")
 	cfg.SetEnvPrefix("app")
 	cfg.AllowEmptyEnv(true)
 	cfg.AutomaticEnv()
+}
+
+func handleConfigReadResult(log *slog.Logger, err error) error {
+	if err == nil {
+		return nil
+	}
+
+	var notFoundErr viper.ConfigFileNotFoundError
+	if errors.As(err, &notFoundErr) {
+		log.Warn("No Config file found, loaded config from Environment - Default path ./conf")
+		return nil
+	}
+
+	return fmt.Errorf("error when fetching configuration: %w", err)
+}
+
+func main() {
+	// Initiate a simple logger
+	log := newLogger()
+
+	// Setup Config
+	cfg := viper.New()
+
+	// Set Default Configs
+	setDefaults(cfg)
+
+	// Load Config
+	configureConfig(cfg)
 	err := cfg.ReadInConfig()
-	if err != nil {
-		switch err.(type) {
-		case viper.ConfigFileNotFoundError:
-			log.Warn("No Config file found, loaded config from Environment - Default path ./conf")
-		default:
-			log.Error("Error when Fetching Configuration: "+err.Error(), "error", err)
-			os.Exit(1)
-		}
+	if err = handleConfigReadResult(log, err); err != nil {
+		log.Error("Error when Fetching Configuration: "+err.Error(), "error", err)
+		os.Exit(1)
 	}
 
 	// Load Config from Consul
@@ -79,7 +104,7 @@ func main() {
 	srv := app.New(cfg)
 	defer srv.Stop()
 	err = srv.Run()
-	if err != nil && err != app.ErrShutdown {
+	if err != nil && !errors.Is(err, app.ErrShutdown) {
 		log.Error("Service stopped: "+err.Error(), "error", err)
 		os.Exit(1)
 	}

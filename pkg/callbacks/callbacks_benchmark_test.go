@@ -14,7 +14,7 @@ func BenchmarkCallback(b *testing.B) {
 		return []byte(""), nil
 	})
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, err := router.Callback(context.Background(), "default", "counter", "++", []byte(""))
 		if err != nil {
 			b.Errorf("Unexpected error when calling Callback function for registered callback - %s", err)

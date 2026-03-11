@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"net/http"
 	"os"
 	"testing"
@@ -11,11 +12,12 @@ import (
 	"github.com/madflojo/testcerts"
 	"github.com/spf13/viper"
 	_ "github.com/spf13/viper/remote"
+
 	"github.com/tarmac-project/tarmac/pkg/tlsconfig"
 )
 
 const (
-	// Test server timeout values
+	// Test server timeout values.
 	testServerContextTimeout = 2 * time.Second
 	testServerMaxWaitTimeout = 2500 * time.Millisecond // Slightly longer than context timeout
 )
@@ -137,7 +139,7 @@ func TestBadConfigs(t *testing.T) {
 				}
 			}()
 			err := srv.Run()
-			if err == nil || err == ErrShutdown {
+			if err == nil || errors.Is(err, ErrShutdown) {
 				t.Errorf("Expected error when starting server, got nil")
 			}
 		})
@@ -159,7 +161,7 @@ func TestRunningServer(t *testing.T) {
 	srv := New(cfg)
 	go func() {
 		err := srv.Run()
-		if err != nil && err != ErrShutdown {
+		if err != nil && !errors.Is(err, ErrShutdown) {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
 	}()
@@ -175,7 +177,7 @@ func TestRunningServer(t *testing.T) {
 			t.Errorf("Unexpected error when requesting health status - %s", err)
 		}
 		defer r.Body.Close()
-		if r.StatusCode != 200 {
+		if r.StatusCode != http.StatusOK {
 			t.Errorf("Unexpected http status code when checking health - %d", r.StatusCode)
 		}
 	})
@@ -186,7 +188,7 @@ func TestRunningServer(t *testing.T) {
 			t.Errorf("Unexpected error when requesting metrics status - %s", err)
 		}
 		defer r.Body.Close()
-		if r.StatusCode != 200 {
+		if r.StatusCode != http.StatusOK {
 			t.Errorf("Unexpected http status code when checking metrics - %d", r.StatusCode)
 		}
 	})
@@ -205,7 +207,7 @@ func TestPProfServerEnabled(t *testing.T) {
 	srv := New(cfg)
 	go func() {
 		err := srv.Run()
-		if err != nil && err != ErrShutdown {
+		if err != nil && !errors.Is(err, ErrShutdown) {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
 	}()
@@ -253,7 +255,7 @@ func TestPProfServerDisabled(t *testing.T) {
 	srv := New(cfg)
 	go func() {
 		err := srv.Run()
-		if err != nil && err != ErrShutdown {
+		if err != nil && !errors.Is(err, ErrShutdown) {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
 	}()
@@ -282,7 +284,7 @@ func TestPProfServerDisabled(t *testing.T) {
 				t.Errorf("Unexpected error when validating pprof - %s", err)
 			}
 			defer r.Body.Close()
-			if r.StatusCode != 403 {
+			if r.StatusCode != http.StatusForbidden {
 				t.Errorf("Unexpected http status code when validating pprof - %d", r.StatusCode)
 			}
 		})
@@ -331,7 +333,7 @@ func TestRunningTLSServer(t *testing.T) {
 	// Start Server in goroutine
 	go func() {
 		err := srv.Run()
-		if err != nil && err != ErrShutdown {
+		if err != nil && !errors.Is(err, ErrShutdown) {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
 	}()
@@ -348,7 +350,7 @@ func TestRunningTLSServer(t *testing.T) {
 			t.FailNow()
 		}
 		defer r.Body.Close()
-		if r.StatusCode != 200 {
+		if r.StatusCode != http.StatusOK {
 			t.Errorf("Unexpected http status code when checking health - %d", r.StatusCode)
 		}
 	})
@@ -360,7 +362,7 @@ func TestRunningTLSServer(t *testing.T) {
 			t.FailNow()
 		}
 		defer r.Body.Close()
-		if r.StatusCode != 200 {
+		if r.StatusCode != http.StatusOK {
 			t.Errorf("Unexpected http status code when checking readiness - %d", r.StatusCode)
 		}
 	})
@@ -375,7 +377,7 @@ func TestRunningTLSServer(t *testing.T) {
 			t.FailNow()
 		}
 		defer r.Body.Close()
-		if r.StatusCode != 503 {
+		if r.StatusCode != http.StatusServiceUnavailable {
 			t.Errorf("Unexpected http status code when checking readiness - %d", r.StatusCode)
 		}
 	})
@@ -385,7 +387,6 @@ func TestRunningTLSServer(t *testing.T) {
 			t.Errorf("Did not fetch config from consul")
 		}
 	})
-
 }
 
 func TestRunningMTLSServer(t *testing.T) {
@@ -440,7 +441,7 @@ func TestRunningMTLSServer(t *testing.T) {
 	// Start Server in goroutine
 	go func() {
 		err := srv.Run()
-		if err != nil && err != ErrShutdown {
+		if err != nil && !errors.Is(err, ErrShutdown) {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
 	}()
@@ -457,7 +458,7 @@ func TestRunningMTLSServer(t *testing.T) {
 			t.FailNow()
 		}
 		defer r.Body.Close()
-		if r.StatusCode != 200 {
+		if r.StatusCode != http.StatusOK {
 			t.Errorf("Unexpected http status code when checking health - %d", r.StatusCode)
 		}
 	})
@@ -469,7 +470,7 @@ func TestRunningMTLSServer(t *testing.T) {
 			t.FailNow()
 		}
 		defer r.Body.Close()
-		if r.StatusCode != 200 {
+		if r.StatusCode != http.StatusOK {
 			t.Errorf("Unexpected http status code when checking readiness - %d", r.StatusCode)
 		}
 	})
@@ -484,7 +485,7 @@ func TestRunningMTLSServer(t *testing.T) {
 			t.FailNow()
 		}
 		defer r.Body.Close()
-		if r.StatusCode != 503 {
+		if r.StatusCode != http.StatusServiceUnavailable {
 			t.Errorf("Unexpected http status code when checking readiness - %d", r.StatusCode)
 		}
 	})
@@ -494,7 +495,6 @@ func TestRunningMTLSServer(t *testing.T) {
 			t.Errorf("Did not fetch config from consul")
 		}
 	})
-
 }
 
 func TestRunningFailMTLSServer(t *testing.T) {
@@ -544,7 +544,7 @@ func TestRunningFailMTLSServer(t *testing.T) {
 	// Start Server in goroutine
 	go func() {
 		err := srv.Run()
-		if err != nil && err != ErrShutdown {
+		if err != nil && !errors.Is(err, ErrShutdown) {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
 	}()
@@ -610,7 +610,7 @@ func TestTLSBranchBehavior(t *testing.T) {
 		select {
 		case err := <-errChan:
 			// Server should stop with ErrShutdown
-			if err != nil && err != ErrShutdown {
+			if err != nil && !errors.Is(err, ErrShutdown) {
 				t.Errorf("Expected ErrShutdown or nil, got: %s", err)
 			}
 		case <-time.After(testServerMaxWaitTimeout):
@@ -648,7 +648,7 @@ func TestTLSBranchBehavior(t *testing.T) {
 		select {
 		case err := <-errChan:
 			// Server should stop with ErrShutdown
-			if err != nil && err != ErrShutdown {
+			if err != nil && !errors.Is(err, ErrShutdown) {
 				t.Errorf("Expected ErrShutdown or nil, got: %s", err)
 			}
 		case <-time.After(testServerMaxWaitTimeout):

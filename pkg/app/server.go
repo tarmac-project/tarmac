@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -8,11 +9,12 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
+
 	"github.com/tarmac-project/tarmac/pkg/config"
 	"github.com/tarmac-project/tarmac/pkg/sanitize"
 )
 
-// isPProf is a regex that validates if the given path is used for PProf
+// isPProf is a regex that validates if the given path is used for PProf.
 var isPProf = regexp.MustCompile(`.*debug\/pprof.*`)
 
 // Health is used to handle HTTP Health requests to this service. Use this for liveness
@@ -97,13 +99,13 @@ func (srv *Server) handlerWrapper(h http.Handler) httprouter.Handle {
 func (srv *Server) WASMHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Find Function
 	function, err := srv.funcCfg.RouteLookup(fmt.Sprintf("http:%s:%s", r.Method, r.URL.EscapedPath()))
-	if err == config.ErrRouteNotFound {
+	if errors.Is(err, config.ErrRouteNotFound) {
 		function = "default"
 	}
 
 	// Read the HTTP Payload
 	var payload []byte
-	if r.Method == "POST" || r.Method == "PUT" {
+	if r.Method == http.MethodPost || r.Method == http.MethodPut {
 		payload, err = io.ReadAll(r.Body)
 		if err != nil {
 			srv.log.Debug("Error reading HTTP payload: "+err.Error(),
@@ -131,7 +133,7 @@ func (srv *Server) WASMHandler(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	// Return status code and print stdout
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "%s", rsp)
 }
 
@@ -142,19 +144,22 @@ func (srv *Server) runWASM(module, handler string, rq []byte) ([]byte, error) {
 	// Fetch Module and run with payload
 	m, err := srv.engine.Module(module)
 	if err != nil {
-		srv.stats.Wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(float64(time.Since(now).Milliseconds()))
-		return []byte(""), fmt.Errorf("unable to load wasi environment - %s", err)
+		srv.stats.Wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).
+			Observe(float64(time.Since(now).Milliseconds()))
+		return []byte(""), fmt.Errorf("unable to load wasi environment - %w", err)
 	}
 
 	// Execute the WASM Handler
 	rsp, err := m.Run(handler, rq)
 	if err != nil {
-		srv.stats.Wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(float64(time.Since(now).Milliseconds()))
-		return rsp, fmt.Errorf("failed to execute wasm module - %s", err)
+		srv.stats.Wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).
+			Observe(float64(time.Since(now).Milliseconds()))
+		return rsp, fmt.Errorf("failed to execute wasm module - %w", err)
 	}
 
 	// Return results
-	srv.stats.Wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).Observe(float64(time.Since(now).Milliseconds()))
+	srv.stats.Wasm.WithLabelValues(fmt.Sprintf("%s:%s", module, handler)).
+		Observe(float64(time.Since(now).Milliseconds()))
 	srv.log.Debug("WASM Module Executed successfully",
 		"module", module,
 		"handler", handler,

@@ -41,7 +41,10 @@ services:
   tests-base:
     image: golang:latest
     working_dir: /go/src/github.com/tarmac-project/tarmac
-    entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -skip "TestFullService/.*" ./...
+    entrypoint:
+      - sh
+      - -c
+      - go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -skip "TestFullService/.*" ./...
     volumes:
       - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
@@ -53,6 +56,7 @@ services:
       - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
       - "CONSUL_HTTP_ADDR=consul:8500"
       - "CONSUL_HTTP_SSL=false"
+      - "COVERAGE_FILE=${COVERAGE_FILE:-coverage.out}"
     depends_on:
       - redis
       - consul
@@ -61,7 +65,10 @@ services:
   tests-inmemory:
     image: golang:latest
     working_dir: /go/src/github.com/tarmac-project/tarmac
-    entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -run "TestFullService/In-Memory.*" ./...
+    entrypoint:
+      - sh
+      - -c
+      - go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/In-Memory.*" ./...
     volumes:
       - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
@@ -73,13 +80,17 @@ services:
       - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
       - "CONSUL_HTTP_ADDR=consul:8500"
       - "CONSUL_HTTP_SSL=false"
+      - "COVERAGE_FILE=${COVERAGE_FILE:-coverage.out}"
     depends_on:
       - consul
       - consulator
   tests-boltdb:
     image: golang:latest
     working_dir: /go/src/github.com/tarmac-project/tarmac
-    entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -run "TestFullService/BoltDB.*" ./...
+    entrypoint:
+      - sh
+      - -c
+      - go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/BoltDB.*" ./...
     volumes:
       - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
@@ -91,13 +102,17 @@ services:
       - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
       - "CONSUL_HTTP_ADDR=consul:8500"
       - "CONSUL_HTTP_SSL=false"
+      - "COVERAGE_FILE=${COVERAGE_FILE:-coverage.out}"
     depends_on:
       - consul
       - consulator
   tests-redis:
     image: golang:latest
     working_dir: /go/src/github.com/tarmac-project/tarmac
-    entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -run "TestFullService/Redis.*" ./...
+    entrypoint:
+      - sh
+      - -c
+      - go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/Redis.*" ./...
     volumes:
       - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
@@ -109,6 +124,7 @@ services:
       - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
       - "CONSUL_HTTP_ADDR=consul:8500"
       - "CONSUL_HTTP_SSL=false"
+      - "COVERAGE_FILE=${COVERAGE_FILE:-coverage.out}"
     depends_on:
       - redis
       - consul
@@ -116,7 +132,10 @@ services:
   tests-nats:
     image: golang:latest
     working_dir: /go/src/github.com/tarmac-project/tarmac
-    entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -run "TestFullService/NATS.*" ./...
+    entrypoint:
+      - sh
+      - -c
+      - go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/NATS.*" ./...
     volumes:
       - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
@@ -128,6 +147,7 @@ services:
       - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
       - "CONSUL_HTTP_ADDR=consul:8500"
       - "CONSUL_HTTP_SSL=false"
+      - "COVERAGE_FILE=${COVERAGE_FILE:-coverage.out}"
     depends_on:
       - nats
       - consul
@@ -135,7 +155,10 @@ services:
   tests-cassandra:
     image: golang:latest
     working_dir: /go/src/github.com/tarmac-project/tarmac
-    entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -run "TestFullService/Cassandra.*" ./...
+    entrypoint:
+      - sh
+      - -c
+      - go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/Cassandra.*" ./...
     volumes:
       - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
@@ -147,6 +170,7 @@ services:
       - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
       - "CONSUL_HTTP_ADDR=consul:8500"
       - "CONSUL_HTTP_SSL=false"
+      - "COVERAGE_FILE=${COVERAGE_FILE:-coverage.out}"
     depends_on:
       - cassandra-primary
       - cassandra
@@ -155,7 +179,10 @@ services:
   tests-mysql:
     image: golang:latest
     working_dir: /go/src/github.com/tarmac-project/tarmac
-    entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -run "TestFullService/MySQL.*" ./...
+    entrypoint:
+      - sh
+      - -c
+      - go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/MySQL.*" ./...
     volumes:
       - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
@@ -167,6 +194,7 @@ services:
       - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
       - "CONSUL_HTTP_ADDR=consul:8500"
       - "CONSUL_HTTP_SSL=false"
+      - "COVERAGE_FILE=${COVERAGE_FILE:-coverage.out}"
     depends_on:
       - mysql
       - consul
@@ -174,7 +202,10 @@ services:
   tests-postgres:
     image: golang:latest
     working_dir: /go/src/github.com/tarmac-project/tarmac
-    entrypoint: go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/coverage.out -run "TestFullService/Postgres.*" ./...
+    entrypoint:
+      - sh
+      - -c
+      - go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/Postgres.*" ./...
     volumes:
       - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
@@ -186,6 +217,7 @@ services:
       - "APP_CONSUL_KEYS_PREFIX=tarmac/config"
       - "CONSUL_HTTP_ADDR=consul:8500"
       - "CONSUL_HTTP_SSL=false"
+      - "COVERAGE_FILE=${COVERAGE_FILE:-coverage.out}"
     depends_on:
       - postgres
       - consul
