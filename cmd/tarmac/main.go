@@ -47,15 +47,13 @@ func main() {
 	cfg.AutomaticEnv()
 	err := cfg.ReadInConfig()
 	if err != nil {
-		{
-			var errCase0 viper.ConfigFileNotFoundError
-			switch {
-			case errors.As(err, &errCase0):
-				log.Warn("No Config file found, loaded config from Environment - Default path ./conf")
-			default:
-				log.Error("Error when Fetching Configuration: "+err.Error(), "error", err)
-				os.Exit(1)
-			}
+		var errCase0 viper.ConfigFileNotFoundError
+		switch {
+		case errors.As(err, &errCase0):
+			log.Warn("No Config file found, loaded config from Environment - Default path ./conf")
+		default:
+			log.Error("Error when Fetching Configuration: "+err.Error(), "error", err)
+			os.Exit(1)
 		}
 	}
 

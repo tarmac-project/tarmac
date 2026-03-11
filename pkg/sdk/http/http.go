@@ -128,7 +128,7 @@ func (h *Client) Do(
 	// Parse response JSON
 	v, err := fastjson.ParseBytes(b)
 	if err != nil {
-		return Response{}, fmt.Errorf("unable to parse Client resposne - %w", err)
+		return Response{}, fmt.Errorf("unable to parse Client response - %w", err)
 	}
 
 	rsp := Response{}

@@ -945,7 +945,7 @@ func (srv *Server) Run() error {
 	if srv.cfg.GetBool("enable_tls") {
 		err := srv.httpServer.ListenAndServeTLS(srv.cfg.GetString("cert_file"), srv.cfg.GetString("key_file"))
 		if err != nil {
-			if err == http.ErrServerClosed {
+			if errors.Is(err, http.ErrServerClosed) {
 				// Wait until all outstanding requests are done
 				<-srv.runCtx.Done()
 				return ErrShutdown

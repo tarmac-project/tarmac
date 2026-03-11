@@ -27,9 +27,11 @@ jobs:
         with:
           go-version-file: ${{ matrix.go-version-file }}
       - name: install golangci-lint
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
-            | sh -s -- -b "$(go env GOPATH)/bin" v2.11.3
+        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9
+        with:
+          version: v2.11.3
+          install-mode: binary
+          install-only: true
       - name: check formatting
         working-directory: ${{ matrix.module }}
         run: golangci-lint fmt --diff

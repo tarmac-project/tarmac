@@ -31,6 +31,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/pquerna/ffjson/ffjson"
 
@@ -44,6 +45,9 @@ import (
 const (
 	// DefaultMaxResponseBodySize is the default maximum size for HTTP response bodies (10MB).
 	DefaultMaxResponseBodySize = 10 * 1024 * 1024
+
+	// DefaultRequestTimeout bounds outbound HTTP callback requests.
+	DefaultRequestTimeout = 30 * time.Second
 )
 
 // HTTPClient provides access to Host Callbacks that interact with an HTTP client. These callbacks offer all of the logic
@@ -103,7 +107,10 @@ func (hc *HTTPClient) Call(b []byte) ([]byte, error) {
 			InsecureSkipVerify: true,
 		}
 	}
-	c = &http.Client{Transport: tr}
+	c = &http.Client{
+		Transport: tr,
+		Timeout:   DefaultRequestTimeout,
+	}
 
 	// Create HTTP Request
 	request, err = http.NewRequestWithContext(
@@ -201,18 +208,21 @@ func (hc *HTTPClient) callJSON(b []byte) ([]byte, error) {
 				InsecureSkipVerify: true,
 			}
 		}
-		c = &http.Client{Transport: tr}
+		c = &http.Client{
+			Transport: tr,
+			Timeout:   DefaultRequestTimeout,
+		}
 
 		// Create HTTP Request
 		request, err = http.NewRequestWithContext(context.Background(), rq.Method, rq.URL, bytes.NewBuffer(data))
 		if err != nil {
 			r.Status.Code = 400
 			r.Status.Status = fmt.Sprintf("Unable to create HTTP request - %s", err)
-		}
-
-		// Set user-supplied headers
-		for k, v := range rq.Headers {
-			request.Header.Set(k, v)
+		} else {
+			// Set user-supplied headers
+			for k, v := range rq.Headers {
+				request.Header.Set(k, v)
+			}
 		}
 	}
 

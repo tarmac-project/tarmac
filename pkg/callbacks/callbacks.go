@@ -114,7 +114,7 @@ func (r *Router) Lookup(key string) (*Callback, error) {
 // registered Callback; if not, it will return an error indicating the callback method not found.
 func (r *Router) Callback(ctx context.Context, _, namespace, op string, data []byte) ([]byte, error) {
 	if namespace == "" || op == "" {
-		return []byte(""), errors.New("namespace and op cannot be nil")
+		return []byte(""), errors.New("namespace and op cannot be empty")
 	}
 
 	// Lookup registered Callback

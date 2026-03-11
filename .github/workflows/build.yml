@@ -18,7 +18,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
       with:
-        go-version: '1.21'
+        go-version-file: go.mod
     - name: Execute Tests
       run: make build tests-base
     - name: Upload coverage to Codecov
@@ -33,7 +33,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
       with:
-        go-version: '1.21'
+        go-version-file: go.mod
     - name: Execute Tests
       run: make build tests-redis
     - name: Upload coverage to Codecov
@@ -48,7 +48,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
       with:
-        go-version: '1.21'
+        go-version-file: go.mod
     - name: Execute Tests
       run: make build tests-nats
     - name: Upload coverage to Codecov
@@ -63,7 +63,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
       with:
-        go-version: '1.21'
+        go-version-file: go.mod
     - name: Execute Tests
       run: make build tests-cassandra
     - name: Upload coverage to Codecov
@@ -79,7 +79,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
       with:
-        go-version: '1.21'
+        go-version-file: go.mod
     - name: Build Test WASM Modules
       run: make build
     - name: Execute Tests
@@ -97,7 +97,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
       with:
-        go-version: '1.21'
+        go-version-file: go.mod
     - name: Execute Tests
       run: make build tests-inmemory
     - name: Upload coverage to Codecov
@@ -113,7 +113,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
       with:
-        go-version: '1.21'
+        go-version-file: go.mod
     - name: Execute Tests
       run: make build tests-mysql
     - name: Upload coverage to Codecov
@@ -128,7 +128,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
       with:
-        go-version: '1.21'
+        go-version-file: go.mod
     - name: Execute Tests
       run: make build tests-postgres
     - name: Upload coverage to Codecov

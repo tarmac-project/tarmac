@@ -1,6 +1,7 @@
 package function
 
 import (
+	"bytes"
 	"errors"
 	"testing"
 )
@@ -14,8 +15,8 @@ func TestFunction(t *testing.T) {
 				if namespace != "default" || capability != "function" || function != "test-func" {
 					t.Errorf("hostcall signature invalid %s, %s, %s", namespace, capability, function)
 				}
-				if len(input) != len([]byte("Hey hey hey")) {
-					t.Errorf("unexpected input vs. payload")
+				if !bytes.Equal(input, []byte("Hey hey hey")) {
+					t.Errorf("unexpected input payload - got %v want %v", input, []byte("Hey hey hey"))
 				}
 				return []byte("Success"), nil
 			},
@@ -45,8 +46,8 @@ func TestFunctionFail(t *testing.T) {
 				if namespace != "default" || capability != "function" || function != "test-func" {
 					t.Errorf("hostcall signature invalid %s, %s, %s", namespace, capability, function)
 				}
-				if len(input) != len([]byte("Hey hey hey")) {
-					t.Errorf("unexpected input vs. payload")
+				if !bytes.Equal(input, []byte("Hey hey hey")) {
+					t.Errorf("unexpected input payload - got %v want %v", input, []byte("Hey hey hey"))
 				}
 				return []byte(""), errors.New("This is an error")
 			},

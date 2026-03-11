@@ -90,7 +90,7 @@ func (c *Config) CAFromFile(ca string) error {
 
 	pool := x509.NewCertPool()
 	if !pool.AppendCertsFromPEM(b) {
-		return fmt.Errorf("unable to load ca certificate - %w", err)
+		return errors.New("unable to load ca certificate: invalid PEM")
 	}
 
 	c.config.ClientCAs = pool

@@ -54,7 +54,7 @@ func TestCallbacks(t *testing.T) {
 	router := New(Config{
 		PreFunc: func(namespace, _ string, _ []byte) ([]byte, error) {
 			if namespace == "badfunc" {
-				return []byte(""), errors.New("Forced Error")
+				return []byte(""), errors.New("forced error")
 			}
 			return []byte(""), nil
 		},

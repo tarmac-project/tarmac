@@ -308,7 +308,7 @@ func (k *KVStore) deleteJSON(b []byte) ([]byte, error) {
 	// Marshal a response JSON to return to caller
 	rsp, err := ffjson.Marshal(r)
 	if err != nil {
-		return []byte(""), errors.New("unable to marshal kvstore:delete response")
+		return []byte(""), errors.New("unable to marshal kvstore:keys response")
 	}
 
 	if r.Status.Code == 200 {

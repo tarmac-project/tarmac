@@ -67,6 +67,26 @@ func TestSQL_Query(t *testing.T) {
 			expected: nil,
 			err:      true,
 		},
+		{
+			name:      "empty data",
+			namespace: "test-namespace",
+			query:     "SELECT * FROM users;",
+			hostCall: func(namespace, service, endpoint string, payload []byte) ([]byte, error) {
+				return []byte(`{"data":""}`), nil
+			},
+			expected: []byte(""),
+			err:      false,
+		},
+		{
+			name:      "missing data",
+			namespace: "test-namespace",
+			query:     "SELECT * FROM users;",
+			hostCall: func(namespace, service, endpoint string, payload []byte) ([]byte, error) {
+				return []byte(`{}`), nil
+			},
+			expected: []byte(""),
+			err:      false,
+		},
 	}
 
 	for _, tc := range tests {

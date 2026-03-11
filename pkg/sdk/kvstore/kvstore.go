@@ -52,7 +52,7 @@ func (kv *KV) Set(key string, data []byte) error {
 	}
 
 	if len(data) == 0 {
-		return errors.New("data cannot by empty")
+		return errors.New("data cannot be empty")
 	}
 
 	d := base64.StdEncoding.EncodeToString(data)

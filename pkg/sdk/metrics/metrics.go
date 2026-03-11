@@ -36,7 +36,7 @@ func New(cfg Config) (*Metrics, error) {
 
 	// Verify HostCall is set
 	if cfg.HostCall == nil {
-		return &Metrics{}, errors.New("HostCall cannot be nil")
+		return &Metrics{}, errors.New("hostCall cannot be nil")
 	}
 
 	return &Metrics{namespace: cfg.Namespace, hostCall: cfg.HostCall}, nil
