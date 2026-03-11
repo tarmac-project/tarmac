@@ -140,3 +140,22 @@ func TestTLSConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestCAFromFileInvalidPEM(t *testing.T) {
+	tmpDir := t.TempDir()
+	caFile := tmpDir + "/invalid-ca.pem"
+
+	if err := os.WriteFile(caFile, []byte("definitely-not-pem"), 0o600); err != nil {
+		t.Fatalf("Unable to write invalid PEM file - %s", err)
+	}
+
+	cfg := New()
+	err := cfg.CAFromFile(caFile)
+	if err == nil {
+		t.Fatal("expected invalid PEM error")
+	}
+
+	if err.Error() != "unable to load ca certificate: invalid PEM" {
+		t.Fatalf("unexpected error: got %q want %q", err.Error(), "unable to load ca certificate: invalid PEM")
+	}
+}

@@ -25,6 +25,9 @@ jobs:
       uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage/tests-base.out
+        flags: tests-base
+        name: tests-base
 
   redis:
     runs-on: ubuntu-latest
@@ -40,6 +43,9 @@ jobs:
       uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage/tests-redis.out
+        flags: tests-redis
+        name: tests-redis
 
   nats:
     runs-on: ubuntu-latest
@@ -55,6 +61,9 @@ jobs:
       uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage/tests-nats.out
+        flags: tests-nats
+        name: tests-nats
 
   cassandra:
     runs-on: ubuntu-latest
@@ -70,6 +79,9 @@ jobs:
       uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage/tests-cassandra.out
+        flags: tests-cassandra
+        name: tests-cassandra
 
 
   boltdb:
@@ -88,6 +100,9 @@ jobs:
       uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage/tests-boltdb.out
+        flags: tests-boltdb
+        name: tests-boltdb
 
 
   in-memory:
@@ -104,6 +119,9 @@ jobs:
       uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage/tests-inmemory.out
+        flags: tests-inmemory
+        name: tests-inmemory
 
 
   mysql:
@@ -120,6 +138,9 @@ jobs:
       uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage/tests-mysql.out
+        flags: tests-mysql
+        name: tests-mysql
 
   postgres:
     runs-on: ubuntu-latest
@@ -135,3 +156,6 @@ jobs:
       uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage/tests-postgres.out
+        flags: tests-postgres
+        name: tests-postgres

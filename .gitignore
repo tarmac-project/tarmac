@@ -4,6 +4,8 @@
 *.so
 *.dylib
 tarmac
+!cmd/tarmac/
+!cmd/tarmac/*.go
 
 # SQLite DB
 *.sqlite
