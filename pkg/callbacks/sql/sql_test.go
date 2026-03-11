@@ -35,7 +35,7 @@ func TestSQLQuery(t *testing.T) {
 		t.Fatalf("Unable to create sqllite DB for testing")
 	}
 	mockDB.SetMaxOpenConns(1)
-	defer mockDB.Close()
+	defer func() { _ = mockDB.Close() }()
 
 	// Create new SQL Database instance
 	db, err := New(Config{DB: mockDB})

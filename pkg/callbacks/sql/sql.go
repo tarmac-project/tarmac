@@ -1,5 +1,5 @@
 /*
-Package database is part of the Tarmac suite of Host Callback packages. This package provides users with the ability to
+Package sql is part of the Tarmac suite of Host Callback packages. This package provides users with the ability to
 provide WASM functions with a host callback interface that provides SQL database capabilities.
 
 	import (
@@ -234,7 +234,7 @@ func (db *Database) query(qry []byte) ([]string, []map[string]any, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to execute query - %s", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	columns, err := rows.Columns()
 	if err != nil {

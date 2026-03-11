@@ -9,6 +9,7 @@ package wasm
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -19,11 +20,16 @@ import (
 )
 
 const (
-	// Default Pool Size.
+	// DefaultPoolSize is the default size of the WASM module pool.
 	DefaultPoolSize = 100
 
-	// Default Pool Timeout.
+	// DefaultPoolTimeout is the default timeout in seconds for acquiring a module from the pool.
 	DefaultPoolTimeout = 5
+)
+
+var (
+	// ErrCallbackNil is returned when the callback function is nil.
+	ErrCallbackNil = errors.New("callback cannot be nil")
 )
 
 // Config is used to configure the initial WASM Server.
@@ -83,7 +89,7 @@ func NewServer(cfg Config) (*Server, error) {
 	s.modules = make(map[string]*Module)
 
 	if cfg.Callback == nil {
-		return s, fmt.Errorf("Callback cannot be nil")
+		return s, ErrCallbackNil
 	}
 
 	s.callback = cfg.Callback
@@ -96,8 +102,8 @@ func (s *Server) Shutdown() {
 	defer s.RUnlock()
 	for _, m := range s.modules {
 		defer m.cancel()
-		defer m.module.Close(m.ctx)
-		defer m.pool.Close(m.ctx)
+		defer func(module *Module) { _ = module.module.Close(module.ctx) }(m)
+		defer func(module *Module) { module.pool.Close(module.ctx) }(m)
 	}
 }
 
@@ -175,7 +181,7 @@ func (m *Module) Run(handler string, payload []byte) ([]byte, error) {
 	defer func() {
 		err := m.pool.Return(i)
 		if err != nil {
-			defer i.Close(m.ctx)
+			defer func() { _ = i.Close(m.ctx) }()
 		}
 	}()
 

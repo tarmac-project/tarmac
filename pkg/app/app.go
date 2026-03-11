@@ -276,7 +276,7 @@ func (srv *Server) Run() error {
 			if err != nil && !os.IsExist(err) {
 				return fmt.Errorf("could not create boltdb file - %w", err)
 			}
-			fh.Close()
+			_ = fh.Close()
 
 			// Open datastore
 			srv.kv, err = bbolt.Dial(bbolt.Config{

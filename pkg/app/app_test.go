@@ -174,7 +174,7 @@ func TestRunningServer(t *testing.T) {
 		if err != nil {
 			t.Errorf("Unexpected error when requesting health status - %s", err)
 		}
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when checking health - %d", r.StatusCode)
 		}
@@ -185,7 +185,7 @@ func TestRunningServer(t *testing.T) {
 		if err != nil {
 			t.Errorf("Unexpected error when requesting metrics status - %s", err)
 		}
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when checking metrics - %d", r.StatusCode)
 		}
@@ -233,7 +233,7 @@ func TestPProfServerEnabled(t *testing.T) {
 			if err != nil {
 				t.Errorf("Unexpected error when validating pprof - %s", err)
 			}
-			defer r.Body.Close()
+			defer func() { _ = r.Body.Close() }()
 			if r.StatusCode > 399 {
 				t.Errorf("Unexpected http status code when validating pprof - %d", r.StatusCode)
 			}
@@ -281,7 +281,7 @@ func TestPProfServerDisabled(t *testing.T) {
 			if err != nil {
 				t.Errorf("Unexpected error when validating pprof - %s", err)
 			}
-			defer r.Body.Close()
+			defer func() { _ = r.Body.Close() }()
 			if r.StatusCode != 403 {
 				t.Errorf("Unexpected http status code when validating pprof - %d", r.StatusCode)
 			}
@@ -296,8 +296,8 @@ func TestRunningTLSServer(t *testing.T) {
 		t.Errorf("Failed to create certs - %s", err)
 		t.FailNow()
 	}
-	defer os.Remove("/tmp/cert")
-	defer os.Remove("/tmp/key")
+	defer func() { _ = os.Remove("/tmp/cert") }()
+	defer func() { _ = os.Remove("/tmp/key") }()
 
 	// Disable Host Checking globally
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
@@ -347,7 +347,7 @@ func TestRunningTLSServer(t *testing.T) {
 			t.Errorf("Unexpected error when requesting health status - %s", err)
 			t.FailNow()
 		}
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when checking health - %d", r.StatusCode)
 		}
@@ -359,7 +359,7 @@ func TestRunningTLSServer(t *testing.T) {
 			t.Errorf("Unexpected error when requesting ready status - %s", err)
 			t.FailNow()
 		}
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when checking readiness - %d", r.StatusCode)
 		}
@@ -374,7 +374,7 @@ func TestRunningTLSServer(t *testing.T) {
 			t.Errorf("Unexpected error when requesting ready status - %s", err)
 			t.FailNow()
 		}
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 		if r.StatusCode != 503 {
 			t.Errorf("Unexpected http status code when checking readiness - %d", r.StatusCode)
 		}
@@ -395,8 +395,8 @@ func TestRunningMTLSServer(t *testing.T) {
 		t.Errorf("Failed to create certs - %s", err)
 		t.FailNow()
 	}
-	defer os.Remove("/tmp/cert")
-	defer os.Remove("/tmp/key")
+	defer func() { _ = os.Remove("/tmp/cert") }()
+	defer func() { _ = os.Remove("/tmp/key") }()
 
 	// Setup TLS Config
 	tlsCfg := tlsconfig.New()
@@ -456,7 +456,7 @@ func TestRunningMTLSServer(t *testing.T) {
 			t.Errorf("Unexpected error when requesting health status - %s", err)
 			t.FailNow()
 		}
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when checking health - %d", r.StatusCode)
 		}
@@ -468,7 +468,7 @@ func TestRunningMTLSServer(t *testing.T) {
 			t.Errorf("Unexpected error when requesting ready status - %s", err)
 			t.FailNow()
 		}
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when checking readiness - %d", r.StatusCode)
 		}
@@ -483,7 +483,7 @@ func TestRunningMTLSServer(t *testing.T) {
 			t.Errorf("Unexpected error when requesting ready status - %s", err)
 			t.FailNow()
 		}
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 		if r.StatusCode != 503 {
 			t.Errorf("Unexpected http status code when checking readiness - %d", r.StatusCode)
 		}
@@ -504,8 +504,8 @@ func TestRunningFailMTLSServer(t *testing.T) {
 		t.Errorf("Failed to create certs - %s", err)
 		t.FailNow()
 	}
-	defer os.Remove("/tmp/cert")
-	defer os.Remove("/tmp/key")
+	defer func() { _ = os.Remove("/tmp/cert") }()
+	defer func() { _ = os.Remove("/tmp/key") }()
 
 	// Setup TLS Config
 	tlsCfg := tlsconfig.New()
@@ -557,7 +557,7 @@ func TestRunningFailMTLSServer(t *testing.T) {
 	t.Run("Check Health HTTP Handler", func(t *testing.T) {
 		r, err := http.Get("https://localhost:9000/health")
 		if err == nil {
-			defer r.Body.Close()
+			defer func() { _ = r.Body.Close() }()
 			t.Errorf("Unexpected success when requesting health status")
 			t.FailNow()
 		}
