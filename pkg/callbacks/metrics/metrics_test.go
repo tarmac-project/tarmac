@@ -251,7 +251,6 @@ func TestMetricsCallback(t *testing.T) {
 				t.Errorf("Unknown callback method - %s", c.Callback)
 			}
 		})
-
 	}
 }
 

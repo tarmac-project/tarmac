@@ -6,6 +6,7 @@ package app
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -15,11 +16,11 @@ import (
 	"syscall"
 	"time"
 
-	// MySQL Database Driver
+	// MySQL Database Driver.
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/julienschmidt/httprouter"
 
-	// PostgreSQL Database Driver
+	// PostgreSQL Database Driver.
 	_ "github.com/lib/pq"
 	"github.com/madflojo/tasks"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -30,6 +31,9 @@ import (
 	"github.com/tarmac-project/hord/drivers/hashmap"
 	"github.com/tarmac-project/hord/drivers/nats"
 	"github.com/tarmac-project/hord/drivers/redis"
+	"github.com/tarmac-project/wapc-toolkit/callbacks"
+	"github.com/tarmac-project/wapc-toolkit/engine"
+
 	"github.com/tarmac-project/tarmac/pkg/callbacks/httpclient"
 	"github.com/tarmac-project/tarmac/pkg/callbacks/kvstore"
 	"github.com/tarmac-project/tarmac/pkg/callbacks/logging"
@@ -38,16 +42,14 @@ import (
 	"github.com/tarmac-project/tarmac/pkg/config"
 	"github.com/tarmac-project/tarmac/pkg/telemetry"
 	"github.com/tarmac-project/tarmac/pkg/tlsconfig"
-	"github.com/tarmac-project/wapc-toolkit/callbacks"
-	"github.com/tarmac-project/wapc-toolkit/engine"
 )
 
 // Common errors returned by this app.
 var (
-	ErrShutdown = fmt.Errorf("application shutdown gracefully")
+	ErrShutdown = errors.New("application shutdown gracefully")
 )
 
-// LevelNames maps custom log levels to their string representations
+// LevelNames maps custom log levels to their string representations.
 var LevelNames = map[slog.Leveler]string{
 	LevelTrace:      "TRACE",
 	slog.LevelDebug: "DEBUG",
@@ -272,7 +274,11 @@ func (srv *Server) Run() error {
 			}
 		case "internal", "boltdb":
 			// Check if file exists, if not create one
-			fh, err := os.OpenFile(srv.cfg.GetString("boltdb_filename"), os.O_RDWR|os.O_CREATE|os.O_EXCL, os.FileMode(srv.cfg.GetInt("boltdb_permissions")))
+			fh, err := os.OpenFile(
+				srv.cfg.GetString("boltdb_filename"),
+				os.O_RDWR|os.O_CREATE|os.O_EXCL,
+				os.FileMode(srv.cfg.GetInt("boltdb_permissions")),
+			)
 			if err != nil && !os.IsExist(err) {
 				return fmt.Errorf("could not create boltdb file - %w", err)
 			}
@@ -305,7 +311,7 @@ func (srv *Server) Run() error {
 				WriteTimeout:   time.Duration(srv.cfg.GetInt("redis_write_timeout")) * time.Second,
 			})
 			if err != nil {
-				return fmt.Errorf("could not establish kvstore connection - %s", err)
+				return fmt.Errorf("could not establish kvstore connection - %w", err)
 			}
 		case "cassandra":
 			srv.kv, err = cassandra.Dial(cassandra.Config{
@@ -320,7 +326,7 @@ func (srv *Server) Run() error {
 				EnableHostnameVerification: srv.cfg.GetBool("cassandra_hostname_verify"),
 			})
 			if err != nil {
-				return fmt.Errorf("could not establish kvstore connection - %s", err)
+				return fmt.Errorf("could not establish kvstore connection - %w", err)
 			}
 		case "nats":
 			srv.kv, err = nats.Dial(nats.Config{
@@ -330,7 +336,7 @@ func (srv *Server) Run() error {
 				SkipTLSVerify: srv.cfg.GetBool("nats_skip_tls_verify"),
 			})
 			if err != nil {
-				return fmt.Errorf("could not establish kvstore connection - %s", err)
+				return fmt.Errorf("could not establish kvstore connection - %w", err)
 			}
 		default:
 			return fmt.Errorf("unknown kvstore specified - %s", srv.cfg.GetString("kvstore_type"))
@@ -342,7 +348,7 @@ func (srv *Server) Run() error {
 		// Initialize the KV
 		err = srv.kv.Setup()
 		if err != nil {
-			return fmt.Errorf("could not setup kvstore - %s", err)
+			return fmt.Errorf("could not setup kvstore - %w", err)
 		}
 	}
 
@@ -356,12 +362,12 @@ func (srv *Server) Run() error {
 		case "mysql":
 			srv.db, err = sql.Open("mysql", srv.cfg.GetString("sql_dsn"))
 			if err != nil {
-				return fmt.Errorf("could not establish sql db connection - %s", err)
+				return fmt.Errorf("could not establish sql db connection - %w", err)
 			}
 		case "postgres":
 			srv.db, err = sql.Open("postgres", srv.cfg.GetString("sql_dsn"))
 			if err != nil {
-				return fmt.Errorf("could not establish sql db connection - %s", err)
+				return fmt.Errorf("could not establish sql db connection - %w", err)
 			}
 		default:
 			return fmt.Errorf("unknown sql store specified - %s", srv.cfg.GetString("sql_type"))
@@ -385,14 +391,17 @@ func (srv *Server) Run() error {
 		// Load Certs from file
 		err := tlsCfg.CertsFromFile(srv.cfg.GetString("cert_file"), srv.cfg.GetString("key_file"))
 		if err != nil {
-			return fmt.Errorf("unable to configure HTTPS server with certificate and key - %s", err)
+			return fmt.Errorf("unable to configure HTTPS server with certificate and key - %w", err)
 		}
 
 		// Load CA enabling m-TLS
 		if srv.cfg.GetString("ca_file") != "" {
 			err := tlsCfg.CAFromFile(srv.cfg.GetString("ca_file"))
 			if err != nil {
-				return fmt.Errorf("unable to configure HTTPS server with provided client certificate authority - %s", err)
+				return fmt.Errorf(
+					"unable to configure HTTPS server with provided client certificate authority - %w",
+					err,
+				)
 			}
 
 			// Set to ask but ignore client certs
@@ -448,7 +457,8 @@ func (srv *Server) Run() error {
 		PostFunc: func(r callbacks.CallbackResult) {
 			// Measure Callback Execution time and counts
 			duration := r.EndTime.Sub(r.StartTime).Milliseconds()
-			srv.stats.Callbacks.WithLabelValues(fmt.Sprintf("%s:%s", r.Namespace, r.Operation)).Observe(float64(duration))
+			srv.stats.Callbacks.WithLabelValues(fmt.Sprintf("%s:%s", r.Namespace, r.Operation)).
+				Observe(float64(duration))
 
 			// Debug logging of callback results
 			if r.Err != nil {
@@ -472,15 +482,26 @@ func (srv *Server) Run() error {
 
 			// Trace logging of callback results
 			if r.Err != nil {
-				srv.log.Log(context.Background(), LevelTrace, "Callback returned result with error and output: "+r.Err.Error(),
-					"namespace", r.Namespace,
-					"capability", r.Capability,
-					"operation", r.Operation,
-					"error", r.Err,
-					"input", string(r.Input),
-					"duration", duration,
-					"duration_ms", duration,
-					"output", string(r.Output),
+				srv.log.Log(
+					context.Background(),
+					LevelTrace,
+					"Callback returned result with error and output: "+r.Err.Error(),
+					"namespace",
+					r.Namespace,
+					"capability",
+					r.Capability,
+					"operation",
+					r.Operation,
+					"error",
+					r.Err,
+					"input",
+					string(r.Input),
+					"duration",
+					duration,
+					"duration_ms",
+					duration,
+					"output",
+					string(r.Output),
 				)
 			} else {
 				srv.log.Log(context.Background(), LevelTrace, "Callback returned result with output",
@@ -508,7 +529,7 @@ func (srv *Server) Run() error {
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("unable to initialize callback router - %s", err)
+		return fmt.Errorf("unable to initialize callback router - %w", err)
 	}
 
 	// Start WASM Engine
@@ -516,14 +537,14 @@ func (srv *Server) Run() error {
 		Callback: router.Callback,
 	})
 	if err != nil {
-		return fmt.Errorf("unable to initialize wasm engine - %s", err)
+		return fmt.Errorf("unable to initialize wasm engine - %w", err)
 	}
 
 	// Setup SQL Callbacks
 	if srv.cfg.GetBool("enable_sql") {
 		cbSQL, err := sqlstore.New(sqlstore.Config{DB: srv.db})
 		if err != nil {
-			return fmt.Errorf("unable to initialize callback sqlstore for WASM functions - %s", err)
+			return fmt.Errorf("unable to initialize callback sqlstore for WASM functions - %w", err)
 		}
 
 		// Register SQLStore Callbacks
@@ -534,7 +555,7 @@ func (srv *Server) Run() error {
 			Func:       cbSQL.Query,
 		})
 		if err != nil {
-			return fmt.Errorf("unable to register callback for sql query - %s", err)
+			return fmt.Errorf("unable to register callback for sql query - %w", err)
 		}
 
 		err = router.RegisterCallback(callbacks.CallbackConfig{
@@ -544,7 +565,7 @@ func (srv *Server) Run() error {
 			Func:       cbSQL.Exec,
 		})
 		if err != nil {
-			return fmt.Errorf("unable to register callback for sql exec - %s", err)
+			return fmt.Errorf("unable to register callback for sql exec - %w", err)
 		}
 	}
 
@@ -552,7 +573,7 @@ func (srv *Server) Run() error {
 	if srv.cfg.GetBool("enable_kvstore") {
 		cbKVStore, err := kvstore.New(kvstore.Config{KV: srv.kv})
 		if err != nil {
-			return fmt.Errorf("unable to initialize callback kvstore for WASM functions - %s", err)
+			return fmt.Errorf("unable to initialize callback kvstore for WASM functions - %w", err)
 		}
 
 		// Register KVStore Callbacks
@@ -563,7 +584,7 @@ func (srv *Server) Run() error {
 			Func:       cbKVStore.Get,
 		})
 		if err != nil {
-			return fmt.Errorf("unable to register callback for kvstore get - %s", err)
+			return fmt.Errorf("unable to register callback for kvstore get - %w", err)
 		}
 
 		err = router.RegisterCallback(callbacks.CallbackConfig{
@@ -573,7 +594,7 @@ func (srv *Server) Run() error {
 			Func:       cbKVStore.Set,
 		})
 		if err != nil {
-			return fmt.Errorf("unable to register callback for kvstore set - %s", err)
+			return fmt.Errorf("unable to register callback for kvstore set - %w", err)
 		}
 
 		err = router.RegisterCallback(callbacks.CallbackConfig{
@@ -583,7 +604,7 @@ func (srv *Server) Run() error {
 			Func:       cbKVStore.Delete,
 		})
 		if err != nil {
-			return fmt.Errorf("unable to register callback for kvstore delete - %s", err)
+			return fmt.Errorf("unable to register callback for kvstore delete - %w", err)
 		}
 
 		err = router.RegisterCallback(callbacks.CallbackConfig{
@@ -593,7 +614,7 @@ func (srv *Server) Run() error {
 			Func:       cbKVStore.Keys,
 		})
 		if err != nil {
-			return fmt.Errorf("unable to register callback for kvstore keys - %s", err)
+			return fmt.Errorf("unable to register callback for kvstore keys - %w", err)
 		}
 	}
 
@@ -602,7 +623,7 @@ func (srv *Server) Run() error {
 		MaxResponseBodySize: srv.cfg.GetInt64("http_client_max_response_body_size"),
 	})
 	if err != nil {
-		return fmt.Errorf("unable to initialize callback http client for WASM functions - %s", err)
+		return fmt.Errorf("unable to initialize callback http client for WASM functions - %w", err)
 	}
 
 	// Register HTTPClient Functions
@@ -613,7 +634,7 @@ func (srv *Server) Run() error {
 		Func:       cbHTTPClient.Call,
 	})
 	if err != nil {
-		return fmt.Errorf("unable to register callback for httpclient call - %s", err)
+		return fmt.Errorf("unable to register callback for httpclient call - %w", err)
 	}
 
 	// Setup Logger Callbacks
@@ -622,7 +643,7 @@ func (srv *Server) Run() error {
 		Log: logging.NewSlogAdapter(srv.log),
 	})
 	if err != nil {
-		return fmt.Errorf("unable to initialize callback logger for WASM functions - %s", err)
+		return fmt.Errorf("unable to initialize callback logger for WASM functions - %w", err)
 	}
 
 	// Register Logger Functions
@@ -633,7 +654,7 @@ func (srv *Server) Run() error {
 		Func:       cbLogger.Info,
 	})
 	if err != nil {
-		return fmt.Errorf("unable to register callback for logger info - %s", err)
+		return fmt.Errorf("unable to register callback for logger info - %w", err)
 	}
 
 	err = router.RegisterCallback(callbacks.CallbackConfig{
@@ -643,7 +664,7 @@ func (srv *Server) Run() error {
 		Func:       cbLogger.Error,
 	})
 	if err != nil {
-		return fmt.Errorf("unable to register callback for logger error - %s", err)
+		return fmt.Errorf("unable to register callback for logger error - %w", err)
 	}
 
 	err = router.RegisterCallback(callbacks.CallbackConfig{
@@ -653,7 +674,7 @@ func (srv *Server) Run() error {
 		Func:       cbLogger.Warn,
 	})
 	if err != nil {
-		return fmt.Errorf("unable to register callback for logger warn - %s", err)
+		return fmt.Errorf("unable to register callback for logger warn - %w", err)
 	}
 
 	err = router.RegisterCallback(callbacks.CallbackConfig{
@@ -663,7 +684,7 @@ func (srv *Server) Run() error {
 		Func:       cbLogger.Debug,
 	})
 	if err != nil {
-		return fmt.Errorf("unable to register callback for logger debug - %s", err)
+		return fmt.Errorf("unable to register callback for logger debug - %w", err)
 	}
 
 	err = router.RegisterCallback(callbacks.CallbackConfig{
@@ -673,13 +694,13 @@ func (srv *Server) Run() error {
 		Func:       cbLogger.Trace,
 	})
 	if err != nil {
-		return fmt.Errorf("unable to register callback for logger trace - %s", err)
+		return fmt.Errorf("unable to register callback for logger trace - %w", err)
 	}
 
 	// Setup Metrics Callbacks
 	cbMetrics, err := metrics.New(metrics.Config{})
 	if err != nil {
-		return fmt.Errorf("unable to initialize callback metrics for WASM functions - %s", err)
+		return fmt.Errorf("unable to initialize callback metrics for WASM functions - %w", err)
 	}
 
 	// Register Metrics Callbacks
@@ -690,7 +711,7 @@ func (srv *Server) Run() error {
 		Func:       cbMetrics.Counter,
 	})
 	if err != nil {
-		return fmt.Errorf("unable to register callback for metrics counter - %s", err)
+		return fmt.Errorf("unable to register callback for metrics counter - %w", err)
 	}
 
 	err = router.RegisterCallback(callbacks.CallbackConfig{
@@ -700,7 +721,7 @@ func (srv *Server) Run() error {
 		Func:       cbMetrics.Gauge,
 	})
 	if err != nil {
-		return fmt.Errorf("unable to register callback for metrics gauge - %s", err)
+		return fmt.Errorf("unable to register callback for metrics gauge - %w", err)
 	}
 
 	err = router.RegisterCallback(callbacks.CallbackConfig{
@@ -710,7 +731,7 @@ func (srv *Server) Run() error {
 		Func:       cbMetrics.Histogram,
 	})
 	if err != nil {
-		return fmt.Errorf("unable to register callback for metrics histogram - %s", err)
+		return fmt.Errorf("unable to register callback for metrics histogram - %w", err)
 	}
 
 	// Look for Functions Config
@@ -727,7 +748,11 @@ func (srv *Server) Run() error {
 			PoolSize: srv.cfg.GetInt("wasm_pool_size"),
 		})
 		if err != nil {
-			return fmt.Errorf("could not load default function path for wasm_function (%s) - %s", srv.cfg.GetString("wasm_function"), err)
+			return fmt.Errorf(
+				"could not load default function path for wasm_function (%s) - %w",
+				srv.cfg.GetString("wasm_function"),
+				err,
+			)
 		}
 
 		// Register WASM Handler with default path
@@ -743,7 +768,11 @@ func (srv *Server) Run() error {
 
 	// Load Functions from Config
 	if err == nil {
-		srv.log.Info("Loading Services from wasm_function_config", "config_path", srv.cfg.GetString("wasm_function_config"))
+		srv.log.Info(
+			"Loading Services from wasm_function_config",
+			"config_path",
+			srv.cfg.GetString("wasm_function_config"),
+		)
 
 		routesCounter := map[string]int{
 			RouteTypeInit:          0,
@@ -761,7 +790,7 @@ func (srv *Server) Run() error {
 					PoolSize: fCfg.PoolSize,
 				})
 				if err != nil {
-					return fmt.Errorf("could not load function %s from path %s - %s", fName, fCfg.Filepath, err)
+					return fmt.Errorf("could not load function %s from path %s - %w", fName, fCfg.Filepath, err)
 				}
 				srv.log.Info("Loaded Function for Service",
 					"function", fName,
@@ -820,7 +849,13 @@ func (srv *Server) Run() error {
 						},
 					})
 					if err != nil {
-						srv.log.Error("Error scheduling scheduled task: "+err.Error(), "function", r.Function, "error", err)
+						srv.log.Error(
+							"Error scheduling scheduled task: "+err.Error(),
+							"function",
+							r.Function,
+							"error",
+							err,
+						)
 					}
 					// Clean up Task on Shutdown
 					defer srv.scheduler.Del(id)
@@ -842,7 +877,7 @@ func (srv *Server) Run() error {
 						Func:       f,
 					})
 					if err != nil {
-						return fmt.Errorf("error registering callback for function %s - %s", fname, err)
+						return fmt.Errorf("error registering callback for function %s - %w", fname, err)
 					}
 					routesCounter[RouteTypeFunction]++
 					srv.stats.Routes.WithLabelValues(svcName, r.Type).Inc()
@@ -873,7 +908,6 @@ func (srv *Server) Run() error {
 					return fmt.Errorf("init function %s exceeded retries", r.Function)
 				}
 			}
-
 		}
 
 		// Log information about loaded functions and routes
@@ -916,17 +950,17 @@ func (srv *Server) Run() error {
 				<-srv.runCtx.Done()
 				return ErrShutdown
 			}
-			return fmt.Errorf("unable to start HTTPS Server - %s", err)
+			return fmt.Errorf("unable to start HTTPS Server - %w", err)
 		}
 	} else {
 		err = srv.httpServer.ListenAndServe()
 		if err != nil {
-			if err == http.ErrServerClosed {
+			if errors.Is(err, http.ErrServerClosed) {
 				// Wait until all outstanding requests are done
 				<-srv.runCtx.Done()
 				return ErrShutdown
 			}
-			return fmt.Errorf("unable to start HTTP Server - %s", err)
+			return fmt.Errorf("unable to start HTTP Server - %w", err)
 		}
 	}
 

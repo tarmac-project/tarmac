@@ -95,7 +95,7 @@ func TestLoggingFunc(t *testing.T) {
 	})
 }
 
-// spyLogger is a test implementation that captures log calls
+// spyLogger is a test implementation that captures log calls.
 type spyLogger struct {
 	mu    sync.Mutex
 	calls []logCall
@@ -160,7 +160,7 @@ func formatArgs(args ...interface{}) string {
 	return fmt.Sprint(args...)
 }
 
-// TestLoggerBehavior validates that Logger adapter methods call the correct logger methods
+// TestLoggerBehavior validates that Logger adapter methods call the correct logger methods.
 func TestLoggerBehavior(t *testing.T) {
 	spy := &spyLogger{}
 	logger, err := New(Config{Log: spy})
@@ -231,7 +231,7 @@ func TestLoggerBehavior(t *testing.T) {
 	}
 }
 
-// spySlogHandler is a test handler that captures slog calls
+// spySlogHandler is a test handler that captures slog calls.
 type spySlogHandler struct {
 	mu      sync.Mutex
 	records []slogRecord
@@ -276,7 +276,7 @@ func (h *spySlogHandler) reset() {
 	h.records = nil
 }
 
-// TestSlogAdapterBehavior validates that SlogAdapter methods call slog with correct levels
+// TestSlogAdapterBehavior validates that SlogAdapter methods call slog with correct levels.
 func TestSlogAdapterBehavior(t *testing.T) {
 	handler := &spySlogHandler{}
 	slogger := slog.New(handler)
@@ -342,7 +342,7 @@ func TestSlogAdapterBehavior(t *testing.T) {
 	}
 }
 
-// TestSlogAdapterWithMultipleArgs validates that SlogAdapter formats multiple args correctly
+// TestSlogAdapterWithMultipleArgs validates that SlogAdapter formats multiple args correctly.
 func TestSlogAdapterWithMultipleArgs(t *testing.T) {
 	handler := &spySlogHandler{}
 	slogger := slog.New(handler)
@@ -361,14 +361,14 @@ func TestSlogAdapterWithMultipleArgs(t *testing.T) {
 	}
 }
 
-// TestSlogAdapterTraceLevelValue validates that trace level is below debug
+// TestSlogAdapterTraceLevelValue validates that trace level is below debug.
 func TestSlogAdapterTraceLevelValue(t *testing.T) {
 	if LevelTrace >= slog.LevelDebug {
 		t.Errorf("Expected LevelTrace (%d) to be less than LevelDebug (%d)", LevelTrace, slog.LevelDebug)
 	}
 }
 
-// TestSlogAdapterIntegration validates end-to-end behavior with actual slog
+// TestSlogAdapterIntegration validates end-to-end behavior with actual slog.
 func TestSlogAdapterIntegration(t *testing.T) {
 	var buf bytes.Buffer
 	handler := slog.NewTextHandler(&buf, &slog.HandlerOptions{

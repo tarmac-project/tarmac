@@ -6,7 +6,7 @@ Guest WASM functions running inside Tarmac can import and call this logger.
 */
 package logger
 
-import "fmt"
+import "errors"
 
 // Logger provides a simple interface for Tarmac Functions to send messages via the standard logger.
 type Logger struct {
@@ -34,7 +34,7 @@ func New(cfg Config) (*Logger, error) {
 
 	// Verify HostCall is set
 	if cfg.HostCall == nil {
-		return &Logger{}, fmt.Errorf("HostCall cannot be nil")
+		return &Logger{}, errors.New("HostCall cannot be nil")
 	}
 
 	return &Logger{namespace: cfg.Namespace, hostCall: cfg.HostCall}, nil

@@ -9,14 +9,15 @@ package callbacks
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
 )
 
 var (
-	ErrNotFound = fmt.Errorf("callback not found")
-	ErrCanceled = fmt.Errorf("callback context has expired")
+	ErrNotFound = errors.New("callback not found")
+	ErrCanceled = errors.New("callback context has expired")
 )
 
 // Router is a callback router, which provides a Callback function that users can register with wapc-go. This callback function will
@@ -113,7 +114,7 @@ func (r *Router) Lookup(key string) (*Callback, error) {
 // registered Callback; if not, it will return an error indicating the callback method not found.
 func (r *Router) Callback(ctx context.Context, _, namespace, op string, data []byte) ([]byte, error) {
 	if namespace == "" || op == "" {
-		return []byte(""), fmt.Errorf("namespace and op cannot be nil")
+		return []byte(""), errors.New("namespace and op cannot be nil")
 	}
 
 	// Lookup registered Callback
@@ -155,7 +156,7 @@ func (r *Router) Callback(ctx context.Context, _, namespace, op string, data []b
 		}
 		return result.Output, result.Err
 	}
-	return []byte(""), fmt.Errorf("unable to execute callback function, function is nil")
+	return []byte(""), errors.New("unable to execute callback function, function is nil")
 }
 
 // RegisterCallback will add the provided function into the internal map store of Callbacks, which will

@@ -7,6 +7,7 @@ package sql
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 
 	"github.com/valyala/fastjson"
@@ -38,7 +39,7 @@ func New(cfg Config) (*SQL, error) {
 
 	// Verify HostCall is set
 	if cfg.HostCall == nil {
-		return &SQL{}, fmt.Errorf("HostCall cannot be nil")
+		return &SQL{}, errors.New("HostCall cannot be nil")
 	}
 
 	return &SQL{namespace: cfg.Namespace, hostCall: cfg.HostCall}, nil
@@ -53,7 +54,7 @@ func (sql *SQL) Query(q string) ([]byte, error) {
 	// Callback to host
 	rsp, err := sql.hostCall(sql.namespace, "sql", "query", []byte(fmt.Sprintf(`{"query":"%s"}`, qry)))
 	if err != nil {
-		return []byte(""), fmt.Errorf("error while executing host callback - %s", err)
+		return []byte(""), fmt.Errorf("error while executing host callback - %w", err)
 	}
 
 	// Fetch Data from JSON
@@ -65,7 +66,7 @@ func (sql *SQL) Query(q string) ([]byte, error) {
 	// Decode SQL Response
 	d, err := base64.StdEncoding.DecodeString(fastjson.GetString(rsp, "data"))
 	if err != nil {
-		return []byte(""), fmt.Errorf("unable to decode returned data - %s", err)
+		return []byte(""), fmt.Errorf("unable to decode returned data - %w", err)
 	}
 
 	return d, nil

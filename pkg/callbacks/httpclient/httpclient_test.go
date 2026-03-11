@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/pquerna/ffjson/ffjson"
+
 	"github.com/tarmac-project/tarmac"
 
 	proto "github.com/tarmac-project/protobuf-go/sdk/http"
@@ -39,14 +40,14 @@ func Test(t *testing.T) {
 		w.Header().Set("Server", "tarmac")
 
 		// Check Header
-		if r.Header.Get("teapot") != "true" {
+		if r.Header.Get("Teapot") != "true" {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		// Process methods with and without payloads
 		switch r.Method {
-		case "POST", "PUT", "PATCH":
+		case http.MethodPost, http.MethodPut, http.MethodPatch:
 			body, err := io.ReadAll(r.Body)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
@@ -130,7 +131,10 @@ func Test(t *testing.T) {
 		httpCode: 200,
 		name:     "Simple POST",
 		call:     "Call",
-		json:     fmt.Sprintf(`{"method":"POST","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"UE9TVA=="}`, ts.URL),
+		json: fmt.Sprintf(
+			`{"method":"POST","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"UE9TVA=="}`,
+			ts.URL,
+		),
 		proto: &proto.HTTPClient{
 			Method:   "POST",
 			Headers:  map[string]string{"teapot": "true"},
@@ -146,7 +150,10 @@ func Test(t *testing.T) {
 		httpCode: 400,
 		name:     "Invalid POST",
 		call:     "Call",
-		json:     fmt.Sprintf(`{"method":"POST","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"NotValid"}`, ts.URL),
+		json: fmt.Sprintf(
+			`{"method":"POST","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"NotValid"}`,
+			ts.URL,
+		),
 		proto: &proto.HTTPClient{
 			Method:   "POST",
 			Headers:  map[string]string{"teapot": "true"},
@@ -162,7 +169,10 @@ func Test(t *testing.T) {
 		httpCode: 200,
 		name:     "Simple PUT",
 		call:     "Call",
-		json:     fmt.Sprintf(`{"method":"PUT","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"UFVU"}`, ts.URL),
+		json: fmt.Sprintf(
+			`{"method":"PUT","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"UFVU"}`,
+			ts.URL,
+		),
 		proto: &proto.HTTPClient{
 			Method:   "PUT",
 			Headers:  map[string]string{"teapot": "true"},
@@ -178,7 +188,10 @@ func Test(t *testing.T) {
 		httpCode: 400,
 		name:     "Invalid PUT",
 		call:     "Call",
-		json:     fmt.Sprintf(`{"method":"PUT","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"NotValid"}`, ts.URL),
+		json: fmt.Sprintf(
+			`{"method":"PUT","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"NotValid"}`,
+			ts.URL,
+		),
 		proto: &proto.HTTPClient{
 			Method:   "PUT",
 			Headers:  map[string]string{"teapot": "true"},
@@ -194,7 +207,10 @@ func Test(t *testing.T) {
 		httpCode: 200,
 		name:     "Simple PATCH",
 		call:     "Call",
-		json:     fmt.Sprintf(`{"method":"PATCH","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"UEFUQ0g="}`, ts.URL),
+		json: fmt.Sprintf(
+			`{"method":"PATCH","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"UEFUQ0g="}`,
+			ts.URL,
+		),
 		proto: &proto.HTTPClient{
 			Method:   "PATCH",
 			Headers:  map[string]string{"teapot": "true"},
@@ -210,7 +226,10 @@ func Test(t *testing.T) {
 		httpCode: 400,
 		name:     "Simple PATCH",
 		call:     "Call",
-		json:     fmt.Sprintf(`{"method":"PATCH","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"NotValid"}`, ts.URL),
+		json: fmt.Sprintf(
+			`{"method":"PATCH","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"NotValid"}`,
+			ts.URL,
+		),
 		proto: &proto.HTTPClient{
 			Method:   "PATCH",
 			Headers:  map[string]string{"teapot": "true"},
@@ -297,34 +316,33 @@ func Test(t *testing.T) {
 					}
 
 					// Tarmac Response
-					if rsp.Status.Code == 200 && !c.pass {
-						t.Fatalf(" Callback Set returned an unexpected success - %d", rsp.Status.Code)
+					if rsp.GetStatus().GetCode() == 200 && !c.pass {
+						t.Fatalf(" Callback Set returned an unexpected success - %d", rsp.GetStatus().GetCode())
 					}
 
-					if rsp.Status.Code != 200 && c.pass {
-						t.Fatalf(" Callback Set returned an unexpected failure - %d", rsp.Status.Code)
-
+					if rsp.GetStatus().GetCode() != 200 && c.pass {
+						t.Fatalf(" Callback Set returned an unexpected failure - %d", rsp.GetStatus().GetCode())
 					}
 
 					// HTTP Response
-					if rsp.Code != int32(c.httpCode) {
-						t.Fatalf(" returned an unexpected response code - %d", rsp.Code)
+					if rsp.GetCode() != int32(c.httpCode) {
+						t.Fatalf(" returned an unexpected response code - %d", rsp.GetCode())
 						return
 					}
 
 					// Validate Response Header
-					v, ok := rsp.Headers["server"]
-					if (!ok || v != "tarmac") && rsp.Code == 200 {
+					v, ok := rsp.GetHeaders()["server"]
+					if (!ok || v != "tarmac") && rsp.GetCode() == 200 {
 						t.Errorf(" returned an unexpected header - %s", v)
 					}
 
 					// Validate Payload
-					if len(rsp.Body) > 0 {
-						switch string(rsp.Body) {
+					if len(rsp.GetBody()) > 0 {
+						switch string(rsp.GetBody()) {
 						case "PUT", "POST", "PATCH":
 							return
 						default:
-							t.Errorf(" returned unexpected payload - %s", rsp.Body)
+							t.Errorf(" returned unexpected payload - %s", rsp.GetBody())
 						}
 					}
 				})
@@ -356,7 +374,7 @@ func TestResponseBodySizeLimit(t *testing.T) {
 		patternBytes := []byte(pattern)
 		data := make([]byte, size)
 
-		for i := 0; i < size; i++ {
+		for i := range size {
 			data[i] = patternBytes[i%len(patternBytes)]
 		}
 		_, _ = w.Write(data)
@@ -458,7 +476,7 @@ func TestResponseBodySizeLimit(t *testing.T) {
 				pattern := "This is test data for HTTP response body size limiting. "
 				patternBytes := []byte(pattern)
 				expectedData := make([]byte, expectedSize)
-				for i := 0; i < expectedSize; i++ {
+				for i := range expectedSize {
 					expectedData[i] = patternBytes[i%len(patternBytes)]
 				}
 
@@ -495,8 +513,12 @@ func TestResponseBodySizeLimit(t *testing.T) {
 					t.Fatalf("Failed to unmarshal protobuf response: %s", err)
 				}
 
-				if rsp.Status.Code != 200 {
-					t.Fatalf("Expected successful status, got %d: %s", rsp.Status.Code, rsp.Status.Status)
+				if rsp.GetStatus().GetCode() != 200 {
+					t.Fatalf(
+						"Expected successful status, got %d: %s",
+						rsp.GetStatus().GetCode(),
+						rsp.GetStatus().GetStatus(),
+					)
 				}
 
 				expectedSize := tc.responseSize
@@ -509,21 +531,21 @@ func TestResponseBodySizeLimit(t *testing.T) {
 					expectedSize = int(maxSize)
 				}
 
-				if len(rsp.Body) != expectedSize {
-					t.Errorf("%s: expected body length %d, got %d", tc.description, expectedSize, len(rsp.Body))
+				if len(rsp.GetBody()) != expectedSize {
+					t.Errorf("%s: expected body length %d, got %d", tc.description, expectedSize, len(rsp.GetBody()))
 				}
 
 				// Generate expected data for MD5 verification
 				pattern := "This is test data for HTTP response body size limiting. "
 				patternBytes := []byte(pattern)
 				expectedData := make([]byte, expectedSize)
-				for i := 0; i < expectedSize; i++ {
+				for i := range expectedSize {
 					expectedData[i] = patternBytes[i%len(patternBytes)]
 				}
 
 				// Verify data integrity using MD5 checksum
 				expectedMD5 := fmt.Sprintf("%x", md5.Sum(expectedData))
-				actualMD5 := fmt.Sprintf("%x", md5.Sum(rsp.Body))
+				actualMD5 := fmt.Sprintf("%x", md5.Sum(rsp.GetBody()))
 
 				if expectedMD5 != actualMD5 {
 					t.Errorf("%s: MD5 checksum mismatch. Expected %s, got %s", tc.description, expectedMD5, actualMD5)

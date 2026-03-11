@@ -9,6 +9,7 @@ package wasm
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -19,10 +20,10 @@ import (
 )
 
 const (
-	// Default Pool Size.
+	// DefaultPoolSize is the default pool size.
 	DefaultPoolSize = 100
 
-	// Default Pool Timeout.
+	// DefaultPoolTimeout is the default pool timeout in seconds.
 	DefaultPoolTimeout = 5
 )
 
@@ -83,7 +84,7 @@ func NewServer(cfg Config) (*Server, error) {
 	s.modules = make(map[string]*Module)
 
 	if cfg.Callback == nil {
-		return s, fmt.Errorf("Callback cannot be nil")
+		return s, errors.New("callback cannot be nil")
 	}
 
 	s.callback = cfg.Callback
@@ -104,7 +105,7 @@ func (s *Server) Shutdown() {
 // LoadModule will read and load the WASM module from the filesysem.
 func (s *Server) LoadModule(cfg ModuleConfig) error {
 	if cfg.Name == "" || cfg.Filepath == "" {
-		return fmt.Errorf("key and file cannot be empty")
+		return errors.New("key and file cannot be empty")
 	}
 
 	// Create Module
@@ -124,7 +125,7 @@ func (s *Server) LoadModule(cfg ModuleConfig) error {
 	// Read the WASM module file
 	guest, err := os.ReadFile(cfg.Filepath)
 	if err != nil {
-		return fmt.Errorf("unable to read wasm module file - %s", err)
+		return fmt.Errorf("unable to read wasm module file - %w", err)
 	}
 
 	// Initiate waPC Engine
@@ -137,13 +138,13 @@ func (s *Server) LoadModule(cfg ModuleConfig) error {
 		Stderr: os.Stderr,
 	})
 	if err != nil {
-		return fmt.Errorf("unable to load module with wasm file %s - %s", cfg.Filepath, err)
+		return fmt.Errorf("unable to load module with wasm file %s - %w", cfg.Filepath, err)
 	}
 
 	// Create pool for module
 	m.pool, err = wapc.NewPool(m.ctx, m.module, m.poolSize)
 	if err != nil {
-		return fmt.Errorf("unable to create module pool for wasm file %s - %s", cfg.Filepath, err)
+		return fmt.Errorf("unable to create module pool for wasm file %s - %w", cfg.Filepath, err)
 	}
 
 	s.Lock()
@@ -161,15 +162,15 @@ func (s *Server) Module(key string) (*Module, error) {
 	if m, ok := s.modules[key]; ok {
 		return m, nil
 	}
-	return m, fmt.Errorf("module not found")
+	return m, errors.New("module not found")
 }
 
 // Run will fetch an instance from the module pool and execute it.
 func (m *Module) Run(handler string, payload []byte) ([]byte, error) {
 	var r []byte
-	i, err := m.pool.Get(time.Duration(DefaultPoolTimeout * time.Second))
+	i, err := m.pool.Get(DefaultPoolTimeout * time.Second)
 	if err != nil {
-		return r, fmt.Errorf("could not fetch module from pool - %s", err)
+		return r, fmt.Errorf("could not fetch module from pool - %w", err)
 	}
 
 	defer func() {
@@ -181,7 +182,7 @@ func (m *Module) Run(handler string, payload []byte) ([]byte, error) {
 
 	r, err = i.Invoke(m.ctx, handler, payload)
 	if err != nil {
-		return r, fmt.Errorf("invocation of WASM module failed - %s", err)
+		return r, fmt.Errorf("invocation of WASM module failed - %w", err)
 	}
 
 	return r, nil

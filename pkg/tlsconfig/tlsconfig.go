@@ -24,6 +24,7 @@ package tlsconfig
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"os"
 )
@@ -59,12 +60,12 @@ func New() *Config {
 // intermediate certificates following the leaf certificate to form a certificate chain.
 func (c *Config) CertsFromFile(cert, key string) error {
 	if cert == "" || key == "" {
-		return fmt.Errorf("cert and key cannot be empty")
+		return errors.New("cert and key cannot be empty")
 	}
 
 	pair, err := tls.LoadX509KeyPair(cert, key)
 	if err != nil {
-		return fmt.Errorf("unable to load keypair - %s", err)
+		return fmt.Errorf("unable to load keypair - %w", err)
 	}
 
 	c.config.Certificates = append(c.config.Certificates, pair)
@@ -79,17 +80,17 @@ func (c *Config) CAFromFile(ca string) error {
 	c.config.ClientAuth = tls.RequireAndVerifyClientCert
 
 	if ca == "" {
-		return fmt.Errorf("ca cannot be empty")
+		return errors.New("ca cannot be empty")
 	}
 
 	b, err := os.ReadFile(ca)
 	if err != nil {
-		return fmt.Errorf("unable to read ca file - %s", err)
+		return fmt.Errorf("unable to read ca file - %w", err)
 	}
 
 	pool := x509.NewCertPool()
 	if !pool.AppendCertsFromPEM(b) {
-		return fmt.Errorf("unable to load ca certificate - %s", err)
+		return fmt.Errorf("unable to load ca certificate - %w", err)
 	}
 
 	c.config.ClientCAs = pool

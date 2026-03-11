@@ -3,6 +3,12 @@
 
 build: build-testdata
 
+format:
+	golangci-lint fmt
+
+lint:
+	golangci-lint run --timeout=5m
+
 build-testdata:
 	$(MAKE) -C testdata/sdkv1/kv build
 	$(MAKE) -C testdata/sdkv1/sql build

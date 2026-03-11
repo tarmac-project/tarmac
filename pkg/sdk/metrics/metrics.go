@@ -5,7 +5,10 @@ This package provides user-friendly Metrics functions that enable users to creat
 */
 package metrics
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 // Metrics provides an interface to the host metrics.
 type Metrics struct {
@@ -33,7 +36,7 @@ func New(cfg Config) (*Metrics, error) {
 
 	// Verify HostCall is set
 	if cfg.HostCall == nil {
-		return &Metrics{}, fmt.Errorf("HostCall cannot be nil")
+		return &Metrics{}, errors.New("HostCall cannot be nil")
 	}
 
 	return &Metrics{namespace: cfg.Namespace, hostCall: cfg.HostCall}, nil
@@ -49,7 +52,7 @@ type Counter struct {
 // NewCounter creates a new Counter metric with the given name.
 func (m *Metrics) NewCounter(name string) (*Counter, error) {
 	if name == "" {
-		return &Counter{}, fmt.Errorf("name cannot be empty")
+		return &Counter{}, errors.New("name cannot be empty")
 	}
 
 	c := &Counter{name: name, namespace: m.namespace, hostCall: m.hostCall}
@@ -71,7 +74,7 @@ type Histogram struct {
 // NewHistogram creates a new Histogram metric with the given name.
 func (m *Metrics) NewHistogram(name string) (*Histogram, error) {
 	if name == "" {
-		return &Histogram{}, fmt.Errorf("name cannot be empty")
+		return &Histogram{}, errors.New("name cannot be empty")
 	}
 
 	h := &Histogram{name: name, namespace: m.namespace, hostCall: m.hostCall}
@@ -93,7 +96,7 @@ type Gauge struct {
 // NewGauge creates a new Gauge metric with the given name.
 func (m *Metrics) NewGauge(name string) (*Gauge, error) {
 	if name == "" {
-		return &Gauge{}, fmt.Errorf("name cannot be empty")
+		return &Gauge{}, errors.New("name cannot be empty")
 	}
 
 	g := &Gauge{name: name, namespace: m.namespace, hostCall: m.hostCall}

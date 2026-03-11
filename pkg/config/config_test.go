@@ -13,7 +13,9 @@ type TestCase struct {
 
 func TestParserFile(t *testing.T) {
 	// Define the JSON data that will be used to create the temporary file
-	data := []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm","pool_size":10},"example-defaults":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"http","path":"/example","methods":["GET"],"function":"example"},{"type":"scheduled_task","function":"example","frequency":15},{"type":"init","function":"example","retries":15,"frequency":50},{"type":"init","function":"example-defaults"},{"type":"function","function":"function1"}]}}}`)
+	data := []byte(
+		`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm","pool_size":10},"example-defaults":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"http","path":"/example","methods":["GET"],"function":"example"},{"type":"scheduled_task","function":"example","frequency":15},{"type":"init","function":"example","retries":15,"frequency":50},{"type":"init","function":"example-defaults"},{"type":"function","function":"function1"}]}}}`,
+	)
 
 	// Create a temporary file in the /tmp directory
 	fh, err := os.CreateTemp("/tmp", "")
@@ -72,7 +74,10 @@ func TestParserFile(t *testing.T) {
 
 		t.Run("Validate Default Pool Size", func(t *testing.T) {
 			if cfg.Services["example"].Functions["example-defaults"].PoolSize != 100 {
-				t.Errorf("Unexpected Default Pool Size - %d", cfg.Services["example"].Functions["example-defaults"].PoolSize)
+				t.Errorf(
+					"Unexpected Default Pool Size - %d",
+					cfg.Services["example"].Functions["example-defaults"].PoolSize,
+				)
 			}
 		})
 
@@ -145,7 +150,6 @@ func TestParserFile(t *testing.T) {
 				t.Errorf("Unexpected Function Name - %s", cfg.Services["example"].Routes[4].Function)
 			}
 		})
-
 	})
 
 	// Validate RouteLookup
@@ -185,63 +189,87 @@ func TestConfigParser(t *testing.T) {
 			valid: false,
 		},
 		{
-			name:  "Valid JSON",
-			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"http","path":"/example","methods":["GET"],"function":"example"}]}}}`),
+			name: "Valid JSON",
+			data: []byte(
+				`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"http","path":"/example","methods":["GET"],"function":"example"}]}}}`,
+			),
 			valid: true,
 		},
 		{
-			name:  "Missing Frequency for scheduled_task",
-			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"scheduled_task","function":"default"},{"type":"init","function":"default"},{"type":"function","function":"function1"}]}}}`),
+			name: "Missing Frequency for scheduled_task",
+			data: []byte(
+				`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"scheduled_task","function":"default"},{"type":"init","function":"default"},{"type":"function","function":"function1"}]}}}`,
+			),
 			valid: false,
 		},
 		{
-			name:  "Missing Function for scheduled_task",
-			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"scheduled_task","frequency":15},{"type":"init","function":"default"},{"type":"function","function":"function1"}]}}}`),
+			name: "Missing Function for scheduled_task",
+			data: []byte(
+				`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"scheduled_task","frequency":15},{"type":"init","function":"default"},{"type":"function","function":"function1"}]}}}`,
+			),
 			valid: false,
 		},
 		{
-			name:  "Missing Function for init",
-			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"scheduled_task","function":"default","frequency":15},{"type":"init"},{"type":"function","function":"function1"}]}}}`),
+			name: "Missing Function for init",
+			data: []byte(
+				`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"scheduled_task","function":"default","frequency":15},{"type":"init"},{"type":"function","function":"function1"}]}}}`,
+			),
 			valid: false,
 		},
 		{
-			name:  "Missing Function for function",
-			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"scheduled_task","function":"default","frequency":15},{"type":"init","function":"default"},{"type":"function"}]}}}`),
+			name: "Missing Function for function",
+			data: []byte(
+				`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"scheduled_task","function":"default","frequency":15},{"type":"init","function":"default"},{"type":"function"}]}}}`,
+			),
 			valid: false,
 		},
 		{
-			name:  "Missing Service Name",
-			data:  []byte(`{"services":{"example":{"functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"scheduled_task","function":"default","frequency":15},{"type":"init","function":"default"},{"type":"function","function":"function1"}]}}}`),
+			name: "Missing Service Name",
+			data: []byte(
+				`{"services":{"example":{"functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"scheduled_task","function":"default","frequency":15},{"type":"init","function":"default"},{"type":"function","function":"function1"}]}}}`,
+			),
 			valid: false,
 		},
 		{
-			name:  "Missing Function Name",
-			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"scheduled_task","function":"default","frequency":15},{"type":"init","function":"default"},{"type":"function"}]}}}`),
+			name: "Missing Function Name",
+			data: []byte(
+				`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"scheduled_task","function":"default","frequency":15},{"type":"init","function":"default"},{"type":"function"}]}}}`,
+			),
 			valid: false,
 		},
 		{
-			name:  "Missing Function Filepath",
-			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{},"routes":[{"type":"scheduled_task","function":"default","frequency":15},{"type":"init","function":"default"},{"type":"function","function":"function1"}]}}}}`),
+			name: "Missing Function Filepath",
+			data: []byte(
+				`{"services":{"example":{"name":"example","functions":{"example":{},"routes":[{"type":"scheduled_task","function":"default","frequency":15},{"type":"init","function":"default"},{"type":"function","function":"function1"}]}}}}`,
+			),
 			valid: false,
 		},
 		{
-			name:  "Missing Route Type",
-			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"path":"/example","methods":["GET"],"function":"example"}]}}}`),
+			name: "Missing Route Type",
+			data: []byte(
+				`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"path":"/example","methods":["GET"],"function":"example"}]}}}`,
+			),
 			valid: false,
 		},
 		{
-			name:  "Missing Route Path",
-			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"http","methods":["GET"],"function":"example"}]}}}`),
+			name: "Missing Route Path",
+			data: []byte(
+				`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"http","methods":["GET"],"function":"example"}]}}}`,
+			),
 			valid: false,
 		},
 		{
-			name:  "Missing Route Methods",
-			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"http","path":"/example","function":"example"}]}}}`),
+			name: "Missing Route Methods",
+			data: []byte(
+				`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"http","path":"/example","function":"example"}]}}}`,
+			),
 			valid: false,
 		},
 		{
-			name:  "Missing Route Function",
-			data:  []byte(`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"http","path":"/example","methods":["GET"]}]}}}`),
+			name: "Missing Route Function",
+			data: []byte(
+				`{"services":{"example":{"name":"example","functions":{"example":{"filepath":"./functions/example.wasm"}},"routes":[{"type":"http","path":"/example","methods":["GET"]}]}}}`,
+			),
 			valid: false,
 		},
 	}

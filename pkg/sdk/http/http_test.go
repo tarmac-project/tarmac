@@ -2,6 +2,7 @@ package http
 
 import (
 	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/pquerna/ffjson/ffjson"
@@ -85,8 +86,12 @@ func TestHTTPDo(t *testing.T) {
 				t.Errorf("Invalid or missing body value: %v", req)
 			}
 
-			return []byte(fmt.Sprintf(`{"code": 200,"headers":{"testing":"testing"},"body":"%s","status":{"code":200,"status":"OK"}}`, req["body"])), nil
-
+			return []byte(
+				fmt.Sprintf(
+					`{"code": 200,"headers":{"testing":"testing"},"body":"%s","status":{"code":200,"status":"OK"}}`,
+					req["body"],
+				),
+			), nil
 		},
 	}
 	tc.headers["testing"] = "testing"
@@ -135,7 +140,9 @@ func TestHTTPDo(t *testing.T) {
 		insecure: false,
 		headers:  make(map[string]string),
 		hostCall: func(namespace, capability, function string, input []byte) ([]byte, error) {
-			return []byte(`{"code": 200,"headers":{},"body":"THIS IS NOT BASE64","status":{"code":200,"status":"OK"}}`), nil
+			return []byte(
+				`{"code": 200,"headers":{},"body":"THIS IS NOT BASE64","status":{"code":200,"status":"OK"}}`,
+			), nil
 		},
 	}
 	tt = append(tt, tc)
@@ -180,8 +187,12 @@ func TestHTTPDo(t *testing.T) {
 				t.Errorf("unexpected method value: %v", req)
 			}
 
-			return []byte(fmt.Sprintf(`{"code": 200,"headers":{"testing":"testing"},"body":"%s","status":{"code":200,"status":"OK"}}`, req["body"])), nil
-
+			return []byte(
+				fmt.Sprintf(
+					`{"code": 200,"headers":{"testing":"testing"},"body":"%s","status":{"code":200,"status":"OK"}}`,
+					req["body"],
+				),
+			), nil
 		},
 	}
 	tc.headers["testing"] = "testing"
@@ -248,8 +259,12 @@ func TestHTTPDo(t *testing.T) {
 				t.Errorf("Invalid or missing body value: %v", req)
 			}
 
-			return []byte(fmt.Sprintf(`{"code": 200,"headers":{"testing":"testing"},"body":"%s","status":{"code":200,"status":"OK"}}`, req["body"])), nil
-
+			return []byte(
+				fmt.Sprintf(
+					`{"code": 200,"headers":{"testing":"testing"},"body":"%s","status":{"code":200,"status":"OK"}}`,
+					req["body"],
+				),
+			), nil
 		},
 	}
 	tc.headers["testing"] = "testing"
@@ -292,7 +307,7 @@ func TestHTTPDo(t *testing.T) {
 			}
 
 			// Validate response code
-			if rsp.StatusCode != 200 {
+			if rsp.StatusCode != http.StatusOK {
 				t.Errorf("Unexpected response code: %d", rsp.StatusCode)
 			}
 
@@ -309,7 +324,6 @@ func TestHTTPDo(t *testing.T) {
 					t.Errorf("Unexpected response body: %s", rsp.Body)
 				}
 			}
-
 		})
 	}
 }
@@ -327,7 +341,7 @@ func TestHTTPClientGet(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
-	if response.StatusCode != 200 {
+	if response.StatusCode != http.StatusOK {
 		t.Errorf("Unexpected status code: %d", response.StatusCode)
 	}
 
@@ -351,7 +365,7 @@ func TestHTTPClientDelete(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
-	if response.StatusCode != 200 {
+	if response.StatusCode != http.StatusOK {
 		t.Errorf("Unexpected status code: %d", response.StatusCode)
 	}
 
@@ -375,7 +389,7 @@ func TestHTTPClientPost(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
-	if response.StatusCode != 200 {
+	if response.StatusCode != http.StatusOK {
 		t.Errorf("Unexpected status code: %d", response.StatusCode)
 	}
 
@@ -399,7 +413,7 @@ func TestHTTPClientPut(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
-	if response.StatusCode != 200 {
+	if response.StatusCode != http.StatusOK {
 		t.Errorf("Unexpected status code: %d", response.StatusCode)
 	}
 

@@ -3,6 +3,7 @@ package kvstore
 import (
 	"bytes"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"testing"
 )
@@ -52,7 +53,7 @@ func TestKVStore(t *testing.T) {
 			key:  "foo",
 			data: []byte("bar"),
 			hostCall: func(string, string, string, []byte) ([]byte, error) {
-				return nil, fmt.Errorf("HostCall error")
+				return nil, errors.New("HostCall error")
 			},
 		},
 	}
@@ -101,7 +102,9 @@ func TestKVStore_Get(t *testing.T) {
 			err:  true,
 			key:  "unknown_key",
 			hostCall: func(string, string, string, []byte) ([]byte, error) {
-				return []byte(`{"status": {"code": 404, "status":"Unable to fetch key unknown_key - not found"}}`), fmt.Errorf("Unable to fetch key unknown_key - not found")
+				return []byte(
+					`{"status": {"code": 404, "status":"Unable to fetch key unknown_key - not found"}}`,
+				), errors.New("Unable to fetch key unknown_key - not found")
 			},
 		},
 		{
@@ -109,7 +112,7 @@ func TestKVStore_Get(t *testing.T) {
 			err:  true,
 			key:  "some_key",
 			hostCall: func(string, string, string, []byte) ([]byte, error) {
-				return nil, fmt.Errorf("some error")
+				return nil, errors.New("some error")
 			},
 		},
 		{
@@ -214,7 +217,7 @@ func TestKVStore_Delete(t *testing.T) {
 				if string(data) != `{"key":"test"}` {
 					t.Errorf("Incorrect data passed to hostCall")
 				}
-				return []byte(""), fmt.Errorf("hostCall failed")
+				return []byte(""), errors.New("hostCall failed")
 			},
 		},
 	}

@@ -1,5 +1,5 @@
 /*
-Package database is part of the Tarmac suite of Host Callback packages. This package provides users with the ability to
+Package sql is part of the Tarmac suite of Host Callback packages. This package provides users with the ability to
 provide WASM functions with a host callback interface that provides SQL database capabilities.
 
 	import (
@@ -18,11 +18,14 @@ provide WASM functions with a host callback interface that provides SQL database
 package sql
 
 import (
+	"context"
 	"database/sql"
 	"encoding/base64"
+	"errors"
 	"fmt"
 
 	"github.com/pquerna/ffjson/ffjson"
+
 	"github.com/tarmac-project/tarmac"
 
 	"github.com/tarmac-project/protobuf-go/sdk"
@@ -51,7 +54,7 @@ type Config struct {
 func New(cfg Config) (*Database, error) {
 	db := &Database{}
 	if cfg.DB == nil {
-		return db, fmt.Errorf("DB cannot be nil")
+		return db, errors.New("DB cannot be nil")
 	}
 	db.db = cfg.DB
 	return db, nil
@@ -64,27 +67,27 @@ func (db *Database) Exec(b []byte) ([]byte, error) {
 	msg := &proto.SQLExec{}
 	err := pb.Unmarshal(b, msg)
 	if err != nil {
-		return []byte(""), fmt.Errorf("unable to unmarshal database:exec request")
+		return []byte(""), errors.New("unable to unmarshal database:exec request")
 	}
 
 	r := &proto.SQLExecResponse{}
 	r.Status = &sdk.Status{Code: 200, Status: "OK"}
 
-	if len(msg.Query) < 1 {
+	if len(msg.GetQuery()) < 1 {
 		r.Status.Code = 400
 		r.Status.Status = "SQL Query must be defined"
 	}
 
 	var results sql.Result
-	if r.Status.Code == 200 {
-		results, err = db.exec(msg.Query)
+	if r.GetStatus().GetCode() == 200 {
+		results, err = db.exec(msg.GetQuery())
 		if err != nil {
 			r.Status.Code = 500
 			r.Status.Status = fmt.Sprintf("Unable to execute query - %s", err)
 		}
 	}
 
-	if r.Status.Code == 200 {
+	if r.GetStatus().GetCode() == 200 {
 		// Set Row Count
 		ra, err := results.RowsAffected()
 		if err != nil {
@@ -106,14 +109,14 @@ func (db *Database) Exec(b []byte) ([]byte, error) {
 
 	rsp, err := pb.Marshal(r)
 	if err != nil {
-		return []byte(""), fmt.Errorf("unable to marshal database:exec response")
+		return []byte(""), errors.New("unable to marshal database:exec response")
 	}
 
-	if r.Status.Code == 200 {
+	if r.GetStatus().GetCode() == 200 {
 		return rsp, nil
 	}
 
-	return rsp, fmt.Errorf("%s", r.Status.Status)
+	return rsp, fmt.Errorf("%s", r.GetStatus().GetStatus())
 }
 
 // Query will execute the supplied query against the supplied database. Error handling, processing results, and base64 encoding
@@ -131,13 +134,13 @@ func (db *Database) Query(b []byte) ([]byte, error) {
 	r := &proto.SQLQueryResponse{}
 	r.Status = &sdk.Status{Code: 200, Status: "OK"}
 
-	if len(msg.Query) < 1 {
+	if len(msg.GetQuery()) < 1 {
 		r.Status.Code = 400
 		r.Status.Status = "SQL Query must be defined"
 	}
 
-	if r.Status.Code == 200 {
-		columns, results, err := db.query(msg.Query)
+	if r.GetStatus().GetCode() == 200 {
+		columns, results, err := db.query(msg.GetQuery())
 		if err != nil {
 			r.Status.Code = 500
 			r.Status.Status = fmt.Sprintf("Unable to execute query - %s", err)
@@ -158,14 +161,14 @@ func (db *Database) Query(b []byte) ([]byte, error) {
 	// Marshal a response Proto to return to caller
 	rsp, err := pb.Marshal(r)
 	if err != nil {
-		return []byte(""), fmt.Errorf("unable to marshal database:query response")
+		return []byte(""), errors.New("unable to marshal database:query response")
 	}
 
-	if r.Status.Code == 200 {
+	if r.GetStatus().GetCode() == 200 {
 		return rsp, nil
 	}
 
-	return rsp, fmt.Errorf("%s", r.Status.Status)
+	return rsp, fmt.Errorf("%s", r.GetStatus().GetStatus())
 }
 
 // queryJSON retains the JSON interface for backwards compatibility with the Tarmac Host Callback interface.
@@ -216,7 +219,7 @@ func (db *Database) queryJSON(b []byte) ([]byte, error) {
 	// Marshal a resposne JSON to return to caller
 	rsp, err := ffjson.Marshal(r)
 	if err != nil {
-		return []byte(""), fmt.Errorf("unable to marshal database:query response")
+		return []byte(""), errors.New("unable to marshal database:query response")
 	}
 
 	if r.Status.Code == 200 {
@@ -229,16 +232,15 @@ func (db *Database) queryJSON(b []byte) ([]byte, error) {
 // the rows as a list of maps. The keys in the map are the column names
 // and the values are the column values.
 func (db *Database) query(qry []byte) ([]string, []map[string]any, error) {
-
-	rows, err := db.db.Query(string(qry))
+	rows, err := db.db.QueryContext(context.Background(), string(qry))
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to execute query - %s", err)
+		return nil, nil, fmt.Errorf("unable to execute query - %w", err)
 	}
 	defer rows.Close()
 
 	columns, err := rows.Columns()
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to process query results - %s", err)
+		return nil, nil, fmt.Errorf("unable to process query results - %w", err)
 	}
 
 	var results []map[string]any
@@ -252,12 +254,16 @@ func (db *Database) query(qry []byte) ([]string, []map[string]any, error) {
 
 		err := rows.Scan(data...)
 		if err != nil {
-			return nil, nil, fmt.Errorf("unable to process query results - %s", err)
+			return nil, nil, fmt.Errorf("unable to process query results - %w", err)
 		}
 
 		m := make(map[string]any)
 		for i, c := range columns {
-			val := *data[i].(*interface{})
+			value, ok := data[i].(*interface{})
+			if !ok {
+				continue
+			}
+			val := *value
 			m[c] = val
 		}
 
@@ -265,7 +271,7 @@ func (db *Database) query(qry []byte) ([]string, []map[string]any, error) {
 	}
 
 	if rows.Err() != nil {
-		return nil, nil, fmt.Errorf("error while processing query results - %s", rows.Err())
+		return nil, nil, fmt.Errorf("error while processing query results - %w", rows.Err())
 	}
 
 	return columns, results, nil
@@ -273,5 +279,5 @@ func (db *Database) query(qry []byte) ([]string, []map[string]any, error) {
 
 // exec will execute the supplied query against the database and return the result.
 func (db *Database) exec(qry []byte) (sql.Result, error) {
-	return db.db.Exec(string(qry))
+	return db.db.ExecContext(context.Background(), string(qry))
 }

@@ -7,6 +7,7 @@ package http
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -39,7 +40,7 @@ func New(cfg Config) (*Client, error) {
 
 	// Verify HostCall is set
 	if cfg.HostCall == nil {
-		return &Client{}, fmt.Errorf("HostCall cannot be nil")
+		return &Client{}, errors.New("HostCall cannot be nil")
 	}
 
 	return &Client{namespace: cfg.Namespace, hostCall: cfg.HostCall}, nil
@@ -79,15 +80,21 @@ func (h *Client) Put(url string, payload []byte) (Response, error) {
 
 // Do will perform HTTP requests using the specified parameters.
 // Valid Methods are GET, POST, PUT, and DELETE.
-func (h *Client) Do(method string, headers map[string]string, url string, insecure bool, payload []byte) (Response, error) {
+func (h *Client) Do(
+	method string,
+	headers map[string]string,
+	url string,
+	insecure bool,
+	payload []byte,
+) (Response, error) {
 	// Validate user provided method
 	if method != "GET" && method != "POST" && method != "DELETE" && method != "PUT" {
-		return Response{}, fmt.Errorf("invalid method specified")
+		return Response{}, errors.New("invalid method specified")
 	}
 
 	// Validate URL is not empty
 	if url == "" {
-		return Response{}, fmt.Errorf("url cannot be empty")
+		return Response{}, errors.New("url cannot be empty")
 	}
 
 	// Build headers string
@@ -103,18 +110,25 @@ func (h *Client) Do(method string, headers map[string]string, url string, insecu
 	}
 
 	// Build Callback JSON
-	r := fmt.Sprintf(`{"method":"%s", "headers": {%s},"url":"%s","body":"%s", "insecure": %t}`, method, strings.Join(hh, ", "), url, d, insecure)
+	r := fmt.Sprintf(
+		`{"method":"%s", "headers": {%s},"url":"%s","body":"%s", "insecure": %t}`,
+		method,
+		strings.Join(hh, ", "),
+		url,
+		d,
+		insecure,
+	)
 
 	// Perform Host Callback
 	b, err := h.hostCall(h.namespace, "httpclient", "call", []byte(r))
 	if err != nil {
-		return Response{}, fmt.Errorf("unable to call Client - %s", err)
+		return Response{}, fmt.Errorf("unable to call Client - %w", err)
 	}
 
 	// Parse response JSON
 	v, err := fastjson.ParseBytes(b)
 	if err != nil {
-		return Response{}, fmt.Errorf("unable to parse Client resposne - %s", err)
+		return Response{}, fmt.Errorf("unable to parse Client resposne - %w", err)
 	}
 
 	rsp := Response{}
@@ -134,7 +148,7 @@ func (h *Client) Do(method string, headers map[string]string, url string, insecu
 	// Extract and Decode Payload
 	rsp.Body, err = base64.StdEncoding.DecodeString(string(v.GetStringBytes("body")))
 	if err != nil {
-		return rsp, fmt.Errorf("unable to decode Client response - %s", err)
+		return rsp, fmt.Errorf("unable to decode Client response - %w", err)
 	}
 
 	return rsp, nil

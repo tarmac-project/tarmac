@@ -1,11 +1,14 @@
 package main
 
 import (
-	"github.com/spf13/viper"
-	_ "github.com/spf13/viper/remote"
-	"github.com/tarmac-project/tarmac/pkg/app"
+	"errors"
 	"log/slog"
 	"os"
+
+	"github.com/spf13/viper"
+	_ "github.com/spf13/viper/remote"
+
+	"github.com/tarmac-project/tarmac/pkg/app"
 )
 
 func main() {
@@ -44,12 +47,15 @@ func main() {
 	cfg.AutomaticEnv()
 	err := cfg.ReadInConfig()
 	if err != nil {
-		switch err.(type) {
-		case viper.ConfigFileNotFoundError:
-			log.Warn("No Config file found, loaded config from Environment - Default path ./conf")
-		default:
-			log.Error("Error when Fetching Configuration: "+err.Error(), "error", err)
-			os.Exit(1)
+		{
+			var errCase0 viper.ConfigFileNotFoundError
+			switch {
+			case errors.As(err, &errCase0):
+				log.Warn("No Config file found, loaded config from Environment - Default path ./conf")
+			default:
+				log.Error("Error when Fetching Configuration: "+err.Error(), "error", err)
+				os.Exit(1)
+			}
 		}
 	}
 
@@ -79,7 +85,7 @@ func main() {
 	srv := app.New(cfg)
 	defer srv.Stop()
 	err = srv.Run()
-	if err != nil && err != app.ErrShutdown {
+	if err != nil && !errors.Is(err, app.ErrShutdown) {
 		log.Error("Service stopped: "+err.Error(), "error", err)
 		os.Exit(1)
 	}

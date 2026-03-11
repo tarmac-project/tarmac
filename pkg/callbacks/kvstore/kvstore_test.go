@@ -2,11 +2,13 @@ package kvstore
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/tarmac-project/hord/drivers/mock"
+
 	"github.com/tarmac-project/tarmac"
 
 	proto "github.com/tarmac-project/protobuf-go/sdk/kvstore"
@@ -45,7 +47,7 @@ func TestKVStore(t *testing.T) {
 				value: []byte(""),
 				mockCfg: mock.Config{
 					GetFunc: func(_ string) ([]byte, error) {
-						return nil, fmt.Errorf("Key not found")
+						return nil, errors.New("Key not found")
 					},
 				},
 			},
@@ -64,7 +66,7 @@ func TestKVStore(t *testing.T) {
 						if key == k {
 							return v, nil
 						}
-						return nil, fmt.Errorf("Key not found")
+						return nil, errors.New("Key not found")
 					},
 				},
 			})
@@ -95,12 +97,12 @@ func TestKVStore(t *testing.T) {
 					t.Fatalf("Failed to unmarshal response: %v", err)
 				}
 
-				if (response.Status.Code == 200) != c.pass {
-					t.Fatalf("Unexpected response status: %d", response.Status.Code)
+				if (response.GetStatus().GetCode() == 200) != c.pass {
+					t.Fatalf("Unexpected response status: %d", response.GetStatus().GetCode())
 				}
 
-				if c.pass && !bytes.Equal(response.Data, c.value) {
-					t.Fatalf("Unexpected response data: %v", response.Data)
+				if c.pass && !bytes.Equal(response.GetData(), c.value) {
+					t.Fatalf("Unexpected response data: %v", response.GetData())
 				}
 			})
 		}
@@ -148,7 +150,7 @@ func TestKVStore(t *testing.T) {
 						if key == k && bytes.Equal(data, v) {
 							return nil
 						}
-						return fmt.Errorf("Error inserting data")
+						return errors.New("Error inserting data")
 					},
 				},
 			})
@@ -179,8 +181,8 @@ func TestKVStore(t *testing.T) {
 					t.Fatalf("Failed to unmarshal response: %v", err)
 				}
 
-				if (response.Status.Code == 200) != c.pass {
-					t.Fatalf("Unexpected response status: %d", response.Status.Code)
+				if (response.GetStatus().GetCode() == 200) != c.pass {
+					t.Fatalf("Unexpected response status: %d", response.GetStatus().GetCode())
 				}
 			})
 		}
@@ -211,7 +213,7 @@ func TestKVStore(t *testing.T) {
 						if key == "testing-happy" {
 							return nil
 						}
-						return fmt.Errorf("Key not found")
+						return errors.New("Key not found")
 					},
 				},
 			},
@@ -242,8 +244,8 @@ func TestKVStore(t *testing.T) {
 					t.Fatalf("Failed to unmarshal response: %v", err)
 				}
 
-				if (response.Status.Code == 200) != c.pass {
-					t.Fatalf("Unexpected response status: %d", response.Status.Code)
+				if (response.GetStatus().GetCode() == 200) != c.pass {
+					t.Fatalf("Unexpected response status: %d", response.GetStatus().GetCode())
 				}
 			})
 		}
@@ -260,7 +262,7 @@ func TestKVStore(t *testing.T) {
 				value: []byte(""),
 				mockCfg: mock.Config{
 					KeysFunc: func() ([]string, error) {
-						return []string{}, fmt.Errorf("Forced Error")
+						return []string{}, errors.New("Forced Error")
 					},
 				},
 			},
@@ -285,7 +287,7 @@ func TestKVStore(t *testing.T) {
 				mockCfg: mock.Config{
 					KeysFunc: func() ([]string, error) {
 						keys := make([]string, 100)
-						for i := 0; i < 100; i++ {
+						for i := range 100 {
 							keys[i] = fmt.Sprintf("key%d", i)
 						}
 						return keys, nil
@@ -331,8 +333,8 @@ func TestKVStore(t *testing.T) {
 					t.Fatalf("Failed to unmarshal response: %v", err)
 				}
 
-				if (response.Status.Code == 200) != c.pass {
-					t.Fatalf("Unexpected response status: %d", response.Status.Code)
+				if (response.GetStatus().GetCode() == 200) != c.pass {
+					t.Fatalf("Unexpected response status: %d", response.GetStatus().GetCode())
 				}
 			})
 		}
@@ -354,23 +356,23 @@ func TestKVStoreJSON(t *testing.T) {
 			if key == "testing-happy" {
 				return []byte("somedata"), nil
 			}
-			return []byte(""), fmt.Errorf("Forced Error")
+			return []byte(""), errors.New("Forced Error")
 		},
 		SetFunc: func(key string, _ []byte) error {
 			if key == "testing-happy" {
 				return nil
 			}
-			return fmt.Errorf("Error inserting data")
+			return errors.New("Error inserting data")
 		},
 		// Create a fake Delete function
 		DeleteFunc: func(key string) error {
 			if key == "testing-happy" {
 				return nil
 			}
-			return fmt.Errorf("Error deleting data")
+			return errors.New("Error deleting data")
 		},
 		KeysFunc: func() ([]string, error) {
-			return []string{}, fmt.Errorf("Forced Error")
+			return []string{}, errors.New("Forced Error")
 		},
 	})
 

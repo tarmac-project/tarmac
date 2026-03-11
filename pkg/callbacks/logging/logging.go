@@ -94,17 +94,17 @@ func (l *Logger) Warn(b []byte) ([]byte, error) {
 // NoOpLog is a convience logger which is used as a default when users do not provide their own interface.
 type NoOpLog struct{}
 
-// Info does nothing
+// Info does nothing.
 func (log NoOpLog) Info(...interface{}) {}
 
-// Warn does nothing
+// Warn does nothing.
 func (log NoOpLog) Warn(...interface{}) {}
 
-// Error does nothing
+// Error does nothing.
 func (log NoOpLog) Error(...interface{}) {}
 
-// Debug does nothing
+// Debug does nothing.
 func (log NoOpLog) Debug(...interface{}) {}
 
-// Trace does nothing
+// Trace does nothing.
 func (log NoOpLog) Trace(...interface{}) {}
