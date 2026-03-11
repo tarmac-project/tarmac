@@ -477,3 +477,59 @@ func TestWASMRunner(t *testing.T) {
 		})
 	}
 }
+
+// TestBoltDBExistingFile ensures that when a BoltDB file already exists,
+// the initialization code does not panic when attempting to close a nil file handle.
+// This is a regression test for the nil pointer dereference when fh.Close()
+// was called unconditionally after os.OpenFile with O_EXCL flag.
+func TestBoltDBExistingFile(t *testing.T) {
+	// Create a temporary file that will represent an existing BoltDB file
+	fh, err := os.CreateTemp("", "tarmac-test-*.db")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	dbPath := fh.Name()
+	fh.Close()
+	defer os.Remove(dbPath)
+
+	// Configure the server to use the existing BoltDB file
+	cfg := viper.New()
+	cfg.Set("disable_logging", true)
+	cfg.Set("listen_addr", "localhost:9099")
+	cfg.Set("kvstore_type", "internal")
+	cfg.Set("boltdb_filename", dbPath)
+	cfg.Set("boltdb_bucket", "test-bucket")
+	cfg.Set("boltdb_permissions", 0600)
+	cfg.Set("boltdb_timeout", 5)
+	cfg.Set("enable_kvstore", true)
+
+	// Create the server
+	srv := New(cfg)
+
+	// Start the server in a goroutine - the key test is that this doesn't panic
+	// when encountering the existing BoltDB file
+	errChan := make(chan error, 1)
+	go func() {
+		err := srv.Run()
+		errChan <- err
+	}()
+
+	// Wait for Run() to complete (either success or error)
+	// The important part is that it doesn't panic during BoltDB initialization
+	select {
+	case err := <-errChan:
+		// We expect an error about WASM function since we didn't configure it
+		// The important part is that we didn't panic from the nil file handle
+		if err != nil && err != ErrShutdown {
+			// This is expected - WASM configuration error
+			t.Logf("Server stopped with error (expected): %v", err)
+		}
+	case <-time.After(10 * time.Second):
+		// If Run() hasn't returned, stop the server and wait for cleanup
+		srv.Stop()
+		<-errChan
+	}
+
+	// If we got here without panicking, the fix is working
+	t.Log("Test passed: no panic when BoltDB file already exists")
+}
