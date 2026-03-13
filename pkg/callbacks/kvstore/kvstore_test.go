@@ -10,7 +10,6 @@ import (
 	"github.com/tarmac-project/tarmac"
 
 	proto "github.com/tarmac-project/protobuf-go/sdk/kvstore"
-	pb "google.golang.org/protobuf/proto"
 )
 
 type KVStoreCase struct {
@@ -80,7 +79,7 @@ func TestKVStore(t *testing.T) {
 				}
 
 				req := &proto.KVStoreGet{Key: c.key}
-				b, err := pb.Marshal(req)
+				b, err := req.MarshalVT()
 				if err != nil {
 					t.Fatalf("Failed to marshal request: %v", err)
 				}
@@ -91,7 +90,7 @@ func TestKVStore(t *testing.T) {
 				}
 
 				var response proto.KVStoreGetResponse
-				if err := pb.Unmarshal(rsp, &response); err != nil {
+				if err := response.UnmarshalVT(rsp); err != nil {
 					t.Fatalf("Failed to unmarshal response: %v", err)
 				}
 
@@ -164,7 +163,7 @@ func TestKVStore(t *testing.T) {
 				}
 
 				req := &proto.KVStoreSet{Key: c.key, Data: c.value}
-				b, err := pb.Marshal(req)
+				b, err := req.MarshalVT()
 				if err != nil {
 					t.Fatalf("Failed to marshal request: %v", err)
 				}
@@ -175,7 +174,7 @@ func TestKVStore(t *testing.T) {
 				}
 
 				var response proto.KVStoreSetResponse
-				if err := pb.Unmarshal(rsp, &response); err != nil {
+				if err := response.UnmarshalVT(rsp); err != nil {
 					t.Fatalf("Failed to unmarshal response: %v", err)
 				}
 
@@ -227,7 +226,7 @@ func TestKVStore(t *testing.T) {
 				}
 
 				req := &proto.KVStoreDelete{Key: c.key}
-				b, err := pb.Marshal(req)
+				b, err := req.MarshalVT()
 				if err != nil {
 					t.Fatalf("Failed to marshal request: %v", err)
 				}
@@ -238,7 +237,7 @@ func TestKVStore(t *testing.T) {
 				}
 
 				var response proto.KVStoreDeleteResponse
-				if err := pb.Unmarshal(rsp, &response); err != nil {
+				if err := response.UnmarshalVT(rsp); err != nil {
 					t.Fatalf("Failed to unmarshal response: %v", err)
 				}
 
@@ -316,7 +315,7 @@ func TestKVStore(t *testing.T) {
 				}
 
 				req := &proto.KVStoreKeys{ReturnProto: true}
-				b, err := pb.Marshal(req)
+				b, err := req.MarshalVT()
 				if err != nil {
 					t.Fatalf("Failed to marshal request: %v", err)
 				}
@@ -327,7 +326,7 @@ func TestKVStore(t *testing.T) {
 				}
 
 				var response proto.KVStoreKeysResponse
-				if err := pb.Unmarshal(rsp, &response); err != nil {
+				if err := response.UnmarshalVT(rsp); err != nil {
 					t.Fatalf("Failed to unmarshal response: %v", err)
 				}
 

@@ -14,7 +14,6 @@ import (
 	"github.com/tarmac-project/tarmac"
 
 	proto "github.com/tarmac-project/protobuf-go/sdk/http"
-	pb "google.golang.org/protobuf/proto"
 )
 
 type HTTPClientCase struct {
@@ -74,7 +73,7 @@ func Test(t *testing.T) {
 		json:     fmt.Sprintf(`{"method":"GET","headers":{"teapot": "true"},"insecure":true,"url":"%s"}`, ts.URL),
 		proto: &proto.HTTPClient{
 			Method:   "GET",
-			Headers:  map[string]string{"teapot": "true"},
+			Headers:  map[string]*proto.Header{"teapot": {Values: []string{"true"}}},
 			Insecure: true,
 			Url:      ts.URL,
 		},
@@ -89,7 +88,7 @@ func Test(t *testing.T) {
 		json:     fmt.Sprintf(`{"method":"GET","headers":{"teapot": "true"},"url":"%s"}`, ts.URL),
 		proto: &proto.HTTPClient{
 			Method:  "GET",
-			Headers: map[string]string{"teapot": "true"},
+			Headers: map[string]*proto.Header{"teapot": {Values: []string{"true"}}},
 			Url:     ts.URL,
 		},
 	})
@@ -103,7 +102,7 @@ func Test(t *testing.T) {
 		json:     fmt.Sprintf(`{"method":"HEAD","headers":{"teapot": "true"},"insecure":true,"url":"%s"}`, ts.URL),
 		proto: &proto.HTTPClient{
 			Method:   "HEAD",
-			Headers:  map[string]string{"teapot": "true"},
+			Headers:  map[string]*proto.Header{"teapot": {Values: []string{"true"}}},
 			Insecure: true,
 			Url:      ts.URL,
 		},
@@ -118,7 +117,7 @@ func Test(t *testing.T) {
 		json:     fmt.Sprintf(`{"method":"DELETE","headers":{"teapot": "true"},"insecure":true,"url":"%s"}`, ts.URL),
 		proto: &proto.HTTPClient{
 			Method:   "DELETE",
-			Headers:  map[string]string{"teapot": "true"},
+			Headers:  map[string]*proto.Header{"teapot": {Values: []string{"true"}}},
 			Insecure: true,
 			Url:      ts.URL,
 		},
@@ -133,7 +132,7 @@ func Test(t *testing.T) {
 		json:     fmt.Sprintf(`{"method":"POST","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"UE9TVA=="}`, ts.URL),
 		proto: &proto.HTTPClient{
 			Method:   "POST",
-			Headers:  map[string]string{"teapot": "true"},
+			Headers:  map[string]*proto.Header{"teapot": {Values: []string{"true"}}},
 			Insecure: true,
 			Url:      ts.URL,
 			Body:     []byte("POST"),
@@ -149,7 +148,7 @@ func Test(t *testing.T) {
 		json:     fmt.Sprintf(`{"method":"POST","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"NotValid"}`, ts.URL),
 		proto: &proto.HTTPClient{
 			Method:   "POST",
-			Headers:  map[string]string{"teapot": "true"},
+			Headers:  map[string]*proto.Header{"teapot": {Values: []string{"true"}}},
 			Insecure: true,
 			Url:      ts.URL,
 			Body:     []byte("NotValid"),
@@ -165,7 +164,7 @@ func Test(t *testing.T) {
 		json:     fmt.Sprintf(`{"method":"PUT","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"UFVU"}`, ts.URL),
 		proto: &proto.HTTPClient{
 			Method:   "PUT",
-			Headers:  map[string]string{"teapot": "true"},
+			Headers:  map[string]*proto.Header{"teapot": {Values: []string{"true"}}},
 			Insecure: true,
 			Url:      ts.URL,
 			Body:     []byte("PUT"),
@@ -181,7 +180,7 @@ func Test(t *testing.T) {
 		json:     fmt.Sprintf(`{"method":"PUT","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"NotValid"}`, ts.URL),
 		proto: &proto.HTTPClient{
 			Method:   "PUT",
-			Headers:  map[string]string{"teapot": "true"},
+			Headers:  map[string]*proto.Header{"teapot": {Values: []string{"true"}}},
 			Insecure: true,
 			Url:      ts.URL,
 			Body:     []byte("NotValid"),
@@ -197,7 +196,7 @@ func Test(t *testing.T) {
 		json:     fmt.Sprintf(`{"method":"PATCH","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"UEFUQ0g="}`, ts.URL),
 		proto: &proto.HTTPClient{
 			Method:   "PATCH",
-			Headers:  map[string]string{"teapot": "true"},
+			Headers:  map[string]*proto.Header{"teapot": {Values: []string{"true"}}},
 			Insecure: true,
 			Url:      ts.URL,
 			Body:     []byte("PATCH"),
@@ -213,7 +212,7 @@ func Test(t *testing.T) {
 		json:     fmt.Sprintf(`{"method":"PATCH","headers":{"teapot": "true"},"insecure":true,"url":"%s","body":"NotValid"}`, ts.URL),
 		proto: &proto.HTTPClient{
 			Method:   "PATCH",
-			Headers:  map[string]string{"teapot": "true"},
+			Headers:  map[string]*proto.Header{"teapot": {Values: []string{"true"}}},
 			Insecure: true,
 			Url:      ts.URL,
 			Body:     []byte("NotValid"),
@@ -278,7 +277,7 @@ func Test(t *testing.T) {
 				})
 				t.Run("Protobuf", func(t *testing.T) {
 					// Generate Protobuf
-					msg, err := pb.Marshal(c.proto)
+					msg, err := c.proto.MarshalVT()
 					if err != nil {
 						t.Fatalf("Unable to marshal protobuf - %s", err)
 					}
@@ -291,7 +290,7 @@ func Test(t *testing.T) {
 
 					// Validate protobuf response
 					var rsp proto.HTTPClientResponse
-					err = pb.Unmarshal(b, &rsp)
+					err = rsp.UnmarshalVT(b)
 					if err != nil {
 						t.Fatalf(" Callback Set replied with an invalid Protobuf - %s", err)
 					}
@@ -314,8 +313,8 @@ func Test(t *testing.T) {
 
 					// Validate Response Header
 					v, ok := rsp.Headers["server"]
-					if (!ok || v != "tarmac") && rsp.Code == 200 {
-						t.Errorf(" returned an unexpected header - %s", v)
+					if (!ok || len(v.GetValues()) == 0 || v.GetValues()[0] != "tarmac") && rsp.Code == 200 {
+						t.Errorf(" returned an unexpected header - %+v", v)
 					}
 
 					// Validate Payload
@@ -475,12 +474,12 @@ func TestResponseBodySizeLimit(t *testing.T) {
 				url := fmt.Sprintf("%s?size=%d", ts.URL, tc.responseSize)
 				protoReq := &proto.HTTPClient{
 					Method:   "GET",
-					Headers:  map[string]string{},
+					Headers:  map[string]*proto.Header{},
 					Insecure: true,
 					Url:      url,
 				}
 
-				msg, err := pb.Marshal(protoReq)
+				msg, err := protoReq.MarshalVT()
 				if err != nil {
 					t.Fatalf("Failed to marshal protobuf request: %s", err)
 				}
@@ -491,7 +490,7 @@ func TestResponseBodySizeLimit(t *testing.T) {
 				}
 
 				var rsp proto.HTTPClientResponse
-				if err := pb.Unmarshal(b, &rsp); err != nil {
+				if err := rsp.UnmarshalVT(b); err != nil {
 					t.Fatalf("Failed to unmarshal protobuf response: %s", err)
 				}
 

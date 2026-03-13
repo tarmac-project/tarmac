@@ -28,7 +28,6 @@ import (
 	"github.com/tarmac-project/tarmac"
 
 	proto "github.com/tarmac-project/protobuf-go/sdk/metrics"
-	pb "google.golang.org/protobuf/proto"
 )
 
 // Metrics stores and manages the user-defined metrics created via
@@ -72,7 +71,7 @@ func New(_ Config) (*Metrics, error) {
 
 func (m *Metrics) Counter(b []byte) ([]byte, error) {
 	rq := &proto.MetricsCounter{}
-	err := pb.Unmarshal(b, rq)
+	err := rq.UnmarshalVT(b)
 	if err != nil {
 		return m.jsonCounter(b)
 	}
@@ -124,7 +123,7 @@ func (m *Metrics) counter(name string) error {
 func (m *Metrics) Gauge(b []byte) ([]byte, error) {
 	// Parse incoming Request
 	rq := &proto.MetricsGauge{}
-	err := pb.Unmarshal(b, rq)
+	err := rq.UnmarshalVT(b)
 	if err != nil {
 		return m.jsonGauge(b)
 	}
@@ -188,7 +187,7 @@ func (m *Metrics) gauge(name string, action string) error {
 func (m *Metrics) Histogram(b []byte) ([]byte, error) {
 	// Parse incoming Request
 	rq := &proto.MetricsHistogram{}
-	err := pb.Unmarshal(b, rq)
+	err := rq.UnmarshalVT(b)
 	if err != nil {
 		return m.jsonHistogram(b)
 	}
