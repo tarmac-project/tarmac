@@ -15,7 +15,6 @@ import (
 	"github.com/tarmac-project/tarmac"
 
 	proto "github.com/tarmac-project/protobuf-go/sdk/http"
-	pb "google.golang.org/protobuf/proto"
 )
 
 type HTTPClientCase struct {
@@ -75,7 +74,7 @@ func Test(t *testing.T) {
 		json:     fmt.Sprintf(`{"method":"GET","headers":{"teapot": "true"},"insecure":true,"url":"%s"}`, ts.URL),
 		proto: &proto.HTTPClient{
 			Method:   "GET",
-			Headers:  map[string]string{"teapot": "true"},
+			Headers:  map[string]*proto.Header{"teapot": {Values: []string{"true"}}},
 			Insecure: true,
 			Url:      ts.URL,
 		},
@@ -90,7 +89,7 @@ func Test(t *testing.T) {
 		json:     fmt.Sprintf(`{"method":"GET","headers":{"teapot": "true"},"url":"%s"}`, ts.URL),
 		proto: &proto.HTTPClient{
 			Method:  "GET",
-			Headers: map[string]string{"teapot": "true"},
+			Headers: map[string]*proto.Header{"teapot": {Values: []string{"true"}}},
 			Url:     ts.URL,
 		},
 	})
@@ -104,7 +103,7 @@ func Test(t *testing.T) {
 		json:     fmt.Sprintf(`{"method":"HEAD","headers":{"teapot": "true"},"insecure":true,"url":"%s"}`, ts.URL),
 		proto: &proto.HTTPClient{
 			Method:   "HEAD",
-			Headers:  map[string]string{"teapot": "true"},
+			Headers:  map[string]*proto.Header{"teapot": {Values: []string{"true"}}},
 			Insecure: true,
 			Url:      ts.URL,
 		},
@@ -119,7 +118,7 @@ func Test(t *testing.T) {
 		json:     fmt.Sprintf(`{"method":"DELETE","headers":{"teapot": "true"},"insecure":true,"url":"%s"}`, ts.URL),
 		proto: &proto.HTTPClient{
 			Method:   "DELETE",
-			Headers:  map[string]string{"teapot": "true"},
+			Headers:  map[string]*proto.Header{"teapot": {Values: []string{"true"}}},
 			Insecure: true,
 			Url:      ts.URL,
 		},
@@ -137,7 +136,7 @@ func Test(t *testing.T) {
 		),
 		proto: &proto.HTTPClient{
 			Method:   "POST",
-			Headers:  map[string]string{"teapot": "true"},
+			Headers:  map[string]*proto.Header{"teapot": {Values: []string{"true"}}},
 			Insecure: true,
 			Url:      ts.URL,
 			Body:     []byte("POST"),
@@ -156,7 +155,7 @@ func Test(t *testing.T) {
 		),
 		proto: &proto.HTTPClient{
 			Method:   "POST",
-			Headers:  map[string]string{"teapot": "true"},
+			Headers:  map[string]*proto.Header{"teapot": {Values: []string{"true"}}},
 			Insecure: true,
 			Url:      ts.URL,
 			Body:     []byte("NotValid"),
@@ -175,7 +174,7 @@ func Test(t *testing.T) {
 		),
 		proto: &proto.HTTPClient{
 			Method:   "PUT",
-			Headers:  map[string]string{"teapot": "true"},
+			Headers:  map[string]*proto.Header{"teapot": {Values: []string{"true"}}},
 			Insecure: true,
 			Url:      ts.URL,
 			Body:     []byte("PUT"),
@@ -194,7 +193,7 @@ func Test(t *testing.T) {
 		),
 		proto: &proto.HTTPClient{
 			Method:   "PUT",
-			Headers:  map[string]string{"teapot": "true"},
+			Headers:  map[string]*proto.Header{"teapot": {Values: []string{"true"}}},
 			Insecure: true,
 			Url:      ts.URL,
 			Body:     []byte("NotValid"),
@@ -213,7 +212,7 @@ func Test(t *testing.T) {
 		),
 		proto: &proto.HTTPClient{
 			Method:   "PATCH",
-			Headers:  map[string]string{"teapot": "true"},
+			Headers:  map[string]*proto.Header{"teapot": {Values: []string{"true"}}},
 			Insecure: true,
 			Url:      ts.URL,
 			Body:     []byte("PATCH"),
@@ -232,7 +231,7 @@ func Test(t *testing.T) {
 		),
 		proto: &proto.HTTPClient{
 			Method:   "PATCH",
-			Headers:  map[string]string{"teapot": "true"},
+			Headers:  map[string]*proto.Header{"teapot": {Values: []string{"true"}}},
 			Insecure: true,
 			Url:      ts.URL,
 			Body:     []byte("NotValid"),
@@ -297,7 +296,7 @@ func Test(t *testing.T) {
 				})
 				t.Run("Protobuf", func(t *testing.T) {
 					// Generate Protobuf
-					msg, err := pb.Marshal(c.proto)
+					msg, err := c.proto.MarshalVT()
 					if err != nil {
 						t.Fatalf("Unable to marshal protobuf - %s", err)
 					}
@@ -310,7 +309,7 @@ func Test(t *testing.T) {
 
 					// Validate protobuf response
 					var rsp proto.HTTPClientResponse
-					err = pb.Unmarshal(b, &rsp)
+					err = rsp.UnmarshalVT(b)
 					if err != nil {
 						t.Fatalf(" Callback Set replied with an invalid Protobuf - %s", err)
 					}
@@ -332,8 +331,8 @@ func Test(t *testing.T) {
 
 					// Validate Response Header
 					v, ok := rsp.GetHeaders()["server"]
-					if (!ok || v != "tarmac") && rsp.GetCode() == 200 {
-						t.Errorf(" returned an unexpected header - %s", v)
+					if (!ok || len(v.GetValues()) == 0 || v.GetValues()[0] != "tarmac") && rsp.GetCode() == 200 {
+						t.Errorf(" returned an unexpected header - %+v", v)
 					}
 
 					// Validate Payload
@@ -493,12 +492,12 @@ func TestResponseBodySizeLimit(t *testing.T) {
 				url := fmt.Sprintf("%s?size=%d", ts.URL, tc.responseSize)
 				protoReq := &proto.HTTPClient{
 					Method:   "GET",
-					Headers:  map[string]string{},
+					Headers:  map[string]*proto.Header{},
 					Insecure: true,
 					Url:      url,
 				}
 
-				msg, err := pb.Marshal(protoReq)
+				msg, err := protoReq.MarshalVT()
 				if err != nil {
 					t.Fatalf("Failed to marshal protobuf request: %s", err)
 				}
@@ -509,7 +508,7 @@ func TestResponseBodySizeLimit(t *testing.T) {
 				}
 
 				var rsp proto.HTTPClientResponse
-				if err := pb.Unmarshal(b, &rsp); err != nil {
+				if err := rsp.UnmarshalVT(b); err != nil {
 					t.Fatalf("Failed to unmarshal protobuf response: %s", err)
 				}
 
@@ -581,10 +580,11 @@ func TestRequestCreationAndExecutionErrors(t *testing.T) {
 	})
 
 	t.Run("Protobuf invalid URL returns request creation error", func(t *testing.T) {
-		msg, err := pb.Marshal(&proto.HTTPClient{
+		req := &proto.HTTPClient{
 			Method: "GET",
 			Url:    "://bad-url",
-		})
+		}
+		msg, err := req.MarshalVT()
 		if err != nil {
 			t.Fatalf("Unable to marshal protobuf request - %s", err)
 		}
@@ -595,7 +595,7 @@ func TestRequestCreationAndExecutionErrors(t *testing.T) {
 		}
 
 		var rsp proto.HTTPClientResponse
-		if err := pb.Unmarshal(b, &rsp); err != nil {
+		if err := rsp.UnmarshalVT(b); err != nil {
 			t.Fatalf("Failed to unmarshal protobuf response: %s", err)
 		}
 
@@ -627,10 +627,11 @@ func TestRequestCreationAndExecutionErrors(t *testing.T) {
 	})
 
 	t.Run("Protobuf execute error returns server error", func(t *testing.T) {
-		msg, err := pb.Marshal(&proto.HTTPClient{
+		req := &proto.HTTPClient{
 			Method: "GET",
 			Url:    "http://127.0.0.1:1",
-		})
+		}
+		msg, err := req.MarshalVT()
 		if err != nil {
 			t.Fatalf("Unable to marshal protobuf request - %s", err)
 		}
@@ -641,7 +642,7 @@ func TestRequestCreationAndExecutionErrors(t *testing.T) {
 		}
 
 		var rsp proto.HTTPClientResponse
-		if err := pb.Unmarshal(b, &rsp); err != nil {
+		if err := rsp.UnmarshalVT(b); err != nil {
 			t.Fatalf("Failed to unmarshal protobuf response: %s", err)
 		}
 
@@ -656,4 +657,47 @@ func TestRequestCreationAndExecutionErrors(t *testing.T) {
 			t.Fatalf("unexpected status message: %s", rsp.GetStatus().GetStatus())
 		}
 	})
+}
+
+func TestCallSkipsNilProtobufHeaders(t *testing.T) {
+	h, err := New(Config{})
+	if err != nil {
+		t.Fatalf("Unable to create HTTP Client - %s", err)
+	}
+
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("X-Test") != "tarmac" {
+			t.Fatalf("missing protobuf header: %s", r.Header.Get("X-Test"))
+		}
+		w.Header().Set("Server", "tarmac")
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	req := &proto.HTTPClient{
+		Method: "GET",
+		Headers: map[string]*proto.Header{
+			"X-Nil":  nil,
+			"X-Test": {Values: []string{"tarmac"}},
+		},
+		Insecure: true,
+		Url:      ts.URL,
+	}
+	msg, err := req.MarshalVT()
+	if err != nil {
+		t.Fatalf("Unable to marshal protobuf request - %s", err)
+	}
+
+	b, err := h.Call(msg)
+	if err != nil {
+		t.Fatalf("HTTP call failed: %s", err)
+	}
+
+	var rsp proto.HTTPClientResponse
+	if err := rsp.UnmarshalVT(b); err != nil {
+		t.Fatalf("Failed to unmarshal protobuf response: %s", err)
+	}
+	if rsp.GetStatus().GetCode() != http.StatusOK {
+		t.Fatalf("unexpected status code: got %d want %d", rsp.GetStatus().GetCode(), http.StatusOK)
+	}
 }
