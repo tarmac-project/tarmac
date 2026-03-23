@@ -22,7 +22,7 @@ jobs:
     - name: Execute Tests
       run: make build tests-base
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+      uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage/tests-base.out
@@ -40,7 +40,7 @@ jobs:
     - name: Execute Tests
       run: make build tests-redis
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+      uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage/tests-redis.out
@@ -58,7 +58,7 @@ jobs:
     - name: Execute Tests
       run: make build tests-nats
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+      uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage/tests-nats.out
@@ -76,7 +76,7 @@ jobs:
     - name: Execute Tests
       run: make build tests-cassandra
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+      uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage/tests-cassandra.out
@@ -97,7 +97,7 @@ jobs:
     - name: Execute Tests
       run: make build tests-boltdb
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+      uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage/tests-boltdb.out
@@ -116,7 +116,7 @@ jobs:
     - name: Execute Tests
       run: make build tests-inmemory
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+      uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage/tests-inmemory.out
@@ -135,7 +135,7 @@ jobs:
     - name: Execute Tests
       run: make build tests-mysql
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+      uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage/tests-mysql.out
@@ -153,7 +153,7 @@ jobs:
     - name: Execute Tests
       run: make build tests-postgres
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+      uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage/tests-postgres.out
