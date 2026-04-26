@@ -37,7 +37,7 @@ Tarmac is a Go-based framework for building serverless functions using WebAssemb
   - **Duration: 3-4 minutes** - NEVER CANCEL. Set timeout to 10+ minutes.
   - Database-specific tests: `make tests-redis`, `make tests-mysql`, `make tests-postgres`, `make tests-cassandra`, `make tests-boltdb`, `make tests-inmemory`
   - **Duration: 3-5 minutes each** - NEVER CANCEL. Set timeout to 10+ minutes per test suite.
-- **For detailed testing guidelines**, see [docs/TESTING.md](../docs/TESTING.md) which explains:
+- **For detailed testing guidelines**, see [docs/contributing/testing.md](../docs/contributing/testing.md) which explains:
   - Unit vs integration test structure
   - Running tests locally without external services
   - CI workflow integration
