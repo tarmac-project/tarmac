@@ -44,7 +44,7 @@ services:
     entrypoint:
       - sh
       - -c
-      - go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -skip "TestFullService/.*" ./...
+      - go test -v -race -tags integration -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -skip "TestFullService/.*" ./...
     volumes:
       - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"

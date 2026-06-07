@@ -27,6 +27,27 @@ build-testdata:
 	$(MAKE) -C testdata/base/function build
 	$(MAKE) -C testdata/base/successafter5 build
 
+# Unit tests - run locally without external dependencies
+tests-unit: build
+	@echo "Running unit tests (no external services required)"
+	@mkdir -p coverage
+	go test -v -race -covermode=atomic -coverprofile=coverage/tests-unit.out \
+		./cmd/tarmac \
+		./pkg/callbacks \
+		./pkg/callbacks/httpclient \
+		./pkg/callbacks/kvstore \
+		./pkg/callbacks/logging \
+		./pkg/callbacks/metrics \
+		./pkg/config \
+		./pkg/sanitize \
+		./pkg/telemetry \
+		./pkg/tlsconfig
+	go test -v -race -covermode=atomic -coverprofile=coverage/tests-app-unit.out ./pkg/app \
+		-run '^(TestBadConfigs|TestPProfServerEnabled|TestPProfServerDisabled|TestTLSBranchBehavior)$$'
+
+# Integration tests - require external services via Docker Compose
+tests-integration: build tests-nobuild
+
 tests: build tests-nobuild
 tests-nobuild: tests-base tests-redis tests-nats tests-cassandra tests-mysql tests-postgres tests-boltdb tests-inmemory
 
