@@ -620,6 +620,14 @@ func TestWASMHandlerWithFailingModule(t *testing.T) {
 		if resp.StatusCode != http.StatusInternalServerError {
 			t.Errorf("Expected status code %d, got %d", http.StatusInternalServerError, resp.StatusCode)
 		}
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			t.Fatalf("Unexpected error reading HTTP response - %s", err)
+		}
+		if !strings.Contains(string(body), "This is a test error") {
+			t.Errorf("Expected error response body to include guest error, got %s", body)
+		}
 	})
 }
 
@@ -641,6 +649,27 @@ func TestWriteWASMErrorIncludesPayload(t *testing.T) {
 	}
 	if rec.Body.String() != "error with payload" {
 		t.Errorf("Expected response body %q, got %q", "error with payload", rec.Body.String())
+	}
+}
+
+func TestWriteWASMErrorIncludesErrorWhenPayloadEmpty(t *testing.T) {
+	cfg := viper.New()
+	cfg.Set("disable_logging", true)
+
+	srv := New(cfg)
+	req, err := http.NewRequest(http.MethodPost, "/", bytes.NewBufferString("test"))
+	if err != nil {
+		t.Fatalf("Failed to create request - %s", err)
+	}
+	rec := httptest.NewRecorder()
+
+	srv.writeWASMError(rec, req, nil, errors.New("test error"))
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Errorf("Expected status code %d, got %d", http.StatusInternalServerError, rec.Code)
+	}
+	if rec.Body.String() != "test error" {
+		t.Errorf("Expected response body %q, got %q", "test error", rec.Body.String())
 	}
 }
 

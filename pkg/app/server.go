@@ -141,7 +141,9 @@ func (srv *Server) writeWASMError(w http.ResponseWriter, r *http.Request, rsp []
 	w.WriteHeader(http.StatusInternalServerError)
 	if len(rsp) > 0 {
 		_, _ = w.Write(rsp)
+		return
 	}
+	_, _ = w.Write([]byte(err.Error()))
 }
 
 // runWASM will load and execute the specified WASM module.
