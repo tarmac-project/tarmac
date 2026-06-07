@@ -122,19 +122,26 @@ func (srv *Server) WASMHandler(w http.ResponseWriter, r *http.Request, _ httprou
 	// Execute WASM Module
 	rsp, err := srv.runWASM(function, "handler", payload)
 	if err != nil {
-		srv.log.DebugContext(r.Context(), "Error executing WASM module: "+err.Error(),
-			"method", r.Method,
-			"remote-addr", r.RemoteAddr,
-			"http-protocol", r.Proto,
-			"content-length", r.ContentLength,
-			"error", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		srv.writeWASMError(w, r, rsp, err)
 		return
 	}
 
 	// Return status code and print stdout
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "%s", rsp)
+}
+
+func (srv *Server) writeWASMError(w http.ResponseWriter, r *http.Request, rsp []byte, err error) {
+	srv.log.DebugContext(r.Context(), "Error executing WASM module: "+err.Error(),
+		"method", r.Method,
+		"remote-addr", r.RemoteAddr,
+		"http-protocol", r.Proto,
+		"content-length", r.ContentLength,
+		"error", err)
+	w.WriteHeader(http.StatusInternalServerError)
+	if len(rsp) > 0 {
+		_, _ = w.Write(rsp)
+	}
 }
 
 // runWASM will load and execute the specified WASM module.

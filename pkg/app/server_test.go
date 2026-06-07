@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -620,6 +621,27 @@ func TestWASMHandlerWithFailingModule(t *testing.T) {
 			t.Errorf("Expected status code %d, got %d", http.StatusInternalServerError, resp.StatusCode)
 		}
 	})
+}
+
+func TestWriteWASMErrorIncludesPayload(t *testing.T) {
+	cfg := viper.New()
+	cfg.Set("disable_logging", true)
+
+	srv := New(cfg)
+	req, err := http.NewRequest(http.MethodPost, "/", bytes.NewBufferString("test"))
+	if err != nil {
+		t.Fatalf("Failed to create request - %s", err)
+	}
+	rec := httptest.NewRecorder()
+
+	srv.writeWASMError(rec, req, []byte("error with payload"), errors.New("test error"))
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Errorf("Expected status code %d, got %d", http.StatusInternalServerError, rec.Code)
+	}
+	if rec.Body.String() != "error with payload" {
+		t.Errorf("Expected response body %q, got %q", "error with payload", rec.Body.String())
+	}
 }
 
 func TestRunWASMWithFailingModule(t *testing.T) {
