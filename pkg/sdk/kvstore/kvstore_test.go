@@ -3,6 +3,7 @@ package kvstore
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"testing"
@@ -238,5 +239,62 @@ func TestKVStore_Delete(t *testing.T) {
 				t.Errorf("Unexpected success executing kv.Delete() that should error")
 			}
 		})
+	}
+}
+
+func TestKVStoreEscapesCallbackJSON(t *testing.T) {
+	key := `key"with\specials`
+	data := []byte(`data"with\specials`)
+	encodedData := base64.StdEncoding.EncodeToString(data)
+
+	kv, err := New(Config{
+		Namespace: "default",
+		HostCall: func(namespace, operation, function string, payload []byte) ([]byte, error) {
+			if namespace != "default" || operation != "kvstore" {
+				t.Errorf("Incorrect arguments to hostCall - %s, %s, %s", namespace, operation, function)
+			}
+
+			var req map[string]string
+			if err := json.Unmarshal(payload, &req); err != nil {
+				t.Fatalf("Unexpected error parsing callback JSON %q: %s", string(payload), err)
+			}
+			if req["key"] != key {
+				t.Errorf("Unexpected key: %q", req["key"])
+			}
+
+			switch function {
+			case "set":
+				if req["data"] != encodedData {
+					t.Errorf("Unexpected data: %q", req["data"])
+				}
+				return []byte(""), nil
+			case "get":
+				return []byte(fmt.Sprintf(`{"data":"%s"}`, encodedData)), nil
+			case "delete":
+				return []byte(`{"success":true}`), nil
+			default:
+				t.Fatalf("Unexpected function: %s", function)
+				return nil, nil
+			}
+		},
+	})
+	if err != nil {
+		t.Fatalf("Unexpected error initializing kvstore - %s", err)
+	}
+
+	if err := kv.Set(key, data); err != nil {
+		t.Fatalf("Unexpected error executing kv.Set() - %s", err)
+	}
+
+	got, err := kv.Get(key)
+	if err != nil {
+		t.Fatalf("Unexpected error executing kv.Get() - %s", err)
+	}
+	if !bytes.Equal(got, data) {
+		t.Fatalf("Expected data to be %q but got %q", string(data), string(got))
+	}
+
+	if err := kv.Delete(key); err != nil {
+		t.Fatalf("Unexpected error executing kv.Delete() - %s", err)
 	}
 }

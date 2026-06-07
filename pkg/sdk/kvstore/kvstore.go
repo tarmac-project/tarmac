@@ -7,6 +7,7 @@ package kvstore
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -56,9 +57,15 @@ func (kv *KV) Set(key string, data []byte) error {
 	}
 
 	d := base64.StdEncoding.EncodeToString(data)
-	j := fmt.Sprintf(`{"key":"%s","data":"%s"}`, key, d)
+	j, err := json.Marshal(tarmacKVStoreSetRequest{
+		Key:  key,
+		Data: d,
+	})
+	if err != nil {
+		return fmt.Errorf("unable to marshal set payload - %w", err)
+	}
 
-	_, err := kv.hostCall(kv.namespace, "kvstore", "set", []byte(j))
+	_, err = kv.hostCall(kv.namespace, "kvstore", "set", j)
 	if err != nil {
 		return fmt.Errorf("unable to execute set - %w", err)
 	}
@@ -72,7 +79,12 @@ func (kv *KV) Get(key string) ([]byte, error) {
 		return []byte(""), errors.New("key cannot be empty")
 	}
 
-	b, err := kv.hostCall(kv.namespace, "kvstore", "get", []byte(fmt.Sprintf(`{"key":"%s"}`, key)))
+	j, err := json.Marshal(tarmacKVStoreKeyRequest{Key: key})
+	if err != nil {
+		return []byte(""), fmt.Errorf("unable to marshal get payload - %w", err)
+	}
+
+	b, err := kv.hostCall(kv.namespace, "kvstore", "get", j)
 	if err != nil {
 		return []byte(""), fmt.Errorf("unable to execute get - %w", err)
 	}
@@ -91,7 +103,12 @@ func (kv *KV) Delete(key string) error {
 		return errors.New("key cannot be empty")
 	}
 
-	_, err := kv.hostCall(kv.namespace, "kvstore", "delete", []byte(fmt.Sprintf(`{"key":"%s"}`, key)))
+	j, err := json.Marshal(tarmacKVStoreKeyRequest{Key: key})
+	if err != nil {
+		return fmt.Errorf("unable to marshal delete payload - %w", err)
+	}
+
+	_, err = kv.hostCall(kv.namespace, "kvstore", "delete", j)
 	if err != nil {
 		return fmt.Errorf("unable to execute delete - %w", err)
 	}
@@ -118,4 +135,13 @@ func (kv *KV) Keys() ([]string, error) {
 	}
 
 	return keys, nil
+}
+
+type tarmacKVStoreKeyRequest struct {
+	Key string `json:"key"`
+}
+
+type tarmacKVStoreSetRequest struct {
+	Key  string `json:"key"`
+	Data string `json:"data"`
 }

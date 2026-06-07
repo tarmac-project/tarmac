@@ -1,6 +1,7 @@
 package http
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -421,5 +422,50 @@ func TestHTTPClientPut(t *testing.T) {
 	_, err = hc.Put("", []byte(`{"data": "example"}`))
 	if err == nil {
 		t.Errorf("Expected error, but got nil")
+	}
+}
+
+func TestHTTPDoEscapesCallbackJSON(t *testing.T) {
+	client, err := New(Config{
+		Namespace: "default",
+		HostCall: func(namespace, capability, function string, input []byte) ([]byte, error) {
+			if namespace != "default" || capability != "httpclient" || function != "call" {
+				t.Errorf("Incorrect arguments to hostCall - %s, %s, %s", namespace, capability, function)
+			}
+
+			var req tarmacHTTPClientRequest
+			if err := json.Unmarshal(input, &req); err != nil {
+				t.Fatalf("Unexpected error parsing callback JSON %q: %s", string(input), err)
+			}
+
+			if req.URL != `http://example.com/path?quote="yes"&slash=\` {
+				t.Errorf("Unexpected URL: %q", req.URL)
+			}
+			if req.Headers[`X-Quote"`] != `value"with\slash` {
+				t.Errorf("Unexpected quoted header value: %q", req.Headers[`X-Quote"`])
+			}
+			if req.Headers[`X\Slash`] != `slash\value` {
+				t.Errorf("Unexpected slash header value: %q", req.Headers[`X\Slash`])
+			}
+
+			return []byte(`{"code":200,"headers":{},"body":"dGVzdA==","status":{"code":200,"status":"OK"}}`), nil
+		},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error initiating HTTP client - %s", err)
+	}
+
+	_, err = client.Do(
+		"GET",
+		map[string]string{
+			`X-Quote"`: `value"with\slash`,
+			`X\Slash`:  `slash\value`,
+		},
+		`http://example.com/path?quote="yes"&slash=\`,
+		false,
+		nil,
+	)
+	if err != nil {
+		t.Fatalf("unexpected error executing HTTP request - %s", err)
 	}
 }
