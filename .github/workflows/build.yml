@@ -11,6 +11,24 @@ on:
       - main
   pull_request:
 jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+    - name: Set up Go
+      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+      with:
+        go-version-file: go.mod
+    - name: Execute Unit Tests
+      run: make tests-unit
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage/tests-unit.out,./coverage/tests-app-unit.out
+        flags: tests-unit
+        name: tests-unit
+
   tests:
     runs-on: ubuntu-latest
     steps:
