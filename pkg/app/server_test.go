@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -489,7 +490,7 @@ func TestWASMHandlerHTTPMethods(t *testing.T) {
 	srv := New(cfg)
 	go func() {
 		err := srv.Run()
-		if err != nil && err != ErrShutdown {
+		if err != nil && !errors.Is(err, ErrShutdown) {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
 	}()
@@ -511,7 +512,7 @@ func TestWASMHandlerHTTPMethods(t *testing.T) {
 	})
 
 	t.Run("POST with valid data", func(t *testing.T) {
-		resp, err := http.Post("http://localhost:9002/", "application/text", bytes.NewBuffer([]byte("test")))
+		resp, err := http.Post("http://localhost:9002/", "application/text", bytes.NewBufferString("test"))
 		if err != nil {
 			t.Fatalf("Unexpected error when making HTTP request - %s", err)
 		}
@@ -523,7 +524,7 @@ func TestWASMHandlerHTTPMethods(t *testing.T) {
 	})
 
 	t.Run("PUT with valid data", func(t *testing.T) {
-		req, err := http.NewRequest("PUT", "http://localhost:9002/", bytes.NewBuffer([]byte("test data")))
+		req, err := http.NewRequest(http.MethodPut, "http://localhost:9002/", bytes.NewBufferString("test data"))
 		if err != nil {
 			t.Fatalf("Failed to create request - %s", err)
 		}
@@ -542,7 +543,7 @@ func TestWASMHandlerHTTPMethods(t *testing.T) {
 	})
 
 	t.Run("DELETE request success", func(t *testing.T) {
-		req, err := http.NewRequest("DELETE", "http://localhost:9002/", nil)
+		req, err := http.NewRequest(http.MethodDelete, "http://localhost:9002/", nil)
 		if err != nil {
 			t.Fatalf("Failed to create request - %s", err)
 		}
@@ -582,29 +583,23 @@ func TestWASMHandlerWithFailingModule(t *testing.T) {
 				]
 			}
 		}
-	}`
+		}`
 
-	tmpfile, err := os.CreateTemp("", "tarmac-test-*.json")
-	if err != nil {
-		t.Fatalf("Failed to create temp file - %s", err)
+	configPath := filepath.Join(t.TempDir(), "tarmac-test.json")
+	if err := os.WriteFile(configPath, []byte(configContent), 0600); err != nil {
+		t.Fatalf("Failed to write temp config file - %s", err)
 	}
-	defer os.Remove(tmpfile.Name())
-
-	if _, err := tmpfile.Write([]byte(configContent)); err != nil {
-		t.Fatalf("Failed to write to temp file - %s", err)
-	}
-	tmpfile.Close()
 
 	cfg := viper.New()
 	cfg.Set("disable_logging", false)
 	cfg.Set("debug", true)
 	cfg.Set("listen_addr", "localhost:9003")
-	cfg.Set("wasm_function_config", tmpfile.Name())
+	cfg.Set("wasm_function_config", configPath)
 
 	srv := New(cfg)
 	go func() {
 		err := srv.Run()
-		if err != nil && err != ErrShutdown {
+		if err != nil && !errors.Is(err, ErrShutdown) {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
 	}()
@@ -614,7 +609,7 @@ func TestWASMHandlerWithFailingModule(t *testing.T) {
 	time.Sleep(5 * time.Second)
 
 	t.Run("POST to failing module endpoint", func(t *testing.T) {
-		resp, err := http.Post("http://localhost:9003/fail", "application/text", bytes.NewBuffer([]byte("test")))
+		resp, err := http.Post("http://localhost:9003/fail", "application/text", bytes.NewBufferString("test"))
 		if err != nil {
 			t.Fatalf("Unexpected error when making HTTP request - %s", err)
 		}
@@ -641,29 +636,23 @@ func TestRunWASMWithFailingModule(t *testing.T) {
 				}
 			}
 		}
-	}`
+		}`
 
-	tmpfile, err := os.CreateTemp("", "tarmac-test-*.json")
-	if err != nil {
-		t.Fatalf("Failed to create temp file - %s", err)
+	configPath := filepath.Join(t.TempDir(), "tarmac-test.json")
+	if err := os.WriteFile(configPath, []byte(configContent), 0600); err != nil {
+		t.Fatalf("Failed to write temp config file - %s", err)
 	}
-	defer os.Remove(tmpfile.Name())
-
-	if _, err := tmpfile.Write([]byte(configContent)); err != nil {
-		t.Fatalf("Failed to write to temp file - %s", err)
-	}
-	tmpfile.Close()
 
 	cfg := viper.New()
 	cfg.Set("disable_logging", false)
 	cfg.Set("debug", true)
 	cfg.Set("listen_addr", "localhost:9004")
-	cfg.Set("wasm_function_config", tmpfile.Name())
+	cfg.Set("wasm_function_config", configPath)
 
 	srv := New(cfg)
 	go func() {
 		err := srv.Run()
-		if err != nil && err != ErrShutdown {
+		if err != nil && !errors.Is(err, ErrShutdown) {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
 	}()
