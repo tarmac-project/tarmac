@@ -29,9 +29,8 @@ import (
 
 	"github.com/tarmac-project/tarmac"
 
-	"github.com/tarmac-project/protobuf-go/sdk"
+	sdkproto "github.com/tarmac-project/protobuf-go/sdk"
 	proto "github.com/tarmac-project/protobuf-go/sdk/kvstore"
-	pb "google.golang.org/protobuf/proto"
 )
 
 // KVStore provides access to Host Callbacks that interact with the key:value datastores within Tarmac. The callbacks
@@ -72,13 +71,13 @@ func New(cfg Config) (*KVStore, error) {
 // Get will fetch data from the key:value datastore using the key specified.
 func (k *KVStore) Get(b []byte) ([]byte, error) {
 	msg := &proto.KVStoreGet{}
-	err := pb.Unmarshal(b, msg)
+	err := msg.UnmarshalVT(b)
 	if err != nil {
 		return k.getJSON(b)
 	}
 
 	rsp := &proto.KVStoreGetResponse{
-		Status: &sdk.Status{
+		Status: &sdkproto.Status{
 			Code:   200,
 			Status: "OK",
 		},
@@ -99,7 +98,7 @@ func (k *KVStore) Get(b []byte) ([]byte, error) {
 		rsp.Data = data
 	}
 
-	m, err := pb.Marshal(rsp)
+	m, err := rsp.MarshalVT()
 	if err != nil {
 		return nil, errors.New("unable to marshal kvstore:get response")
 	}
@@ -154,13 +153,13 @@ func (k *KVStore) getJSON(b []byte) ([]byte, error) {
 // Set will store data within the key:value datastore using the key specified.
 func (k *KVStore) Set(b []byte) ([]byte, error) {
 	msg := &proto.KVStoreSet{}
-	err := pb.Unmarshal(b, msg)
+	err := msg.UnmarshalVT(b)
 	if err != nil {
 		return k.setJSON(b)
 	}
 
 	rsp := &proto.KVStoreSetResponse{
-		Status: &sdk.Status{
+		Status: &sdkproto.Status{
 			Code:   200,
 			Status: "OK",
 		},
@@ -184,7 +183,7 @@ func (k *KVStore) Set(b []byte) ([]byte, error) {
 		}
 	}
 
-	m, err := pb.Marshal(rsp)
+	m, err := rsp.MarshalVT()
 	if err != nil {
 		return nil, errors.New("unable to marshal kvstore:set response")
 	}
@@ -243,13 +242,13 @@ func (k *KVStore) setJSON(b []byte) ([]byte, error) {
 // Delete will remove data from the key:value datastore using the key specified.
 func (k *KVStore) Delete(b []byte) ([]byte, error) {
 	msg := &proto.KVStoreDelete{}
-	err := pb.Unmarshal(b, msg)
+	err := msg.UnmarshalVT(b)
 	if err != nil {
 		return k.deleteJSON(b)
 	}
 
 	rsp := &proto.KVStoreDeleteResponse{
-		Status: &sdk.Status{
+		Status: &sdkproto.Status{
 			Code:   200,
 			Status: "OK",
 		},
@@ -268,7 +267,7 @@ func (k *KVStore) Delete(b []byte) ([]byte, error) {
 		}
 	}
 
-	m, err := pb.Marshal(rsp)
+	m, err := rsp.MarshalVT()
 	if err != nil {
 		return nil, errors.New("unable to marshal kvstore:delete response")
 	}
@@ -323,7 +322,7 @@ func (k *KVStore) Keys(b []byte) ([]byte, error) {
 	}
 
 	rsp := &proto.KVStoreKeysResponse{
-		Status: &sdk.Status{
+		Status: &sdkproto.Status{
 			Code:   200,
 			Status: "OK",
 		},
@@ -336,7 +335,7 @@ func (k *KVStore) Keys(b []byte) ([]byte, error) {
 	}
 	rsp.Keys = keys
 
-	m, err := pb.Marshal(rsp)
+	m, err := rsp.MarshalVT()
 	if err != nil {
 		return nil, errors.New("unable to marshal kvstore:keys response")
 	}

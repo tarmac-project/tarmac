@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	proto "github.com/tarmac-project/protobuf-go/sdk/metrics"
-	pb "google.golang.org/protobuf/proto"
 )
 
 type MetricsCase struct {
@@ -189,7 +188,7 @@ func TestMetricsCallback(t *testing.T) {
 				msg := &proto.MetricsCounter{
 					Name: c.Key,
 				}
-				b, err := pb.Marshal(msg)
+				b, err := msg.MarshalVT()
 				if err != nil {
 					t.Fatalf("Unable to marshal message - %s", err)
 				}
@@ -210,7 +209,7 @@ func TestMetricsCallback(t *testing.T) {
 					Name:   c.Key,
 					Action: c.Action,
 				}
-				b, err := pb.Marshal(msg)
+				b, err := msg.MarshalVT()
 				if err != nil {
 					t.Fatalf("Unable to marshal message - %s", err)
 				}
@@ -231,7 +230,7 @@ func TestMetricsCallback(t *testing.T) {
 					Name:  c.Key,
 					Value: c.Value,
 				}
-				b, err := pb.Marshal(msg)
+				b, err := msg.MarshalVT()
 				if err != nil {
 					t.Fatalf("Unable to marshal message - %s", err)
 				}
