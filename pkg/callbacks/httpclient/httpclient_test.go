@@ -561,6 +561,63 @@ func TestRequestCreationAndExecutionErrors(t *testing.T) {
 		t.Fatalf("Unable to create HTTP Client - %s", err)
 	}
 
+	t.Run("JSON parse error returns bad request", func(t *testing.T) {
+		b, err := h.Call([]byte(`{"method":`))
+		if err == nil {
+			t.Fatal("expected parse error")
+		}
+
+		var rsp tarmac.HTTPClientResponse
+		if err := ffjson.Unmarshal(b, &rsp); err != nil {
+			t.Fatalf("Failed to unmarshal JSON response: %s", err)
+		}
+
+		if rsp.Status.Code != http.StatusBadRequest {
+			t.Fatalf("unexpected status code: got %d want %d", rsp.Status.Code, http.StatusBadRequest)
+		}
+		if !strings.Contains(rsp.Status.Status, "Error Parsing Input") {
+			t.Fatalf("unexpected status message: %s", rsp.Status.Status)
+		}
+	})
+
+	t.Run("JSON invalid body encoding returns bad request", func(t *testing.T) {
+		b, err := h.Call([]byte(`{"method":"POST","headers":{},"url":"http://example.com","body":"not-base64!"}`))
+		if err == nil {
+			t.Fatal("expected body decode error")
+		}
+
+		var rsp tarmac.HTTPClientResponse
+		if err := ffjson.Unmarshal(b, &rsp); err != nil {
+			t.Fatalf("Failed to unmarshal JSON response: %s", err)
+		}
+
+		if rsp.Status.Code != http.StatusBadRequest {
+			t.Fatalf("unexpected status code: got %d want %d", rsp.Status.Code, http.StatusBadRequest)
+		}
+		if !strings.Contains(rsp.Status.Status, "Unable to decode data") {
+			t.Fatalf("unexpected status message: %s", rsp.Status.Status)
+		}
+	})
+
+	t.Run("JSON invalid method returns request creation error", func(t *testing.T) {
+		b, err := h.Call([]byte(`{"method":"BAD\nMETHOD","headers":{},"url":"http://example.com"}`))
+		if err == nil {
+			t.Fatal("expected request creation error")
+		}
+
+		var rsp tarmac.HTTPClientResponse
+		if err := ffjson.Unmarshal(b, &rsp); err != nil {
+			t.Fatalf("Failed to unmarshal JSON response: %s", err)
+		}
+
+		if rsp.Status.Code != http.StatusBadRequest {
+			t.Fatalf("unexpected status code: got %d want %d", rsp.Status.Code, http.StatusBadRequest)
+		}
+		if !strings.Contains(rsp.Status.Status, "Unable to create HTTP request") {
+			t.Fatalf("unexpected status message: %s", rsp.Status.Status)
+		}
+	})
+
 	t.Run("JSON invalid URL returns request creation error", func(t *testing.T) {
 		b, err := h.Call([]byte(`{"method":"GET","headers":{"teapot":"true"},"url":"://bad-url"}`))
 		if err == nil {
@@ -577,6 +634,33 @@ func TestRequestCreationAndExecutionErrors(t *testing.T) {
 		}
 		if !strings.Contains(rsp.Status.Status, "Unable to create HTTP request") {
 			t.Fatalf("unexpected status message: %s", rsp.Status.Status)
+		}
+	})
+
+	t.Run("Protobuf invalid method returns request creation error", func(t *testing.T) {
+		msg, err := pb.Marshal(&proto.HTTPClient{
+			Method: "BAD\nMETHOD",
+			Url:    "http://example.com",
+		})
+		if err != nil {
+			t.Fatalf("Unable to marshal protobuf request - %s", err)
+		}
+
+		b, err := h.Call(msg)
+		if err == nil {
+			t.Fatal("expected request creation error")
+		}
+
+		var rsp proto.HTTPClientResponse
+		if err := pb.Unmarshal(b, &rsp); err != nil {
+			t.Fatalf("Failed to unmarshal protobuf response: %s", err)
+		}
+
+		if rsp.GetStatus().GetCode() != http.StatusBadRequest {
+			t.Fatalf("unexpected status code: got %d want %d", rsp.GetStatus().GetCode(), http.StatusBadRequest)
+		}
+		if !strings.Contains(rsp.GetStatus().GetStatus(), "Unable to create HTTP request") {
+			t.Fatalf("unexpected status message: %s", rsp.GetStatus().GetStatus())
 		}
 	})
 
