@@ -146,6 +146,31 @@ func TestBadConfigs(t *testing.T) {
 	}
 }
 
+func TestRunWithExistingBoltDBFile(t *testing.T) {
+	dbFile, err := os.CreateTemp(t.TempDir(), "*.db")
+	if err != nil {
+		t.Fatalf("Unexpected error creating temp file - %s", err)
+	}
+	if err := dbFile.Close(); err != nil {
+		t.Fatalf("Unexpected error closing temp file - %s", err)
+	}
+
+	cfg := viper.New()
+	cfg.Set("disable_logging", true)
+	cfg.Set("enable_kvstore", true)
+	cfg.Set("kvstore_type", "internal")
+	cfg.Set("boltdb_filename", dbFile.Name())
+	cfg.Set("boltdb_bucket", "tarmac")
+	cfg.Set("listen_addr", "localhost:0")
+	cfg.Set("wasm_function", "does-not-exist.wasm")
+
+	srv := New(cfg)
+	err = srv.Run()
+	if err == nil {
+		t.Fatal("Expected startup error from missing WASM function, got nil")
+	}
+}
+
 func TestRunningServer(t *testing.T) {
 	cfg := viper.New()
 	cfg.Set("disable_logging", true)
