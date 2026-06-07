@@ -53,7 +53,7 @@ func (srv *Server) middleware(n httprouter.Handle) httprouter.Handle {
 		w.Header().Set("Server", "tarmac")
 
 		// Log the basics
-		srv.log.Debug("HTTP Request received",
+		srv.log.DebugContext(r.Context(), "HTTP Request received",
 			"method", r.Method,
 			"remote-addr", r.RemoteAddr,
 			"http-protocol", r.Proto,
@@ -62,7 +62,7 @@ func (srv *Server) middleware(n httprouter.Handle) httprouter.Handle {
 
 		// Verify if PProf
 		if isPProf.MatchString(r.URL.EscapedPath()) && !srv.cfg.GetBool("enable_pprof") {
-			srv.log.Debug("Request to PProf Address failed, PProf disabled",
+			srv.log.DebugContext(r.Context(), "Request to PProf Address failed, PProf disabled",
 				"method", r.Method,
 				"remote-addr", r.RemoteAddr,
 				"http-protocol", r.Proto,
@@ -77,7 +77,7 @@ func (srv *Server) middleware(n httprouter.Handle) httprouter.Handle {
 		// Call registered handler
 		n(w, r, ps)
 		srv.stats.Srv.WithLabelValues(r.URL.EscapedPath()).Observe(float64(time.Since(now).Milliseconds()))
-		srv.log.Debug("HTTP Request complete",
+		srv.log.DebugContext(r.Context(), "HTTP Request complete",
 			"method", r.Method,
 			"remote-addr", r.RemoteAddr,
 			"http-protocol", r.Proto,
@@ -108,7 +108,7 @@ func (srv *Server) WASMHandler(w http.ResponseWriter, r *http.Request, _ httprou
 	if r.Method == http.MethodPost || r.Method == http.MethodPut {
 		payload, err = io.ReadAll(r.Body)
 		if err != nil {
-			srv.log.Debug("Error reading HTTP payload: "+err.Error(),
+			srv.log.DebugContext(r.Context(), "Error reading HTTP payload: "+err.Error(),
 				"method", r.Method,
 				"remote-addr", r.RemoteAddr,
 				"http-protocol", r.Proto,
@@ -122,7 +122,7 @@ func (srv *Server) WASMHandler(w http.ResponseWriter, r *http.Request, _ httprou
 	// Execute WASM Module
 	rsp, err := srv.runWASM(function, "handler", payload)
 	if err != nil {
-		srv.log.Debug("Error executing WASM module: "+err.Error(),
+		srv.log.DebugContext(r.Context(), "Error executing WASM module: "+err.Error(),
 			"method", r.Method,
 			"remote-addr", r.RemoteAddr,
 			"http-protocol", r.Proto,
