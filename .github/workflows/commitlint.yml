@@ -1,7 +1,9 @@
 name: Lint Commit Messages
 permissions:
   contents: read
-on: [pull_request]
+on:
+  pull_request:
+  merge_group:
 
 jobs:
   commitlint:
