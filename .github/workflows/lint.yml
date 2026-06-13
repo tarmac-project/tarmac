@@ -9,6 +9,7 @@ on:
       - actions
       - main
   pull_request:
+  merge_group:
 jobs:
   golangci:
     name: golangci
