@@ -28,9 +28,8 @@ import (
 
 	"github.com/tarmac-project/tarmac"
 
-	"github.com/tarmac-project/protobuf-go/sdk"
+	sdkproto "github.com/tarmac-project/protobuf-go/sdk"
 	proto "github.com/tarmac-project/protobuf-go/sdk/sql"
-	pb "google.golang.org/protobuf/proto"
 )
 
 // Database provides access to Host Callbacks that interface with a SQL database within Tarmac. The callbacks
@@ -65,13 +64,13 @@ func New(cfg Config) (*Database, error) {
 // and will return a SQLExecResponse JSON.
 func (db *Database) Exec(b []byte) ([]byte, error) {
 	msg := &proto.SQLExec{}
-	err := pb.Unmarshal(b, msg)
+	err := msg.UnmarshalVT(b)
 	if err != nil {
 		return []byte(""), errors.New("unable to unmarshal database:exec request")
 	}
 
 	r := &proto.SQLExecResponse{}
-	r.Status = &sdk.Status{Code: 200, Status: "OK"}
+	r.Status = &sdkproto.Status{Code: 200, Status: "OK"}
 
 	if len(msg.GetQuery()) < 1 {
 		r.Status.Code = 400
@@ -107,7 +106,7 @@ func (db *Database) Exec(b []byte) ([]byte, error) {
 		r.LastInsertId = id
 	}
 
-	rsp, err := pb.Marshal(r)
+	rsp, err := r.MarshalVT()
 	if err != nil {
 		return []byte(""), errors.New("unable to marshal database:exec response")
 	}
@@ -124,7 +123,7 @@ func (db *Database) Exec(b []byte) ([]byte, error) {
 // and will return a SQLQueryResponse JSON.
 func (db *Database) Query(b []byte) ([]byte, error) {
 	msg := &proto.SQLQuery{}
-	err := pb.Unmarshal(b, msg)
+	err := msg.UnmarshalVT(b)
 	if err != nil {
 		// Fallback to JSON if proto fails
 		return db.queryJSON(b)
@@ -132,7 +131,7 @@ func (db *Database) Query(b []byte) ([]byte, error) {
 
 	// Create a new SQLQueryResponse
 	r := &proto.SQLQueryResponse{}
-	r.Status = &sdk.Status{Code: 200, Status: "OK"}
+	r.Status = &sdkproto.Status{Code: 200, Status: "OK"}
 
 	if len(msg.GetQuery()) < 1 {
 		r.Status.Code = 400
@@ -159,7 +158,7 @@ func (db *Database) Query(b []byte) ([]byte, error) {
 	}
 
 	// Marshal a response Proto to return to caller
-	rsp, err := pb.Marshal(r)
+	rsp, err := r.MarshalVT()
 	if err != nil {
 		return []byte(""), errors.New("unable to marshal database:query response")
 	}

@@ -15,7 +15,6 @@ import (
 	"github.com/tarmac-project/tarmac"
 
 	proto "github.com/tarmac-project/protobuf-go/sdk/sql"
-	pb "google.golang.org/protobuf/proto"
 )
 
 type TestCase struct {
@@ -72,7 +71,7 @@ func TestSQLQuery(t *testing.T) {
 			for _, c := range tc {
 				t.Run(c.name, func(t *testing.T) {
 					query := &proto.SQLQuery{Query: []byte(c.q)}
-					qMsg, err := pb.Marshal(query)
+					qMsg, err := query.MarshalVT()
 					if err != nil {
 						t.Fatalf("Unable to marshal query message")
 					}
@@ -84,7 +83,7 @@ func TestSQLQuery(t *testing.T) {
 
 					// Unmarshal the Tarmac Response
 					var rsp proto.SQLQueryResponse
-					err = pb.Unmarshal(r, &rsp)
+					err = rsp.UnmarshalVT(r)
 					if err != nil {
 						t.Fatalf("Error parsing returned query response")
 					}
@@ -104,7 +103,7 @@ func TestSQLQuery(t *testing.T) {
 						`CREATE TABLE IF NOT EXISTS testpkg ( id int NOT NULL AUTO_INCREMENT, name varchar(255), PRIMARY KEY (id) );`,
 					),
 				}
-				qMsg, err := pb.Marshal(query)
+				qMsg, err := query.MarshalVT()
 				if err != nil {
 					t.Fatalf("Unable to marshal query message")
 				}
@@ -116,7 +115,7 @@ func TestSQLQuery(t *testing.T) {
 
 				// Unmarshal the Tarmac Response
 				var rsp proto.SQLExecResponse
-				err = pb.Unmarshal(r, &rsp)
+				err = rsp.UnmarshalVT(r)
 				if err != nil {
 					t.Fatalf("Error parsing returned query response")
 				}
@@ -133,7 +132,7 @@ func TestSQLQuery(t *testing.T) {
 
 			t.Run("Insert Data", func(t *testing.T) {
 				query := &proto.SQLExec{Query: []byte(`INSERT INTO testpkg (name)  VALUES ("John Smith");`)}
-				qMsg, err := pb.Marshal(query)
+				qMsg, err := query.MarshalVT()
 				if err != nil {
 					t.Fatalf("Unable to marshal query message")
 				}
@@ -145,7 +144,7 @@ func TestSQLQuery(t *testing.T) {
 
 				// Unmarshal the Tarmac Response
 				var rsp proto.SQLExecResponse
-				err = pb.Unmarshal(r, &rsp)
+				err = rsp.UnmarshalVT(r)
 				if err != nil {
 					t.Fatalf("Error parsing returned query response")
 				}
@@ -172,7 +171,7 @@ func TestSQLQuery(t *testing.T) {
 
 			t.Run("Select Data", func(t *testing.T) {
 				query := &proto.SQLQuery{Query: []byte(`SELECT * from testpkg;`)}
-				qMsg, err := pb.Marshal(query)
+				qMsg, err := query.MarshalVT()
 				if err != nil {
 					t.Fatalf("Unable to marshal query message")
 				}
@@ -184,7 +183,7 @@ func TestSQLQuery(t *testing.T) {
 
 				// Unmarshal the Tarmac Response
 				var rsp proto.SQLQueryResponse
-				err = pb.Unmarshal(r, &rsp)
+				err = rsp.UnmarshalVT(r)
 				if err != nil {
 					t.Fatalf("Error parsing returned query response")
 				}
@@ -216,7 +215,7 @@ func TestSQLQuery(t *testing.T) {
 
 			t.Run("Delete Table", func(t *testing.T) {
 				query := &proto.SQLExec{Query: []byte(`DROP TABLE IF EXISTS testpkg;`)}
-				qMsg, err := pb.Marshal(query)
+				qMsg, err := query.MarshalVT()
 				if err != nil {
 					t.Fatalf("Unable to marshal query message")
 				}
@@ -228,7 +227,7 @@ func TestSQLQuery(t *testing.T) {
 
 				// Unmarshal the Tarmac Response
 				var rsp proto.SQLExecResponse
-				err = pb.Unmarshal(r, &rsp)
+				err = rsp.UnmarshalVT(r)
 				if err != nil {
 					t.Fatalf("Error parsing returned query response")
 				}
@@ -252,7 +251,7 @@ func TestSQLQuery(t *testing.T) {
 					`CREATE TABLE IF NOT EXISTS testpkg ( id int NOT NULL AUTO_INCREMENT, name varchar(255), PRIMARY KEY (id) );`,
 				),
 			}
-			qMsg, err := pb.Marshal(query)
+			qMsg, err := query.MarshalVT()
 			if err != nil {
 				t.Fatalf("Unable to marshal query message")
 			}
@@ -264,7 +263,7 @@ func TestSQLQuery(t *testing.T) {
 
 			// Unmarshal the Tarmac Response
 			var rsp proto.SQLExecResponse
-			err = pb.Unmarshal(r, &rsp)
+			err = rsp.UnmarshalVT(r)
 			if err != nil {
 				t.Fatalf("Error parsing returned query response")
 			}
@@ -281,7 +280,7 @@ func TestSQLQuery(t *testing.T) {
 
 		t.Run("Unhappy Path", func(t *testing.T) {
 			query := &proto.SQLExec{Query: []byte(`CREATE TALBE;`)}
-			qMsg, err := pb.Marshal(query)
+			qMsg, err := query.MarshalVT()
 			if err != nil {
 				t.Fatalf("Unable to marshal query message")
 			}
@@ -293,7 +292,7 @@ func TestSQLQuery(t *testing.T) {
 
 			// Unmarshal the Tarmac Response
 			var rsp proto.SQLExecResponse
-			err = pb.Unmarshal(r, &rsp)
+			err = rsp.UnmarshalVT(r)
 			if err != nil {
 				t.Fatalf("Error parsing returned query response")
 			}
@@ -306,7 +305,7 @@ func TestSQLQuery(t *testing.T) {
 
 		t.Run("Empty Exec", func(t *testing.T) {
 			query := &proto.SQLExec{}
-			qMsg, err := pb.Marshal(query)
+			qMsg, err := query.MarshalVT()
 			if err != nil {
 				t.Fatalf("Unable to marshal query message")
 			}
@@ -318,7 +317,7 @@ func TestSQLQuery(t *testing.T) {
 
 			// Unmarshal the Tarmac Response
 			var rsp proto.SQLExecResponse
-			err = pb.Unmarshal(r, &rsp)
+			err = rsp.UnmarshalVT(r)
 			if err != nil {
 				t.Fatalf("Error parsing returned query response")
 			}
