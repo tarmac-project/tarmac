@@ -3,7 +3,7 @@ module github.com/tarmac-project/tarmac
 go 1.24.0
 
 require (
-	github.com/go-sql-driver/mysql v1.7.1
+	github.com/go-sql-driver/mysql v1.10.0
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/lib/pq v1.12.3
 	github.com/madflojo/tasks v1.3.0
@@ -24,7 +24,6 @@ require (
 	github.com/tarmac-project/wapc-toolkit/engine v0.3.0
 	github.com/wapc/wapc-go v0.7.2
 	github.com/wapc/wapc-go/engines/wazero v0.0.0-20250220020831-a72aedbbe70d
-	google.golang.org/protobuf v1.36.11
 )
 
 require (
@@ -34,6 +33,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	cloud.google.com/go/firestore v1.18.0 // indirect
 	cloud.google.com/go/longrunning v0.6.7 // indirect
+	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/FZambia/sentinel v1.1.1 // indirect
 	github.com/Workiva/go-datastructures v1.1.7 // indirect
 	github.com/aperturerobotics/protobuf-go-lite v0.11.0 // indirect
@@ -121,6 +121,7 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20251202230838-ff82c1b0f217 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
 	google.golang.org/grpc v1.79.3 // indirect
+	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
