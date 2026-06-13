@@ -7,9 +7,9 @@ package http
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/valyala/fastjson"
 )
@@ -97,10 +97,8 @@ func (h *Client) Do(
 		return Response{}, errors.New("url cannot be empty")
 	}
 
-	// Build headers string
-	hh := []string{}
-	for k, v := range headers {
-		hh = append(hh, fmt.Sprintf(`"%s":"%s"`, k, v))
+	if headers == nil {
+		headers = map[string]string{}
 	}
 
 	// Encode HTTP Payload
@@ -110,17 +108,19 @@ func (h *Client) Do(
 	}
 
 	// Build Callback JSON
-	r := fmt.Sprintf(
-		`{"method":"%s", "headers": {%s},"url":"%s","body":"%s", "insecure": %t}`,
-		method,
-		strings.Join(hh, ", "),
-		url,
-		d,
-		insecure,
-	)
+	r, err := json.Marshal(tarmacHTTPClientRequest{
+		Method:   method,
+		Headers:  headers,
+		URL:      url,
+		Body:     d,
+		Insecure: insecure,
+	})
+	if err != nil {
+		return Response{}, fmt.Errorf("unable to marshal Client request - %w", err)
+	}
 
 	// Perform Host Callback
-	b, err := h.hostCall(h.namespace, "httpclient", "call", []byte(r))
+	b, err := h.hostCall(h.namespace, "httpclient", "call", r)
 	if err != nil {
 		return Response{}, fmt.Errorf("unable to call Client - %w", err)
 	}
@@ -152,4 +152,12 @@ func (h *Client) Do(
 	}
 
 	return rsp, nil
+}
+
+type tarmacHTTPClientRequest struct {
+	Method   string            `json:"method"`
+	Headers  map[string]string `json:"headers"`
+	URL      string            `json:"url"`
+	Body     string            `json:"body"`
+	Insecure bool              `json:"insecure"`
 }
