@@ -6,7 +6,7 @@ require (
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/lib/pq v1.12.3
-	github.com/madflojo/tasks v1.2.1
+	github.com/madflojo/tasks v1.3.0
 	github.com/madflojo/testcerts v1.5.0
 	github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7
 	github.com/prometheus/client_golang v1.23.2
