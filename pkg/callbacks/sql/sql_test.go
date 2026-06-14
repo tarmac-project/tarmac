@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"fmt"
+	"reflect"
 	"strconv"
 
 	// Import MySQL Driver.
@@ -26,6 +27,30 @@ func TestInterface(t *testing.T) {
 	_, err := New(Config{})
 	if err == nil {
 		t.Fatalf("New should error if DB is not provided")
+	}
+}
+
+func TestNormalizeSQLValue(t *testing.T) {
+	tests := []struct {
+		name string
+		in   any
+		want any
+	}{
+		{name: "int64", in: int64(42), want: []byte("42")},
+		{name: "uint64", in: uint64(42), want: []byte("42")},
+		{name: "float64", in: float64(42.25), want: []byte("42.25")},
+		{name: "bytes unchanged", in: []byte("hello"), want: []byte("hello")},
+		{name: "string unchanged", in: "hello", want: "hello"},
+		{name: "nil unchanged", in: nil, want: nil},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := normalizeSQLValue(tc.in)
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Fatalf("unexpected normalized value got %v want %v", got, tc.want)
+			}
+		})
 	}
 }
 
