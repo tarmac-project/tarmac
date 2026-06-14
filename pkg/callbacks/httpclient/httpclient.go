@@ -37,9 +37,8 @@ import (
 
 	"github.com/tarmac-project/tarmac"
 
-	"github.com/tarmac-project/protobuf-go/sdk"
+	sdkproto "github.com/tarmac-project/protobuf-go/sdk"
 	proto "github.com/tarmac-project/protobuf-go/sdk/http"
-	pb "google.golang.org/protobuf/proto"
 )
 
 const (
@@ -88,7 +87,7 @@ func New(cfg Config) (*HTTPClient, error) {
 func (hc *HTTPClient) Call(b []byte) ([]byte, error) {
 	// Parse incoming Request
 	msg := &proto.HTTPClient{}
-	err := pb.Unmarshal(b, msg)
+	err := msg.UnmarshalVT(b)
 	if err != nil {
 		// Assume JSON for backwards compatibility
 		return hc.callJSON(b)
@@ -96,7 +95,7 @@ func (hc *HTTPClient) Call(b []byte) ([]byte, error) {
 
 	// Create HTTPClientResponse
 	r := &proto.HTTPClientResponse{}
-	r.Status = &sdk.Status{Code: 200, Status: "OK"}
+	r.Status = &sdkproto.Status{Code: 200, Status: "OK"}
 
 	// Create HTTP Client
 	var request *http.Request
@@ -123,7 +122,7 @@ func (hc *HTTPClient) Call(b []byte) ([]byte, error) {
 		r.Status.Code = 400
 		r.Status.Status = fmt.Sprintf("Unable to create HTTP request - %s", err)
 		// Marshal a response to return to caller
-		rsp, err := pb.Marshal(r)
+		rsp, err := r.MarshalVT()
 		if err != nil {
 			return []byte(""), errors.New("unable to marshal HTTPClient:call response")
 		}
@@ -132,7 +131,12 @@ func (hc *HTTPClient) Call(b []byte) ([]byte, error) {
 
 	// Set user-supplied headers
 	for k, v := range msg.GetHeaders() {
-		request.Header.Set(k, v)
+		if v == nil {
+			continue
+		}
+		for _, value := range v.GetValues() {
+			request.Header.Add(k, value)
+		}
 	}
 
 	// Execute HTTP Call
@@ -141,7 +145,7 @@ func (hc *HTTPClient) Call(b []byte) ([]byte, error) {
 		r.Status.Code = 500
 		r.Status.Status = fmt.Sprintf("Unable to execute HTTP request - %s", err)
 		// Marshal a response to return to caller
-		rsp, err := pb.Marshal(r)
+		rsp, err := r.MarshalVT()
 		if err != nil {
 			return []byte(""), errors.New("unable to marshal HTTPClient:call response")
 		}
@@ -152,9 +156,9 @@ func (hc *HTTPClient) Call(b []byte) ([]byte, error) {
 	if response != nil {
 		defer response.Body.Close()
 		r.Code = int32(response.StatusCode)
-		r.Headers = make(map[string]string)
+		r.Headers = make(map[string]*proto.Header)
 		for k := range response.Header {
-			r.Headers[strings.ToLower(k)] = response.Header.Get(k)
+			r.Headers[strings.ToLower(k)] = &proto.Header{Values: response.Header.Values(k)}
 		}
 		body, err := io.ReadAll(io.LimitReader(response.Body, hc.maxResponseBodySize))
 		if err != nil {
@@ -165,7 +169,7 @@ func (hc *HTTPClient) Call(b []byte) ([]byte, error) {
 	}
 
 	// Marshal a response to return to caller
-	rsp, err := pb.Marshal(r)
+	rsp, err := r.MarshalVT()
 	if err != nil {
 		return []byte(""), errors.New("unable to marshal HTTPClient:call response")
 	}
