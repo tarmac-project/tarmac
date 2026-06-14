@@ -3,6 +3,7 @@
 package app
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"net/http"
@@ -15,6 +16,32 @@ import (
 	_ "github.com/spf13/viper/remote"
 	"github.com/tarmac-project/tarmac/pkg/tlsconfig"
 )
+
+func waitForIntegrationServer(url string, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+	ticker := time.NewTicker(500 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-ticker.C:
+			resp, err := client.Get(url)
+			if err == nil {
+				resp.Body.Close()
+				if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusForbidden {
+					return nil
+				}
+			}
+		}
+	}
+}
 
 func TestRunningServer(t *testing.T) {
 	cfg := viper.New()
@@ -39,7 +66,7 @@ func TestRunningServer(t *testing.T) {
 	defer srv.Stop()
 
 	// Wait for app to start
-	if err := waitForServer("http://localhost:9000/health", 15*time.Second); err != nil {
+	if err := waitForIntegrationServer("http://localhost:9000/health", 15*time.Second); err != nil {
 		t.Fatalf("Server failed to start: %v", err)
 	}
 
@@ -116,7 +143,7 @@ func TestRunningTLSServer(t *testing.T) {
 	defer srv.Stop()
 
 	// Wait for app to start
-	if err := waitForServer("https://localhost:9000/health", 20*time.Second); err != nil {
+	if err := waitForIntegrationServer("https://localhost:9000/health", 20*time.Second); err != nil {
 		t.Fatalf("Server failed to start: %v", err)
 	}
 
@@ -227,7 +254,7 @@ func TestRunningMTLSServer(t *testing.T) {
 	defer srv.Stop()
 
 	// Wait for app to start
-	if err := waitForServer("https://localhost:9000/health", 20*time.Second); err != nil {
+	if err := waitForIntegrationServer("https://localhost:9000/health", 20*time.Second); err != nil {
 		t.Fatalf("Server failed to start: %v", err)
 	}
 
@@ -333,7 +360,7 @@ func TestRunningFailMTLSServer(t *testing.T) {
 	defer srv.Stop()
 
 	// Wait for app to start
-	if err := waitForServer("https://localhost:9000/health", 20*time.Second); err != nil {
+	if err := waitForIntegrationServer("https://localhost:9000/health", 20*time.Second); err != nil {
 		t.Fatalf("Server failed to start: %v", err)
 	}
 

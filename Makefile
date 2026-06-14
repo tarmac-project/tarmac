@@ -42,8 +42,7 @@ tests-unit: build
 		./pkg/sanitize \
 		./pkg/telemetry \
 		./pkg/tlsconfig
-	go test -v -race -covermode=atomic -coverprofile=coverage/tests-app-unit.out ./pkg/app \
-		-run '^(TestBadConfigs|TestPProfServerEnabled|TestPProfServerDisabled|TestTLSBranchBehavior)$$'
+	go test -v -race -covermode=atomic -coverprofile=coverage/tests-app-unit.out ./pkg/app
 
 # Integration tests - require external services via Docker Compose
 tests-integration: build tests-nobuild

@@ -68,7 +68,7 @@ services:
     entrypoint:
       - sh
       - -c
-      - go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/In-Memory.*" ./...
+      - go test -v -race -tags integration -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/In-Memory.*" ./pkg/app
     volumes:
       - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
@@ -90,7 +90,7 @@ services:
     entrypoint:
       - sh
       - -c
-      - go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/BoltDB.*" ./...
+      - go test -v -race -tags integration -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/BoltDB.*" ./pkg/app
     volumes:
       - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
@@ -112,7 +112,7 @@ services:
     entrypoint:
       - sh
       - -c
-      - go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/Redis.*" ./...
+      - go test -v -race -tags integration -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/Redis.*" ./pkg/app
     volumes:
       - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
@@ -135,7 +135,7 @@ services:
     entrypoint:
       - sh
       - -c
-      - go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/NATS.*" ./...
+      - go test -v -race -tags integration -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/NATS.*" ./pkg/app
     volumes:
       - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
@@ -158,7 +158,7 @@ services:
     entrypoint:
       - sh
       - -c
-      - go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/Cassandra.*" ./...
+      - go test -v -race -tags integration -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/Cassandra.*" ./pkg/app
     volumes:
       - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
@@ -182,7 +182,7 @@ services:
     entrypoint:
       - sh
       - -c
-      - go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/MySQL.*" ./...
+      - go test -v -race -tags integration -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/MySQL.*" ./pkg/app
     volumes:
       - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"
@@ -205,7 +205,7 @@ services:
     entrypoint:
       - sh
       - -c
-      - go test -v -race -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/Postgres.*" ./...
+      - go test -v -race -tags integration -covermode=atomic -coverprofile=/tmp/coverage/${COVERAGE_FILE:-coverage.out} -run "TestFullService/Postgres.*" ./pkg/app
     volumes:
       - "./:/go/src/github.com/tarmac-project/tarmac"
       - "./coverage:/tmp/coverage"

@@ -16,24 +16,23 @@ Unit tests run locally without requiring external services like Redis, MySQL, or
 make tests-unit
 ```
 
-`make tests-unit` builds the test WebAssembly fixtures, runs local-safe package tests, and runs focused `pkg/app` unit tests. Avoid using `go test ./...` for unit-only feedback because some packages intentionally depend on Docker-provided services or `/testdata` mounts.
+`make tests-unit` builds the test WebAssembly fixtures, runs local-safe package tests, and runs the `pkg/app` tests that do not require Docker-provided services. Avoid using `go test ./...` for unit-only feedback because some packages intentionally depend on Docker-provided services or `/testdata` mounts.
 
 Equivalent direct commands:
 
 ```bash
-go test -v -race -covermode=atomic ./cmd/tarmac ./pkg/callbacks ./pkg/callbacks/httpclient ./pkg/callbacks/kvstore ./pkg/callbacks/logging ./pkg/callbacks/metrics ./pkg/config ./pkg/sanitize ./pkg/telemetry ./pkg/tlsconfig
-go test -v -race ./pkg/app -run '^(TestBadConfigs|TestPProfServerEnabled|TestPProfServerDisabled|TestTLSBranchBehavior)$'
+make build
+mkdir -p coverage
+go test -v -race -covermode=atomic -coverprofile=coverage/tests-unit.out ./cmd/tarmac ./pkg/callbacks ./pkg/callbacks/httpclient ./pkg/callbacks/kvstore ./pkg/callbacks/logging ./pkg/callbacks/metrics ./pkg/config ./pkg/sanitize ./pkg/telemetry ./pkg/tlsconfig
+go test -v -race -covermode=atomic -coverprofile=coverage/tests-app-unit.out ./pkg/app
 ```
 
-**Unit test runtime:** 
-- `TestBadConfigs`: ~0.01s (configuration validation)
-- `TestPProfServerEnabled`: ~31s (includes 30s profile test)
-- `TestPProfServerDisabled`: ~0.5s (quick verification)
-- **Total**: ~32s (down from 60s+ with fixed sleeps in integration tests)
+**Unit test runtime:** `pkg/app` tests can still take about a minute because they exercise pprof profiling and WebAssembly startup paths, but they should not require Redis, MySQL, PostgreSQL, Cassandra, NATS, or Consul.
 
 Unit tests include:
 - Configuration validation tests (`TestBadConfigs`)
 - Server functionality tests (`TestPProfServerEnabled`, `TestPProfServerDisabled`)
+- Local WebAssembly handler tests
 - Callback function tests with mocks
 - Local package tests that do not require service containers
 
@@ -99,12 +98,14 @@ The `pkg/app` package has been refactored to separate unit and integration tests
 - `TestPProfServerEnabled` - Validates pprof endpoints when enabled
 - `TestPProfServerDisabled` - Validates pprof endpoints are blocked when disabled
 - `TestTLSBranchBehavior` - Validates TLS/non-TLS listener selection
+- Local handler and WebAssembly tests in `server_test.go`
 
-### Integration Tests (`app_integration_test.go`)
+### Integration Tests (`app_integration_test.go`, `server_integration_test.go`)
 - `TestRunningServer` - Tests server with Redis integration
 - `TestRunningTLSServer` - Tests TLS server with Redis, MySQL, and Consul
 - `TestRunningMTLSServer` - Tests mTLS server with services
 - `TestRunningFailMTLSServer` - Tests mTLS authentication failures
+- `TestFullService` - Tests Docker-backed KV store and SQL service combinations
 
 ## Best Practices
 
@@ -127,7 +128,7 @@ Integration tests now use polling with retries instead of fixed sleeps to reduce
 time.Sleep(10 * time.Second)
 
 // Use:
-if err := waitForServer("http://localhost:9000/health", 15*time.Second); err != nil {
+if err := waitForServer("http://localhost:9000/health"); err != nil {
     t.Fatalf("Server failed to start: %v", err)
 }
 ```

@@ -18,8 +18,8 @@ const (
 )
 
 // waitForServer polls the health endpoint until it responds or times out.
-func waitForServer(url string, timeout time.Duration) error {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+func waitForServer(url string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
 	client := &http.Client{
@@ -189,7 +189,7 @@ func TestPProfServerEnabled(t *testing.T) {
 	defer srv.Stop()
 
 	// Wait for app to start
-	if err := waitForServer("http://localhost:9000/health", 15*time.Second); err != nil {
+	if err := waitForServer("http://localhost:9000/health"); err != nil {
 		t.Fatalf("Server failed to start: %v", err)
 	}
 
@@ -239,7 +239,7 @@ func TestPProfServerDisabled(t *testing.T) {
 	defer srv.Stop()
 
 	// Wait for app to start
-	if err := waitForServer("http://localhost:9000/health", 15*time.Second); err != nil {
+	if err := waitForServer("http://localhost:9000/health"); err != nil {
 		t.Fatalf("Server failed to start: %v", err)
 	}
 
