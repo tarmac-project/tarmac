@@ -23,6 +23,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/pquerna/ffjson/ffjson"
 
@@ -263,7 +264,7 @@ func (db *Database) query(qry []byte) ([]string, []map[string]any, error) {
 				continue
 			}
 			val := *value
-			m[c] = val
+			m[c] = normalizeSQLValue(val)
 		}
 
 		results = append(results, m)
@@ -274,6 +275,19 @@ func (db *Database) query(qry []byte) ([]string, []map[string]any, error) {
 	}
 
 	return columns, results, nil
+}
+
+func normalizeSQLValue(v any) any {
+	switch val := v.(type) {
+	case int64:
+		return []byte(strconv.FormatInt(val, 10))
+	case uint64:
+		return []byte(strconv.FormatUint(val, 10))
+	case float64:
+		return []byte(strconv.FormatFloat(val, 'g', -1, 64))
+	default:
+		return v
+	}
 }
 
 // exec will execute the supplied query against the database and return the result.
