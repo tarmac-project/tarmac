@@ -6,6 +6,8 @@ import (
 	"errors"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -141,6 +143,45 @@ func TestBadConfigs(t *testing.T) {
 			err := srv.Run()
 			if err == nil || errors.Is(err, ErrShutdown) {
 				t.Errorf("Expected error when starting server, got nil")
+			}
+		})
+	}
+}
+
+func TestBoltDBExistingFile(t *testing.T) {
+	tests := map[string]struct {
+		existingFile bool
+	}{
+		"existing file": {existingFile: true},
+		"new file":      {existingFile: false},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			dbFilename := filepath.Join(t.TempDir(), "tarmac.db")
+			if tt.existingFile {
+				if err := os.WriteFile(dbFilename, nil, 0600); err != nil {
+					t.Fatalf("Unexpected error creating temp file - %s", err)
+				}
+			}
+
+			cfg := viper.New()
+			cfg.Set("disable_logging", true)
+			cfg.Set("enable_kvstore", true)
+			cfg.Set("kvstore_type", "internal")
+			cfg.Set("boltdb_filename", dbFilename)
+			cfg.Set("boltdb_bucket", "tarmac")
+			cfg.Set("boltdb_permissions", 0600)
+			cfg.Set("listen_addr", "localhost:0")
+			cfg.Set("wasm_function", "does-not-exist.wasm")
+
+			srv := New(cfg)
+			err := srv.Run()
+			if err == nil {
+				t.Fatal("Expected startup error from missing WASM function, got nil")
+			}
+			if !strings.Contains(err.Error(), "could not load default function path for wasm_function") {
+				t.Fatalf("Expected missing WASM startup error, got %s", err)
 			}
 		})
 	}

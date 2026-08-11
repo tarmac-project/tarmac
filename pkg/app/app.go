@@ -279,10 +279,14 @@ func (srv *Server) Run() error {
 				os.O_RDWR|os.O_CREATE|os.O_EXCL,
 				os.FileMode(srv.cfg.GetInt("boltdb_permissions")),
 			)
-			if err != nil && !os.IsExist(err) {
+			if err != nil && !errors.Is(err, os.ErrExist) {
 				return fmt.Errorf("could not create boltdb file - %w", err)
 			}
-			fh.Close()
+			if err == nil {
+				if err := fh.Close(); err != nil {
+					return fmt.Errorf("could not close boltdb file - %w", err)
+				}
+			}
 
 			// Open datastore
 			srv.kv, err = bbolt.Dial(bbolt.Config{
