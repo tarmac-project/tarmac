@@ -5,17 +5,20 @@ package main
 import (
 	"fmt"
 
-	"github.com/tarmac-project/tarmac/pkg/sdk"
+	"github.com/tarmac-project/sdk"
+	"github.com/tarmac-project/sdk/logging"
 )
 
-// tarmac provides an interface for executing host capabilities such as Logging, KVStore, etc.
-var tarmac *sdk.Tarmac
+var logger logging.Client
 
 func main() {
-	var err error
-
 	// Initialize SDK
-	tarmac, err = sdk.New(sdk.Config{Handler: Handler})
+	runtime, err := sdk.New(sdk.Config{Handler: Handler})
+	if err != nil {
+		return
+	}
+
+	logger, err = logging.New(logging.Config{SDKConfig: runtime.Config()})
 	if err != nil {
 		return
 	}
@@ -25,7 +28,7 @@ func main() {
 // must return a payload along with a nil error.
 func Handler(payload []byte) ([]byte, error) {
 	// Log It
-	tarmac.Logger.Trace(fmt.Sprintf("Echoing Payload: %s", payload))
+	logger.Trace(fmt.Sprintf("Echoing Payload: %s", payload))
 
 	// Return the payload
 	return payload, nil
