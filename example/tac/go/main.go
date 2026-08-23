@@ -3,6 +3,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/tarmac-project/sdk"
@@ -37,7 +38,9 @@ func main() {
 // Handler is the custom Tarmac Handler function that will receive a payload and
 // must return a payload along with a nil error.
 func Handler(payload []byte) ([]byte, error) {
-	var err error
+	if len(payload) == 0 {
+		return nil, errors.New("payload cannot be empty")
+	}
 
 	// Log it
 	logger.Trace(fmt.Sprintf("Reversing Payload: %s", payload))
@@ -45,21 +48,22 @@ func Handler(payload []byte) ([]byte, error) {
 	// Check Cache
 	key := string(payload)
 	rsp, err := kvStore.Get(key)
-	if err != nil || len(payload) < 1 {
-		// Flip it and reverse
-		if len(payload) > 0 {
-			for i, n := 0, len(payload)-1; i < n; i, n = i+1, n-1 {
-				payload[i], payload[n] = payload[n], payload[i]
-			}
-		}
-		rsp = payload
+	if err == nil {
+		return rsp, nil
+	}
+	if !errors.Is(err, kv.ErrKeyNotFound) {
+		return nil, fmt.Errorf("unable to read cached payload: %w", err)
+	}
 
-		// Store in Cache
-		err = kvStore.Set(key, payload)
-		if err != nil {
-			logger.Error(fmt.Sprintf("Unable to cache reversed payload: %s", err))
-			return rsp, nil
-		}
+	// Flip it and reverse
+	for i, n := 0, len(payload)-1; i < n; i, n = i+1, n-1 {
+		payload[i], payload[n] = payload[n], payload[i]
+	}
+	rsp = payload
+
+	// Store in Cache
+	if err := kvStore.Set(key, payload); err != nil {
+		logger.Error(fmt.Sprintf("Unable to cache reversed payload: %s", err))
 	}
 
 	// Return the payload

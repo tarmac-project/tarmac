@@ -12,6 +12,21 @@ on:
   pull_request:
   merge_group:
 jobs:
+  hostcall-compatibility:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    - name: Set up Go
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      with:
+        go-version-file: go.mod
+    - name: Verify fixture dependencies through the Go proxy
+      run: make check-hostcall-modules
+    - name: Build fixture with pinned TinyGo versions
+      run: make build-hostcall-testdata
+    - name: Verify raw hostcalls against the in-memory runtime
+      run: make tests-hostcalls-inmemory
+
   tests:
     runs-on: ubuntu-latest
     steps:
