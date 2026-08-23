@@ -38,6 +38,9 @@ functions/
 # Mac stuff
 .DS_Store
 
+# Runtime toolkit state
+.rtk/
+
 # Ignore .wasm files
 *.wasm
 

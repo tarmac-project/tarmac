@@ -2,7 +2,7 @@
 
 ![Tarmac Banner](tarmac-banner.png)
 
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/tarmac-project/tarmac/pkg/sdk)](https://pkg.go.dev/github.com/tarmac-project/tarmac/pkg/sdk)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/tarmac-project/sdk)](https://pkg.go.dev/github.com/tarmac-project/sdk)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://tarmac.gitbook.io/tarmac/)
 [![Build Status](https://github.com/tarmac-project/tarmac/actions/workflows/build.yml/badge.svg)](https://github.com/tarmac-project/tarmac/actions/workflows/build.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/tarmac-project/tarmac)](https://goreportcard.com/report/github.com/tarmac-project/tarmac)
@@ -25,16 +25,31 @@ package main
 
 import (
 	"fmt"
-	"github.com/tarmac-project/tarmac/pkg/sdk"
+
+	"github.com/tarmac-project/sdk"
+	"github.com/tarmac-project/sdk/kv"
+	"github.com/tarmac-project/sdk/logging"
 )
 
-var tarmac *sdk.Tarmac
+var (
+	logger  logging.Client
+	kvStore kv.Client
+)
 
 func main() {
-	var err error
-
 	// Initialize the Tarmac SDK
-	tarmac, err = sdk.New(sdk.Config{Handler: Handler})
+	runtime, err := sdk.New(sdk.Config{Handler: Handler})
+	if err != nil {
+		return
+	}
+
+	cfg := runtime.Config()
+	logger, err = logging.New(logging.Config{SDKConfig: cfg})
+	if err != nil {
+		return
+	}
+
+	kvStore, err = kv.New(kv.Config{SDKConfig: cfg})
 	if err != nil {
 		return
 	}
@@ -46,11 +61,11 @@ func Handler(payload []byte) ([]byte, error) {
 	var err error
 
 	// Log it
-	tarmac.Logger.Trace(fmt.Sprintf("Reversing Payload: %s", payload))
+	logger.Trace(fmt.Sprintf("Reversing Payload: %s", payload))
 
 	// Check Cache
 	key := string(payload)
-	rsp, err := tarmac.KV.Get(key)
+	rsp, err := kvStore.Get(key)
 	if err != nil || len(payload) < 1 {
 		// Flip it and reverse
 		if len(payload) > 0 {
@@ -61,9 +76,9 @@ func Handler(payload []byte) ([]byte, error) {
 		rsp = payload
 
 		// Store in Cache
-		err = tarmac.KV.Set(key, payload)
+		err = kvStore.Set(key, payload)
 		if err != nil {
-			tarmac.Logger.Error(fmt.Sprintf("Unable to cache reversed payload: %s", err))
+			logger.Error(fmt.Sprintf("Unable to cache reversed payload: %s", err))
 			return rsp, nil
 		}
 	}

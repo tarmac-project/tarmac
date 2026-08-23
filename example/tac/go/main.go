@@ -3,18 +3,33 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 
-	"github.com/tarmac-project/tarmac/pkg/sdk"
+	"github.com/tarmac-project/sdk"
+	"github.com/tarmac-project/sdk/kv"
+	"github.com/tarmac-project/sdk/logging"
 )
 
-var tarmac *sdk.Tarmac
+var (
+	logger  logging.Client
+	kvStore kv.Client
+)
 
 func main() {
-	var err error
-
 	// Initialize the Tarmac SDK
-	tarmac, err = sdk.New(sdk.Config{Handler: Handler})
+	runtime, err := sdk.New(sdk.Config{Handler: Handler})
+	if err != nil {
+		return
+	}
+
+	cfg := runtime.Config()
+	logger, err = logging.New(logging.Config{SDKConfig: cfg})
+	if err != nil {
+		return
+	}
+
+	kvStore, err = kv.New(kv.Config{SDKConfig: cfg})
 	if err != nil {
 		return
 	}
@@ -23,29 +38,32 @@ func main() {
 // Handler is the custom Tarmac Handler function that will receive a payload and
 // must return a payload along with a nil error.
 func Handler(payload []byte) ([]byte, error) {
-	var err error
+	if len(payload) == 0 {
+		return nil, errors.New("payload cannot be empty")
+	}
 
 	// Log it
-	tarmac.Logger.Trace(fmt.Sprintf("Reversing Payload: %s", payload))
+	logger.Trace(fmt.Sprintf("Reversing Payload: %s", payload))
 
 	// Check Cache
 	key := string(payload)
-	rsp, err := tarmac.KV.Get(key)
-	if err != nil || len(payload) < 1 {
-		// Flip it and reverse
-		if len(payload) > 0 {
-			for i, n := 0, len(payload)-1; i < n; i, n = i+1, n-1 {
-				payload[i], payload[n] = payload[n], payload[i]
-			}
-		}
-		rsp = payload
+	rsp, err := kvStore.Get(key)
+	if err == nil {
+		return rsp, nil
+	}
+	if !errors.Is(err, kv.ErrKeyNotFound) {
+		return nil, fmt.Errorf("unable to read cached payload: %w", err)
+	}
 
-		// Store in Cache
-		err = tarmac.KV.Set(key, payload)
-		if err != nil {
-			tarmac.Logger.Error(fmt.Sprintf("Unable to cache reversed payload: %s", err))
-			return rsp, nil
-		}
+	// Flip it and reverse
+	for i, n := 0, len(payload)-1; i < n; i, n = i+1, n-1 {
+		payload[i], payload[n] = payload[n], payload[i]
+	}
+	rsp = payload
+
+	// Store in Cache
+	if err := kvStore.Set(key, payload); err != nil {
+		logger.Error(fmt.Sprintf("Unable to cache reversed payload: %s", err))
 	}
 
 	// Return the payload

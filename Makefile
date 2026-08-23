@@ -27,6 +27,12 @@ build-testdata:
 	$(MAKE) -C testdata/base/function build
 	$(MAKE) -C testdata/base/successafter5 build
 
+build-hostcall-testdata:
+	$(MAKE) -C testdata/hostcalls/kvlogging build
+
+check-hostcall-modules:
+	$(MAKE) -C testdata/hostcalls/kvlogging module-check
+
 tests: build tests-nobuild
 tests-nobuild: tests-base tests-redis tests-nats tests-cassandra tests-mysql tests-postgres tests-boltdb tests-inmemory
 
@@ -45,6 +51,9 @@ tests-inmemory:
 	@echo "Launching Tests in Docker Compose"
 	COVERAGE_FILE=tests-inmemory.out docker compose -f dev-compose.yml up --exit-code-from tests-inmemory tests-inmemory
 	docker compose -f dev-compose.yml down
+
+tests-hostcalls-inmemory:
+	go test -v -race -run '^TestHostCallCompatibility$$' ./pkg/app
 
 tests-redis:
 	@echo "Launching Tests in Docker Compose"
