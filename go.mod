@@ -3,7 +3,7 @@ module github.com/tarmac-project/tarmac
 go 1.25.0
 
 require (
-	github.com/go-sql-driver/mysql v1.10.0
+	github.com/go-sql-driver/mysql v1.10.1
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/lib/pq v1.12.3
 	github.com/madflojo/tasks v1.3.0
